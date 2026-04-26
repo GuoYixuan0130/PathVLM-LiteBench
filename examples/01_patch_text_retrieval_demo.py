@@ -13,6 +13,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from pathvlm_litebench.data import load_patch_images
 from pathvlm_litebench.models import CLIPWrapper
 from pathvlm_litebench.retrieval import retrieve_topk_images
+from pathvlm_litebench.visualization import save_topk_image_grids
 
 
 def create_demo_images(output_dir: str | Path) -> Path:
@@ -46,6 +47,8 @@ def run_patch_text_retrieval_demo(
     prompts: list[str] | None = None,
     top_k: int = 3,
     model_name: str = "openai/clip-vit-base-patch32",
+    save_visualization: bool = False,
+    output_dir: str | Path = "outputs/retrieval_demo",
 ) -> None:
     """
     Run a minimal patch-level image-text retrieval demo.
@@ -97,6 +100,17 @@ def run_patch_text_retrieval_demo(
                 f"path={item.get('path', 'N/A')}"
             )
 
+    if save_visualization:
+        print("\n[INFO] Saving top-k visualization grids...")
+        saved_paths = save_topk_image_grids(
+            prompts=prompts,
+            retrieval_results=results,
+            output_dir=output_dir,
+        )
+
+        for path in saved_paths:
+            print(f"[INFO] Saved visualization: {path}")
+
     print("\n[INFO] Demo finished successfully.")
 
 
@@ -133,6 +147,19 @@ def parse_args() -> argparse.Namespace:
         help="Hugging Face model name for CLIP-style model.",
     )
 
+    parser.add_argument(
+        "--save_visualization",
+        action="store_true",
+        help="Save top-k retrieval visualization grids.",
+    )
+
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default="outputs/retrieval_demo",
+        help="Directory for saving visualization outputs.",
+    )
+
     return parser.parse_args()
 
 
@@ -144,4 +171,6 @@ if __name__ == "__main__":
         prompts=args.prompts,
         top_k=args.top_k,
         model_name=args.model_name,
+        save_visualization=args.save_visualization,
+        output_dir=args.output_dir,
     )
