@@ -10,7 +10,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from pathvlm_litebench.data import load_patch_images
+from pathvlm_litebench.data import (
+    load_patch_images,
+    save_embeddings,
+    load_embeddings,
+    save_metadata,
+    load_metadata,
+)
 from pathvlm_litebench.models import CLIPWrapper
 from pathvlm_litebench.retrieval import retrieve_topk_images
 from pathvlm_litebench.visualization import save_topk_image_grids
@@ -49,6 +55,8 @@ def run_patch_text_retrieval_demo(
     model_name: str = "openai/clip-vit-base-patch32",
     save_visualization: bool = False,
     output_dir: str | Path = "outputs/retrieval_demo",
+    use_cache: bool = False,
+    cache_dir: str | Path = "outputs/cache",
 ) -> None:
     """
     Run a minimal patch-level image-text retrieval demo.
@@ -74,8 +82,41 @@ def run_patch_text_retrieval_demo(
     print("[INFO] Loading CLIP model...")
     model = CLIPWrapper(model_name=model_name)
 
-    print("[INFO] Encoding images...")
-    image_embeddings = model.encode_images(images)
+    if use_cache:
+        cache_dir = Path(cache_dir)
+        cache_dir.mkdir(parents=True, exist_ok=True)
+
+        image_embedding_cache_path = cache_dir / "image_embeddings.pt"
+        image_paths_cache_path = cache_dir / "image_paths.json"
+
+        print(f"[INFO] Embedding cache enabled.")
+        print(f"[INFO] Image embedding cache: {image_embedding_cache_path}")
+        print(f"[INFO] Image paths cache: {image_paths_cache_path}")
+
+        cache_exists = image_embedding_cache_path.exists() and image_paths_cache_path.exists()
+
+        if cache_exists:
+            cached_image_paths = load_metadata(image_paths_cache_path)
+
+            if cached_image_paths == image_paths:
+                print("[INFO] Cache hit: loading image embeddings from cache.")
+                image_embeddings = load_embeddings(image_embedding_cache_path)
+            else:
+                print("[INFO] Cache mismatch: image paths changed. Re-encoding images.")
+                image_embeddings = model.encode_images(images)
+                save_embeddings(image_embeddings, image_embedding_cache_path)
+                save_metadata(image_paths, image_paths_cache_path)
+                print("[INFO] Updated image embedding cache.")
+        else:
+            print("[INFO] Cache miss: encoding images and saving cache.")
+            image_embeddings = model.encode_images(images)
+            save_embeddings(image_embeddings, image_embedding_cache_path)
+            save_metadata(image_paths, image_paths_cache_path)
+            print("[INFO] Saved image embedding cache.")
+    else:
+        print("[INFO] Embedding cache disabled.")
+        print("[INFO] Encoding images...")
+        image_embeddings = model.encode_images(images)
 
     print("[INFO] Encoding text prompts...")
     text_embeddings = model.encode_text(prompts)
@@ -160,6 +201,19 @@ def parse_args() -> argparse.Namespace:
         help="Directory for saving visualization outputs.",
     )
 
+    parser.add_argument(
+        "--use_cache",
+        action="store_true",
+        help="Use cached image embeddings if available.",
+    )
+
+    parser.add_argument(
+        "--cache_dir",
+        type=str,
+        default="outputs/cache",
+        help="Directory for saving/loading embedding cache.",
+    )
+
     return parser.parse_args()
 
 
@@ -173,4 +227,6 @@ if __name__ == "__main__":
         model_name=args.model_name,
         save_visualization=args.save_visualization,
         output_dir=args.output_dir,
+        use_cache=args.use_cache,
+        cache_dir=args.cache_dir,
     )
