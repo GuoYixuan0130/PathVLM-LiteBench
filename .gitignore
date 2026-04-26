@@ -13,9 +13,10 @@ env/
 .ipynb_checkpoints/
 
 # Data and outputs
-data/
+/data/
 outputs/
 results/
+examples/demo_patches/
 
 # Model weights and embeddings
 *.pt

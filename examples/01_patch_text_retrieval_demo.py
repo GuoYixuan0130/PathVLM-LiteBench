@@ -1,0 +1,147 @@
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+import sys
+
+from PIL import Image
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from pathvlm_litebench.data import load_patch_images
+from pathvlm_litebench.models import CLIPWrapper
+from pathvlm_litebench.retrieval import retrieve_topk_images
+
+
+def create_demo_images(output_dir: str | Path) -> Path:
+    """
+    Create a small demo image folder for smoke testing.
+
+    These are not pathology images. They are only used to verify that
+    the image-text retrieval pipeline works end-to-end on a laptop.
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    demo_images = {
+        "patch_red.png": "red",
+        "patch_blue.png": "blue",
+        "patch_white.png": "white",
+        "patch_green.png": "green",
+        "patch_black.png": "black",
+    }
+
+    for filename, color in demo_images.items():
+        image_path = output_dir / filename
+        if not image_path.exists():
+            Image.new("RGB", (224, 224), color=color).save(image_path)
+
+    return output_dir
+
+
+def run_patch_text_retrieval_demo(
+    image_dir: str | Path | None = None,
+    prompts: list[str] | None = None,
+    top_k: int = 3,
+    model_name: str = "openai/clip-vit-base-patch32",
+) -> None:
+    """
+    Run a minimal patch-level image-text retrieval demo.
+    """
+    if image_dir is None:
+        image_dir = create_demo_images(Path("examples") / "demo_patches")
+        print(f"[INFO] No image_dir provided. Created demo images at: {image_dir}")
+    else:
+        image_dir = Path(image_dir)
+
+    if prompts is None or len(prompts) == 0:
+        prompts = [
+            "a red image",
+            "a blue image",
+            "a white image",
+        ]
+
+    print("[INFO] Loading patch images...")
+    images, image_paths = load_patch_images(image_dir)
+
+    print(f"[INFO] Loaded {len(images)} images from {image_dir}")
+
+    print("[INFO] Loading CLIP model...")
+    model = CLIPWrapper(model_name=model_name)
+
+    print("[INFO] Encoding images...")
+    image_embeddings = model.encode_images(images)
+
+    print("[INFO] Encoding text prompts...")
+    text_embeddings = model.encode_text(prompts)
+
+    print("[INFO] Retrieving top-k images...")
+    results = retrieve_topk_images(
+        image_embeddings=image_embeddings,
+        text_embeddings=text_embeddings,
+        image_paths=image_paths,
+        top_k=top_k,
+    )
+
+    print("\n========== Retrieval Results ==========")
+
+    for prompt, prompt_results in zip(prompts, results):
+        print(f"\nPrompt: {prompt}")
+        for rank, item in enumerate(prompt_results, start=1):
+            print(
+                f"  Top {rank}: "
+                f"index={item['index']}, "
+                f"score={item['score']:.4f}, "
+                f"path={item.get('path', 'N/A')}"
+            )
+
+    print("\n[INFO] Demo finished successfully.")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Run a minimal patch-level image-text retrieval demo."
+    )
+
+    parser.add_argument(
+        "--image_dir",
+        type=str,
+        default=None,
+        help="Path to a folder containing patch images. If omitted, demo images will be created.",
+    )
+
+    parser.add_argument(
+        "--prompts",
+        nargs="+",
+        default=None,
+        help="Text prompts for image-text retrieval.",
+    )
+
+    parser.add_argument(
+        "--top_k",
+        type=int,
+        default=3,
+        help="Number of top images to retrieve for each prompt.",
+    )
+
+    parser.add_argument(
+        "--model_name",
+        type=str,
+        default="openai/clip-vit-base-patch32",
+        help="Hugging Face model name for CLIP-style model.",
+    )
+
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+
+    run_patch_text_retrieval_demo(
+        image_dir=args.image_dir,
+        prompts=args.prompts,
+        top_k=args.top_k,
+        model_name=args.model_name,
+    )
