@@ -189,6 +189,20 @@ python examples/02_zero_shot_classification_demo.py \
 
 If no custom `--class_prompts` are provided, the demo builds simple pathology-style prompts automatically.
 
+Manifest-based zero-shot evaluation:
+
+```bash
+python examples/02_zero_shot_classification_demo.py \
+  --manifest path/to/manifest.csv \
+  --image_root path/to/dataset_root \
+  --model clip \
+  --device auto \
+  --split test \
+  --top_k 3
+```
+
+If labels are available in the manifest, the demo can compute accuracy. If labels are missing, you can still inspect predictions but accuracy is skipped.
+
 ## 8. Suggested Interpretation
 
 When inspecting results, consider:

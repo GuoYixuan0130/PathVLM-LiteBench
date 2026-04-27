@@ -264,6 +264,20 @@ Run the zero-shot classification demo:
 python examples/02_zero_shot_classification_demo.py --model clip --device auto
 ```
 
+Run zero-shot evaluation from a CSV manifest:
+
+```bash
+python examples/02_zero_shot_classification_demo.py \
+  --manifest path/to/manifest.csv \
+  --image_root path/to/dataset_root \
+  --model clip \
+  --device auto \
+  --split test \
+  --top_k 3
+```
+
+If labels are available in the manifest, the demo prints accuracy. If `class_names` are not provided, they can be inferred from manifest labels. This is intended for lightweight patch-level evaluation, not clinical diagnosis.
+
 This demo classifies each patch by comparing its image embedding with class text prompt embeddings.
 
 ### Demo 3: Prompt Sensitivity Analysis

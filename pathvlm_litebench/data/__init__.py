@@ -1,4 +1,4 @@
-from .patch_loader import load_patch_images
+from .patch_loader import load_patch_images, load_patch_images_from_paths
 from .embedding_cache import (
     save_embeddings,
     load_embeddings,
@@ -17,6 +17,7 @@ from .manifest_loader import (
 
 __all__ = [
     "load_patch_images",
+    "load_patch_images_from_paths",
     "save_embeddings",
     "load_embeddings",
     "save_metadata",

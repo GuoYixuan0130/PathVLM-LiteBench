@@ -55,6 +55,23 @@ Manifest files are useful for downstream zero-shot evaluation, retrieval metrics
 
 Do not commit real pathology data or patient-level metadata to GitHub.
 
+The manifest format can also be used by the zero-shot classification demo:
+
+```bash
+python examples/02_zero_shot_classification_demo.py \
+  --manifest path/to/manifest.csv \
+  --image_root path/to/dataset_root \
+  --model clip \
+  --device auto \
+  --split test
+```
+
+In this workflow:
+
+- `label` can be used to infer class names and compute accuracy.
+- `split` can be used to evaluate a target subset such as `test`.
+- `case_id` and `slide_id` are useful metadata fields for future grouped analysis.
+
 ## Patch-Level Workflow
 
 The current toolkit works at patch level:

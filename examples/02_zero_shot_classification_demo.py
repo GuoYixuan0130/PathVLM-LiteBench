@@ -10,8 +10,16 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from pathvlm_litebench.data import load_patch_images
-from pathvlm_litebench.evaluation import zero_shot_predict
+from pathvlm_litebench.data import (
+    load_patch_images,
+    load_patch_images_from_paths,
+    load_patch_manifest,
+    records_to_image_paths,
+    records_to_labels,
+    get_unique_labels,
+    filter_records_by_split,
+)
+from pathvlm_litebench.evaluation import zero_shot_predict, compute_accuracy
 from pathvlm_litebench.models import create_model
 from pathvlm_litebench.prompts import build_class_prompts as build_pathology_class_prompts
 
@@ -46,6 +54,10 @@ def run_zero_shot_classification_demo(
     image_dir: str | Path | None = None,
     class_names: list[str] | None = None,
     class_prompts: list[str] | None = None,
+    manifest: str | Path | None = None,
+    image_root: str | Path | None = None,
+    split: str | None = None,
+    max_images: int | None = None,
     top_k: int = 3,
     model: str = "clip",
     device: str = "auto",
@@ -53,16 +65,52 @@ def run_zero_shot_classification_demo(
     """
     Run a minimal patch-level zero-shot classification demo.
     """
-    if image_dir is None:
-        image_dir = create_demo_images(Path("examples") / "demo_patches")
-        print(f"[INFO] No image_dir provided. Created demo images at: {image_dir}")
+    default_smoke_test_class_names = ["red", "blue", "white", "black", "green"]
+    records = None
+    true_labels: list[str | None] | None = None
+
+    if manifest is not None:
+        if image_dir is not None:
+            print("[INFO] --manifest is provided. --image_dir will be ignored.")
+
+        records = load_patch_manifest(manifest, image_root=image_root)
+        if split is not None:
+            records = filter_records_by_split(records, split)
+            print(f"[INFO] Applied split filter: {split}")
+
+        if len(records) == 0:
+            raise ValueError(
+                "No records found in manifest after applying filters."
+            )
+
+        if max_images is not None:
+            records = records[:max_images]
+
+        image_paths = records_to_image_paths(records)
+        true_labels = records_to_labels(records)
+        images, image_paths = load_patch_images_from_paths(image_paths)
+
+        print(f"[INFO] Loaded patch records from manifest: {manifest}")
+        print(f"[INFO] Number of records: {len(records)}")
     else:
-        image_dir = Path(image_dir)
+        if image_dir is None:
+            image_dir = create_demo_images(Path("examples") / "demo_patches")
+            print(f"[INFO] No image_dir provided. Created demo images at: {image_dir}")
+        else:
+            image_dir = Path(image_dir)
+
+        print("[INFO] Loading patch images...")
+        images, image_paths = load_patch_images(image_dir, max_images=max_images)
+        print(f"[INFO] Loaded {len(images)} images from {image_dir}")
 
     if class_names is None or len(class_names) == 0:
-        class_names = ["red", "blue", "white", "black", "green"]
+        if records is not None and len(get_unique_labels(records)) > 0:
+            class_names = get_unique_labels(records)
+            print(f"[INFO] Inferred class names from manifest labels: {class_names}")
+        else:
+            class_names = default_smoke_test_class_names
 
-    if class_prompts is None and class_names == ["red", "blue", "white", "black", "green"]:
+    if class_prompts is None and manifest is None and class_names == default_smoke_test_class_names:
         class_prompts = [
             "a red image",
             "a blue image",
@@ -79,10 +127,6 @@ def run_zero_shot_classification_demo(
             )
     else:
         class_prompts = build_pathology_class_prompts(class_names)
-
-    print("[INFO] Loading patch images...")
-    images, image_paths = load_patch_images(image_dir)
-    print(f"[INFO] Loaded {len(images)} images from {image_dir}")
 
     print("[INFO] Class names:")
     for name, prompt in zip(class_names, class_prompts):
@@ -107,11 +151,15 @@ def run_zero_shot_classification_demo(
         class_names=class_names,
         top_k=top_k,
     )
+    predicted_labels = [item["predicted_label"] for item in results]
 
     print("\n========== Zero-Shot Classification Results ==========")
 
-    for image_path, result in zip(image_paths, results):
+    for idx, (image_path, result) in enumerate(zip(image_paths, results)):
         print(f"\nImage: {image_path}")
+        if true_labels is not None:
+            true_label = true_labels[idx]
+            print(f"True label: {true_label if true_label is not None else 'N/A'}")
         print(
             f"Predicted: {result['predicted_label']} "
             f"(confidence={result['confidence']:.4f})"
@@ -126,6 +174,16 @@ def run_zero_shot_classification_demo(
                 f"logit={item['logit']:.4f}"
             )
 
+    if true_labels is not None:
+        if all(label is not None for label in true_labels):
+            accuracy = compute_accuracy(
+                predicted_labels=predicted_labels,
+                true_labels=[str(label) for label in true_labels],
+            )
+            print(f"\nAccuracy: {accuracy:.4f}")
+        else:
+            print("\n[INFO] Manifest labels are incomplete. Skipping accuracy.")
+
     print("\n[INFO] Zero-shot classification demo finished successfully.")
 
 
@@ -139,6 +197,34 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help="Path to a folder containing patch images. If omitted, demo images will be created.",
+    )
+
+    parser.add_argument(
+        "--manifest",
+        type=str,
+        default=None,
+        help="Path to a CSV patch manifest. If provided, images and labels are loaded from the manifest.",
+    )
+
+    parser.add_argument(
+        "--image_root",
+        type=str,
+        default=None,
+        help="Optional root directory used to resolve relative image paths in the manifest.",
+    )
+
+    parser.add_argument(
+        "--split",
+        type=str,
+        default=None,
+        help="Optional split name to filter manifest records, such as train, val, or test.",
+    )
+
+    parser.add_argument(
+        "--max_images",
+        type=int,
+        default=None,
+        help="Optional maximum number of images to load.",
     )
 
     parser.add_argument(
@@ -187,6 +273,10 @@ if __name__ == "__main__":
         image_dir=args.image_dir,
         class_names=args.class_names,
         class_prompts=args.class_prompts,
+        manifest=args.manifest,
+        image_root=args.image_root,
+        split=args.split,
+        max_images=args.max_images,
         top_k=args.top_k,
         model=args.model,
         device=args.device,
