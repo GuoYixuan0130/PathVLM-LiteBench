@@ -19,7 +19,10 @@ from pathvlm_litebench.data import (
 )
 from pathvlm_litebench.models import CLIPWrapper
 from pathvlm_litebench.retrieval import retrieve_topk_images
-from pathvlm_litebench.visualization import save_topk_image_grids
+from pathvlm_litebench.visualization import (
+    save_topk_image_grids,
+    save_retrieval_html_report,
+)
 
 
 def create_demo_images(output_dir: str | Path) -> Path:
@@ -57,6 +60,8 @@ def run_patch_text_retrieval_demo(
     output_dir: str | Path = "outputs/retrieval_demo",
     use_cache: bool = False,
     cache_dir: str | Path = "outputs/cache",
+    save_html_report: bool = False,
+    html_report_path: str | Path = "outputs/retrieval_demo/retrieval_report.html",
 ) -> None:
     """
     Run a minimal patch-level image-text retrieval demo.
@@ -152,6 +157,15 @@ def run_patch_text_retrieval_demo(
         for path in saved_paths:
             print(f"[INFO] Saved visualization: {path}")
 
+    if save_html_report:
+        print("\n[INFO] Saving HTML retrieval report...")
+        saved_html_path = save_retrieval_html_report(
+            prompts=prompts,
+            retrieval_results=results,
+            output_html_path=html_report_path,
+        )
+        print(f"[INFO] Saved HTML report: {saved_html_path}")
+
     print("\n[INFO] Demo finished successfully.")
 
 
@@ -214,6 +228,19 @@ def parse_args() -> argparse.Namespace:
         help="Directory for saving/loading embedding cache.",
     )
 
+    parser.add_argument(
+        "--save_html_report",
+        action="store_true",
+        help="Save retrieval results as an HTML report.",
+    )
+
+    parser.add_argument(
+        "--html_report_path",
+        type=str,
+        default="outputs/retrieval_demo/retrieval_report.html",
+        help="Output path for the HTML retrieval report.",
+    )
+
     return parser.parse_args()
 
 
@@ -229,4 +256,6 @@ if __name__ == "__main__":
         output_dir=args.output_dir,
         use_cache=args.use_cache,
         cache_dir=args.cache_dir,
+        save_html_report=args.save_html_report,
+        html_report_path=args.html_report_path,
     )
