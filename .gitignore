@@ -13,7 +13,7 @@ env/
 .ipynb_checkpoints/
 
 # Data and outputs
-/data/
+dataset/
 outputs/
 results/
 examples/demo_patches/

@@ -154,7 +154,7 @@ Example usage:
 ```python
 from pathvlm_litebench.data import load_patch_manifest, records_to_image_paths, get_unique_labels
 
-records = load_patch_manifest("manifest.csv", image_root="path/to/data")
+records = load_patch_manifest("manifest.csv", image_root="path/to/datasetset")
 image_paths = records_to_image_paths(records)
 labels = get_unique_labels(records)
 ```

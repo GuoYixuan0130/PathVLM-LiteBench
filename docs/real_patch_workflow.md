@@ -46,7 +46,7 @@ You can load it with:
 ```python
 from pathvlm_litebench.data import load_patch_manifest, records_to_image_paths
 
-records = load_patch_manifest("manifest.csv", image_root="path/to/data")
+records = load_patch_manifest("manifest.csv", image_root="path/to/datasetset")
 image_paths = records_to_image_paths(records)
 ```
 
