@@ -1,5 +1,7 @@
 # PathVLM-LiteBench
 
+[![CI](https://github.com/GuoYixuan0130/PathVLM-LiteBench/actions/workflows/ci.yml/badge.svg)](https://github.com/GuoYixuan0130/PathVLM-LiteBench/actions/workflows/ci.yml)
+
 PathVLM-LiteBench is a lightweight toolkit for benchmarking and visualizing vision-language models in computational pathology under limited computing resources.
 
 This project focuses on patch-level pathology image-text retrieval, zero-shot classification, prompt sensitivity analysis, embedding caching, and visualization reports using frozen CLIP/PLIP-style vision-language models.
