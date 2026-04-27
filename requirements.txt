@@ -8,3 +8,4 @@ torchvision
 transformers
 tqdm
 jupyter
+pytest
