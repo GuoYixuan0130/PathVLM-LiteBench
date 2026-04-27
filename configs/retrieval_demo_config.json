@@ -1,0 +1,18 @@
+{
+  "task": "retrieval",
+  "model": "clip",
+  "device": "auto",
+  "image_dir": null,
+  "prompts": [
+    "a histopathology image of tumor tissue",
+    "a histopathology image of normal tissue",
+    "a histopathology image showing necrosis"
+  ],
+  "top_k": 5,
+  "use_cache": true,
+  "cache_dir": "outputs/cache",
+  "save_visualization": true,
+  "save_html_report": true,
+  "output_dir": "outputs/retrieval_demo",
+  "html_report_path": "outputs/retrieval_demo/retrieval_report.html"
+}
