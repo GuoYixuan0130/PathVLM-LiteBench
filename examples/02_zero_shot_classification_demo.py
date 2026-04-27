@@ -12,7 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from pathvlm_litebench.data import load_patch_images
 from pathvlm_litebench.evaluation import zero_shot_predict
-from pathvlm_litebench.models import CLIPWrapper
+from pathvlm_litebench.models import create_model
 
 
 def create_demo_images(output_dir: str | Path) -> Path:
@@ -64,7 +64,7 @@ def run_zero_shot_classification_demo(
     class_names: list[str] | None = None,
     class_prompts: list[str] | None = None,
     top_k: int = 3,
-    model_name: str = "openai/clip-vit-base-patch32",
+    model: str = "clip",
 ) -> None:
     """
     Run a minimal patch-level zero-shot classification demo.
@@ -100,14 +100,14 @@ def run_zero_shot_classification_demo(
     for name, prompt in zip(class_names, class_prompts):
         print(f"  - {name}: {prompt}")
 
-    print("[INFO] Loading CLIP model...")
-    model = CLIPWrapper(model_name=model_name)
+    print(f"[INFO] Loading model: {model}")
+    vlm = create_model(model)
 
     print("[INFO] Encoding images...")
-    image_embeddings = model.encode_images(images)
+    image_embeddings = vlm.encode_images(images)
 
     print("[INFO] Encoding class prompts...")
-    class_embeddings = model.encode_text(class_prompts)
+    class_embeddings = vlm.encode_text(class_prompts)
 
     print("[INFO] Running zero-shot classification...")
     results = zero_shot_predict(
@@ -172,10 +172,10 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--model_name",
+        "--model",
         type=str,
-        default="openai/clip-vit-base-patch32",
-        help="Hugging Face model name for CLIP-style model.",
+        default="clip",
+        help="Registered model key or Hugging Face model name. Example: 'clip' or 'openai/clip-vit-base-patch32'.",
     )
 
     return parser.parse_args()
@@ -189,5 +189,5 @@ if __name__ == "__main__":
         class_names=args.class_names,
         class_prompts=args.class_prompts,
         top_k=args.top_k,
-        model_name=args.model_name,
+        model=args.model,
     )
