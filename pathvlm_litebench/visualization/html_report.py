@@ -1,20 +1,22 @@
 from __future__ import annotations
 
 import html
+import os
 from pathlib import Path
 from typing import Any
 
 
 def _to_relative_path(path: str | Path, base_dir: Path) -> str:
     """
-    Convert an image path to a relative path from the HTML file directory if possible.
+    Convert an image path to a relative path from the HTML file directory.
     """
     path = Path(path)
+    if not path.is_absolute():
+        path = path.resolve()
 
-    try:
-        return str(path.resolve().relative_to(base_dir.resolve())).replace("\\", "/")
-    except ValueError:
-        return str(path).replace("\\", "/")
+    base_dir = base_dir.resolve()
+    rel_path = os.path.relpath(path, start=base_dir)
+    return rel_path.replace("\\", "/")
 
 
 def save_retrieval_html_report(
