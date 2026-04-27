@@ -126,6 +126,12 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+## Data Preparation
+
+To run PathVLM-LiteBench on real pathology patches, prepare a folder of patch-level images and pass it with `--image_dir`.
+
+See [docs/data_preparation.md](docs/data_preparation.md) for details.
+
 ## Quick Start
 
 ### Demo 1: Patch-Text Retrieval
