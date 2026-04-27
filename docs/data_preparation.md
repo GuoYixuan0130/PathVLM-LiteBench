@@ -4,6 +4,8 @@ PathVLM-LiteBench is designed to start from patch-level pathology images.
 
 The current version does not include public pathology datasets or whole-slide images. Users should prepare their own patch image folder before running retrieval or zero-shot demos on real pathology data.
 
+The toolkit is CPU-compatible and laptop-GPU friendly. Small smoke tests can run on CPU-only machines. If CUDA is available, patch embedding can be accelerated on consumer-grade laptop GPUs.
+
 ## Expected Input Format
 
 The simplest input format is a folder containing patch images:
@@ -44,6 +46,30 @@ patch image folder
 
 This design avoids full WSI processing in the early stage and keeps the workflow laptop-friendly.
 
+## Compute and Device Usage
+
+The toolkit is designed to be CPU-compatible and laptop-GPU friendly.
+
+For small smoke tests, CPU execution is sufficient. For larger patch folders, CUDA acceleration is recommended when available:
+
+```bash
+python examples/01_patch_text_retrieval_demo.py \
+  --model clip \
+  --device cuda \
+  --image_dir path/to/your_patch_folder \
+  --prompts "tumor region" "normal tissue" \
+  --top_k 5 \
+  --use_cache
+```
+
+If you are unsure, use:
+
+```text
+--device auto
+```
+
+This will use CUDA if available and fall back to CPU otherwise.
+
 ## Running Retrieval on Your Own Patches
 
 Example:
@@ -51,6 +77,7 @@ Example:
 ```bash
 python examples/01_patch_text_retrieval_demo.py \
   --model clip \
+  --device auto \
   --image_dir path/to/your_patch_folder \
   --prompts "tumor region" "normal tissue" "necrosis" \
   --top_k 5 \
@@ -72,6 +99,7 @@ Example:
 ```bash
 python examples/02_zero_shot_classification_demo.py \
   --model clip \
+  --device auto \
   --image_dir path/to/your_patch_folder \
   --class_names tumor normal necrosis \
   --class_prompts \
@@ -90,6 +118,7 @@ The current prompt sensitivity demo uses built-in prompt groups. It can still ru
 ```bash
 python examples/03_prompt_sensitivity_demo.py \
   --model clip \
+  --device auto \
   --image_dir path/to/your_patch_folder \
   --top_k 5
 ```

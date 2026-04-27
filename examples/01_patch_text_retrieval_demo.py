@@ -56,6 +56,7 @@ def run_patch_text_retrieval_demo(
     prompts: list[str] | None = None,
     top_k: int = 3,
     model: str = "clip",
+    device: str = "auto",
     save_visualization: bool = False,
     output_dir: str | Path = "outputs/retrieval_demo",
     use_cache: bool = False,
@@ -85,7 +86,10 @@ def run_patch_text_retrieval_demo(
     print(f"[INFO] Loaded {len(images)} images from {image_dir}")
 
     print(f"[INFO] Loading model: {model}")
-    vlm = create_model(model)
+    print(f"[INFO] Requested device: {device}")
+    vlm = create_model(model, device=device)
+    if hasattr(vlm, "device"):
+        print(f"[INFO] Using device: {vlm.device}")
 
     if use_cache:
         cache_dir = Path(cache_dir)
@@ -203,6 +207,14 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--device",
+        type=str,
+        default="auto",
+        choices=["auto", "cpu", "cuda"],
+        help="Device for model inference. Use 'auto' to select CUDA if available, otherwise CPU.",
+    )
+
+    parser.add_argument(
         "--save_visualization",
         action="store_true",
         help="Save top-k retrieval visualization grids.",
@@ -252,6 +264,7 @@ if __name__ == "__main__":
         prompts=args.prompts,
         top_k=args.top_k,
         model=args.model,
+        device=args.device,
         save_visualization=args.save_visualization,
         output_dir=args.output_dir,
         use_cache=args.use_cache,

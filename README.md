@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/GuoYixuan0130/PathVLM-LiteBench/actions/workflows/ci.yml/badge.svg)](https://github.com/GuoYixuan0130/PathVLM-LiteBench/actions/workflows/ci.yml)
 
-PathVLM-LiteBench is a lightweight toolkit for benchmarking and visualizing vision-language models in computational pathology under limited computing resources.
+PathVLM-LiteBench is a lightweight, CPU-compatible and laptop-GPU accelerated toolkit for benchmarking and visualizing vision-language models in computational pathology under limited computing resources.
 
-This project focuses on patch-level pathology image-text retrieval, zero-shot classification, prompt sensitivity analysis, embedding caching, and visualization reports using frozen CLIP/PLIP-style vision-language models.
+This project focuses on patch-level pathology image-text retrieval, zero-shot classification, prompt sensitivity analysis, embedding caching, and visualization reports using frozen CLIP/PLIP-style vision-language models, with CUDA acceleration when available.
 
 ## Motivation
 
@@ -20,7 +20,10 @@ Instead of training large models from scratch, this project focuses on:
 - Prompt sensitivity analysis
 - Embedding caching
 - Visualization and HTML reporting
-- Laptop-friendly experimentation
+- CPU-compatible smoke tests and laptop-friendly experimentation
+- CUDA-accelerated inference on consumer-grade laptop GPUs when available
+
+The project does not require A100 GPUs, multi-GPU training, or large-scale VLM pretraining.
 
 ## Current Stage
 
@@ -65,6 +68,22 @@ python examples/01_patch_text_retrieval_demo.py --model openai/clip-vit-base-pat
 ```
 
 Pathology-specific wrappers such as PLIP and CONCH are planned but not implemented yet. Passing `--model plip` or `--model conch` will raise a clear `NotImplementedError` in the current version.
+
+## Device Support
+
+PathVLM-LiteBench supports explicit device selection for model-based demos:
+
+```bash
+python examples/01_patch_text_retrieval_demo.py --model clip --device auto
+python examples/01_patch_text_retrieval_demo.py --model clip --device cuda
+python examples/01_patch_text_retrieval_demo.py --model clip --device cpu
+```
+
+`auto` is the default mode. It uses CUDA if available and falls back to CPU otherwise.
+
+This design keeps the toolkit compatible with CPU-only environments while allowing faster patch embedding on consumer-grade laptop GPUs.
+
+The retrieval-metrics demo (`examples/04_retrieval_metrics_demo.py`) does not use a model and therefore does not need a `--device` argument.
 
 ## Repository Structure
 
@@ -157,7 +176,7 @@ See [docs/data_preparation.md](docs/data_preparation.md) for details.
 Run the minimal patch-text retrieval demo:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py --model clip
+python examples/01_patch_text_retrieval_demo.py --model clip --device auto
 ```
 
 If no image folder is provided, the script automatically creates a small demo folder with simple RGB images. These demo images are only used to verify that the pipeline works end-to-end.
@@ -167,7 +186,7 @@ If no image folder is provided, the script automatically creates a small demo fo
 Run the zero-shot classification demo:
 
 ```bash
-python examples/02_zero_shot_classification_demo.py --model clip
+python examples/02_zero_shot_classification_demo.py --model clip --device auto
 ```
 
 This demo classifies each patch by comparing its image embedding with class text prompt embeddings.
@@ -177,7 +196,7 @@ This demo classifies each patch by comparing its image embedding with class text
 Run the prompt sensitivity demo:
 
 ```bash
-python examples/03_prompt_sensitivity_demo.py --model clip
+python examples/03_prompt_sensitivity_demo.py --model clip --device auto
 ```
 
 This demo evaluates whether different prompt variants for the same concept retrieve similar top-k image results.
@@ -187,49 +206,49 @@ This demo evaluates whether different prompt variants for the same concept retri
 Patch-text retrieval with custom prompts:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py --model clip --prompts "a red image" "a blue image" "a black image" --top_k 2
+python examples/01_patch_text_retrieval_demo.py --model clip --device auto --prompts "a red image" "a blue image" "a black image" --top_k 2
 ```
 
 Patch-text retrieval on your own patch image folder:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py --model clip --image_dir path/to/your/patches --prompts "tumor region" "normal tissue" --top_k 5
+python examples/01_patch_text_retrieval_demo.py --model clip --device auto --image_dir path/to/your/patches --prompts "tumor region" "normal tissue" --top_k 5
 ```
 
 Save top-k visualization grids:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py --model clip --save_visualization
+python examples/01_patch_text_retrieval_demo.py --model clip --device auto --save_visualization
 ```
 
 Generate an HTML retrieval report:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py --model clip --save_html_report
+python examples/01_patch_text_retrieval_demo.py --model clip --device auto --save_html_report
 ```
 
 Use image embedding cache:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py --model clip --use_cache
+python examples/01_patch_text_retrieval_demo.py --model clip --device auto --use_cache
 ```
 
 Combine cache, visualization, and HTML report:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py --model clip --use_cache --save_visualization --save_html_report --top_k 3
+python examples/01_patch_text_retrieval_demo.py --model clip --device auto --use_cache --save_visualization --save_html_report --top_k 3
 ```
 
 Zero-shot classification with custom pathology-style class prompts:
 
 ```bash
-python examples/02_zero_shot_classification_demo.py --model clip --class_names tumor normal necrosis --class_prompts "a histopathology image of tumor tissue" "a histopathology image of normal tissue" "a histopathology image showing necrosis" --top_k 2
+python examples/02_zero_shot_classification_demo.py --model clip --device auto --class_names tumor normal necrosis --class_prompts "a histopathology image of tumor tissue" "a histopathology image of normal tissue" "a histopathology image showing necrosis" --top_k 2
 ```
 
 Prompt sensitivity with a different top-k value:
 
 ```bash
-python examples/03_prompt_sensitivity_demo.py --model clip --top_k 2
+python examples/03_prompt_sensitivity_demo.py --model clip --device auto --top_k 2
 ```
 
 ## Example Output
@@ -304,6 +323,9 @@ Current design choices:
 - Cache image embeddings to reduce repeated computation
 - Keep demos simple, reproducible, and easy to inspect
 - Provide terminal outputs, image grids, and HTML reports
+- Run smoke tests on CPU-only environments
+- Accelerate model inference with CUDA on consumer-grade laptop GPUs when available
+- Use default `--device auto` mode to choose CUDA when available and otherwise fall back to CPU
 
 ## Current Limitations
 

@@ -8,8 +8,11 @@ PathVLM-LiteBench is a lightweight research engineering toolkit for computationa
 
 This project follows several design principles:
 
-1. **Low-compute first**
-   Avoid large-scale training, heavy GPU requirements, or mandatory WSI-level processing in the core workflow.
+1. **Low-compute first, not CPU-only**
+   Core workflows should remain runnable on CPU for smoke tests.
+   Model inference should support optional CUDA acceleration.
+   Avoid requiring high-end GPUs, multi-GPU setups, or large-scale model training.
+   Consumer-grade laptop GPUs should be sufficient for small patch-level experiments.
 
 2. **Frozen model evaluation**
    The default workflow should use frozen CLIP/PLIP-style models rather than training large vision-language models from scratch.
@@ -75,19 +78,19 @@ The unit tests should not download CLIP models or require GPU access.
 Patch-text retrieval:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py
+python examples/01_patch_text_retrieval_demo.py --model clip --device auto
 ```
 
 Zero-shot classification:
 
 ```bash
-python examples/02_zero_shot_classification_demo.py
+python examples/02_zero_shot_classification_demo.py --model clip --device auto
 ```
 
 Prompt sensitivity analysis:
 
 ```bash
-python examples/03_prompt_sensitivity_demo.py
+python examples/03_prompt_sensitivity_demo.py --model clip --device auto
 ```
 
 Retrieval metrics:
@@ -104,7 +107,7 @@ Please keep code:
 - readable
 - typed where practical
 - modular
-- friendly to CPU-only environments
+- compatible with CPU-only environments and optional CUDA acceleration
 
 Avoid adding heavy dependencies unless they are clearly optional.
 

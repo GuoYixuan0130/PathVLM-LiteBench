@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import torch
+
 from .clip_wrapper import CLIPWrapper
 
 
@@ -91,6 +93,37 @@ def resolve_model_name(model_key_or_name: str) -> str:
     )
 
 
+def resolve_device(device: str | None = None) -> str | None:
+    """
+    Resolve a device option for model creation.
+
+    Args:
+        device:
+            One of None, "auto", "cpu", or "cuda".
+
+    Returns:
+        A device string supported by CLIPWrapper, or None for auto selection.
+
+    Raises:
+        ValueError:
+            If an unsupported device value is provided or CUDA is unavailable.
+    """
+    if device is None or device == "auto":
+        return None
+
+    if device == "cpu":
+        return "cpu"
+
+    if device == "cuda":
+        if torch.cuda.is_available():
+            return "cuda"
+        raise ValueError("CUDA was requested but is not available")
+
+    raise ValueError(
+        f"Invalid device '{device}'; allowed values are: auto, cpu, cuda."
+    )
+
+
 def create_model(
     model_key_or_name: str = "clip",
     device: str | None = None,
@@ -108,8 +141,9 @@ def create_model(
         A CLIPWrapper instance.
     """
     model_name = resolve_model_name(model_key_or_name)
+    resolved_device = resolve_device(device)
 
     return CLIPWrapper(
         model_name=model_name,
-        device=device,
+        device=resolved_device,
     )

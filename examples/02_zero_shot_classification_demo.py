@@ -65,6 +65,7 @@ def run_zero_shot_classification_demo(
     class_prompts: list[str] | None = None,
     top_k: int = 3,
     model: str = "clip",
+    device: str = "auto",
 ) -> None:
     """
     Run a minimal patch-level zero-shot classification demo.
@@ -101,7 +102,10 @@ def run_zero_shot_classification_demo(
         print(f"  - {name}: {prompt}")
 
     print(f"[INFO] Loading model: {model}")
-    vlm = create_model(model)
+    print(f"[INFO] Requested device: {device}")
+    vlm = create_model(model, device=device)
+    if hasattr(vlm, "device"):
+        print(f"[INFO] Using device: {vlm.device}")
 
     print("[INFO] Encoding images...")
     image_embeddings = vlm.encode_images(images)
@@ -178,6 +182,14 @@ def parse_args() -> argparse.Namespace:
         help="Registered model key or Hugging Face model name. Example: 'clip' or 'openai/clip-vit-base-patch32'.",
     )
 
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="auto",
+        choices=["auto", "cpu", "cuda"],
+        help="Device for model inference. Use 'auto' to select CUDA if available, otherwise CPU.",
+    )
+
     return parser.parse_args()
 
 
@@ -190,4 +202,5 @@ if __name__ == "__main__":
         class_prompts=args.class_prompts,
         top_k=args.top_k,
         model=args.model,
+        device=args.device,
     )
