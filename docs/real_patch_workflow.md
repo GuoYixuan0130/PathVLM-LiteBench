@@ -28,6 +28,28 @@ Supported extensions:
 
 Do not commit real pathology data to GitHub.
 
+### Optional: Prepare a CSV Manifest
+
+If you only run retrieval on a folder, an image directory is sufficient.
+
+If you need dataset metadata (`label`, `split`, `case_id`, `slide_id`), prepare a CSV manifest:
+
+```text
+image_path,label,split,case_id
+patches/patch_001.png,tumor,train,case_001
+patches/patch_002.png,normal,train,case_001
+patches/patch_003.png,necrosis,test,case_002
+```
+
+You can load it with:
+
+```python
+from pathvlm_litebench.data import load_patch_manifest, records_to_image_paths
+
+records = load_patch_manifest("manifest.csv", image_root="path/to/data")
+image_paths = records_to_image_paths(records)
+```
+
 ## 2. Choose Text Prompts
 
 You can start with pathology-style prompts such as:

@@ -134,6 +134,31 @@ python examples/01_patch_text_retrieval_demo.py --config configs/retrieval_demo_
 
 JSON config can store model, device, image_dir, prompts, top_k, cache, visualization, and report settings. Command-line arguments can override config values. Currently config execution is integrated for the retrieval demo.
 
+## Patch Manifest Support
+
+PathVLM-LiteBench can also read CSV manifests for real patch datasets.
+
+Example manifest:
+
+```text
+image_path,label,split,case_id
+patches/patch_001.png,tumor,train,case_001
+patches/patch_002.png,normal,train,case_001
+patches/patch_003.png,necrosis,test,case_002
+```
+
+Example usage:
+
+```python
+from pathvlm_litebench.data import load_patch_manifest, records_to_image_paths, get_unique_labels
+
+records = load_patch_manifest("manifest.csv", image_root="path/to/data")
+image_paths = records_to_image_paths(records)
+labels = get_unique_labels(records)
+```
+
+The manifest loader does not load images or run models. It only prepares structured metadata for downstream retrieval, classification, and evaluation workflows.
+
 ## Repository Structure
 
 ```text

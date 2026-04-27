@@ -30,6 +30,31 @@ Supported image extensions include:
 
 All images are loaded as RGB PIL images.
 
+## Manifest Format (Optional)
+
+You can run demos directly from an image folder, or prepare a CSV manifest for structured datasets.
+
+A recommended manifest includes columns such as:
+
+- `image_path`
+- `label`
+- `split`
+- `case_id`
+- `slide_id`
+
+Example:
+
+```text
+image_path,label,split,case_id
+patches/patch_001.png,tumor,train,case_001
+patches/patch_002.png,normal,train,case_001
+patches/patch_003.png,necrosis,test,case_002
+```
+
+Manifest files are useful for downstream zero-shot evaluation, retrieval metrics, and split-aware benchmarking workflows.
+
+Do not commit real pathology data or patient-level metadata to GitHub.
+
 ## Patch-Level Workflow
 
 The current toolkit works at patch level:
