@@ -154,12 +154,48 @@ Example usage:
 ```python
 from pathvlm_litebench.data import load_patch_manifest, records_to_image_paths, get_unique_labels
 
-records = load_patch_manifest("manifest.csv", image_root="path/to/datasetset")
+records = load_patch_manifest("manifest.csv", image_root="path/to/dataset")
 image_paths = records_to_image_paths(records)
 labels = get_unique_labels(records)
 ```
 
 The manifest loader does not load images or run models. It only prepares structured metadata for downstream retrieval, classification, and evaluation workflows.
+
+## Manifest Conversion
+
+PathVLM-LiteBench uses a standard patch manifest format:
+
+```csv
+image_path,label,split,case_id,slide_id
+patch_001.png,tumor,test,case_001,slide_001
+patch_002.png,normal,test,case_001,slide_001
+```
+
+For command-line demos, users are encouraged to convert dataset-specific annotation files into this standard format.
+
+Example: convert MHIST annotations:
+
+```bash
+pathvlm-litebench convert-manifest \
+  --preset mhist \
+  --input dataset/MHIST/annotations.csv \
+  --output dataset/MHIST/manifest.csv \
+  --image_root dataset/MHIST/images \
+  --require_exists
+```
+
+Generic conversion:
+
+```bash
+pathvlm-litebench convert-manifest \
+  --input annotations.csv \
+  --output manifest.csv \
+  --path_column "Image Name" \
+  --label_column "Majority Vote Label" \
+  --split_column "Partition"
+```
+
+The local `dataset/` folder is intended for private local datasets and is ignored by Git.
 
 ## Repository Structure
 
@@ -235,6 +271,7 @@ You can inspect the toolkit with:
 pathvlm-litebench version
 pathvlm-litebench models
 pathvlm-litebench demos
+pathvlm-litebench convert-manifest --help
 ```
 
 The CLI does not download models by default. It only lists registry information and available demo commands.

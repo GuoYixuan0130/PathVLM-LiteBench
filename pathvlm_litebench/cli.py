@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 
 from . import version
+from .data import convert_manifest, convert_mhist_manifest
 from .models import list_available_models
 
 
@@ -16,6 +17,71 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("version", help="Show toolkit version.")
     subparsers.add_parser("models", help="List registered models.")
     subparsers.add_parser("demos", help="Show available demo commands.")
+    convert_manifest_parser = subparsers.add_parser(
+        "convert-manifest",
+        help="Convert dataset-specific annotations CSV to standard patch manifest CSV.",
+    )
+    convert_manifest_parser.add_argument(
+        "--input",
+        required=True,
+        help="Input annotations CSV path.",
+    )
+    convert_manifest_parser.add_argument(
+        "--output",
+        required=True,
+        help="Output manifest CSV path.",
+    )
+    convert_manifest_parser.add_argument(
+        "--preset",
+        choices=["mhist"],
+        default=None,
+        help="Optional dataset preset conversion rules.",
+    )
+    convert_manifest_parser.add_argument(
+        "--path_column",
+        default=None,
+        help="Input CSV column name containing image paths (required without --preset).",
+    )
+    convert_manifest_parser.add_argument(
+        "--label_column",
+        default=None,
+        help="Input CSV column name containing labels.",
+    )
+    convert_manifest_parser.add_argument(
+        "--split_column",
+        default=None,
+        help="Input CSV column name containing split names.",
+    )
+    convert_manifest_parser.add_argument(
+        "--case_id_column",
+        default=None,
+        help="Input CSV column name containing case IDs.",
+    )
+    convert_manifest_parser.add_argument(
+        "--slide_id_column",
+        default=None,
+        help="Input CSV column name containing slide IDs.",
+    )
+    convert_manifest_parser.add_argument(
+        "--image_root",
+        default=None,
+        help="Optional root folder used when validating relative image paths.",
+    )
+    convert_manifest_parser.add_argument(
+        "--require_exists",
+        action="store_true",
+        help="Require image paths to exist during conversion.",
+    )
+    convert_manifest_parser.add_argument(
+        "--no_copy_extra_columns",
+        action="store_true",
+        help="Do not copy unmapped extra columns to output manifest.",
+    )
+    convert_manifest_parser.add_argument(
+        "--no_case_id_from_filename",
+        action="store_true",
+        help="Disable fallback case_id derivation from image filename stem.",
+    )
 
     return parser
 
@@ -44,6 +110,38 @@ def _handle_demos() -> int:
     return 0
 
 
+def _handle_convert_manifest(args: argparse.Namespace) -> int:
+    if args.preset == "mhist":
+        saved_path = convert_mhist_manifest(
+            annotations_csv=args.input,
+            output_csv=args.output,
+            image_root=args.image_root,
+            require_exists=args.require_exists,
+        )
+        print(f"Saved converted manifest to: {saved_path}")
+        return 0
+
+    if args.path_column is None:
+        print("Error: --path_column is required when --preset is not provided.")
+        return 1
+
+    saved_path = convert_manifest(
+        input_csv=args.input,
+        output_csv=args.output,
+        path_column=args.path_column,
+        label_column=args.label_column,
+        split_column=args.split_column,
+        case_id_column=args.case_id_column,
+        slide_id_column=args.slide_id_column,
+        image_root=args.image_root,
+        require_exists=args.require_exists,
+        case_id_from_filename=not args.no_case_id_from_filename,
+        copy_extra_columns=not args.no_copy_extra_columns,
+    )
+    print(f"Saved converted manifest to: {saved_path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -60,6 +158,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "demos":
         return _handle_demos()
+
+    if args.command == "convert-manifest":
+        return _handle_convert_manifest(args)
 
     parser.print_help()
     return 0

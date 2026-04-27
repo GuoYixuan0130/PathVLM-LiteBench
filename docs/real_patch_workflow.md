@@ -46,9 +46,24 @@ You can load it with:
 ```python
 from pathvlm_litebench.data import load_patch_manifest, records_to_image_paths
 
-records = load_patch_manifest("manifest.csv", image_root="path/to/datasetset")
+records = load_patch_manifest("manifest.csv", image_root="path/to/dataset")
 image_paths = records_to_image_paths(records)
 ```
+
+If your dataset provides dataset-specific `annotations.csv`, convert it first:
+
+```bash
+pathvlm-litebench convert-manifest \
+  --preset mhist \
+  --input dataset/MHIST/annotations.csv \
+  --output dataset/MHIST/manifest.csv \
+  --image_root dataset/MHIST/images \
+  --require_exists
+```
+
+Then run retrieval and zero-shot demos with `dataset/MHIST/manifest.csv`.
+
+`dataset/` is a local dataset directory and is ignored by Git. Do not commit real pathology images.
 
 ## 2. Choose Text Prompts
 
@@ -263,7 +278,7 @@ The following folders are ignored by Git:
 ```text
 outputs/
 examples/demo_patches/
-data/
+dataset/
 ```
 
 ## Summary

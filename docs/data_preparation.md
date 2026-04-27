@@ -30,6 +30,37 @@ Supported image extensions include:
 
 All images are loaded as RGB PIL images.
 
+## Converting Dataset-Specific Annotations
+
+Different datasets use different annotation column names.
+PathVLM-LiteBench demos expect the standard manifest columns by default.
+You can convert dataset-specific annotations with the CLI.
+
+MHIST preset conversion:
+
+```bash
+pathvlm-litebench convert-manifest \
+  --preset mhist \
+  --input dataset/MHIST/annotations.csv \
+  --output dataset/MHIST/manifest.csv \
+  --image_root dataset/MHIST/images \
+  --require_exists
+```
+
+Generic conversion:
+
+```bash
+pathvlm-litebench convert-manifest \
+  --input annotations.csv \
+  --output manifest.csv \
+  --path_column "Image Name" \
+  --label_column "Majority Vote Label" \
+  --split_column "Partition"
+```
+
+`dataset/` is a recommended local folder for downloaded datasets and should not be committed.
+`pathvlm_litebench/data/` is the code module, not a dataset storage directory.
+
 ## Manifest Format (Optional)
 
 You can run demos directly from an image folder, or prepare a CSV manifest for structured datasets.

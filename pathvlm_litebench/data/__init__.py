@@ -14,6 +14,7 @@ from .manifest_loader import (
     filter_records_by_split,
     filter_records_by_label,
 )
+from .manifest_converter import convert_manifest, convert_mhist_manifest
 
 __all__ = [
     "load_patch_images",
@@ -29,4 +30,6 @@ __all__ = [
     "get_unique_labels",
     "filter_records_by_split",
     "filter_records_by_label",
+    "convert_manifest",
+    "convert_mhist_manifest",
 ]

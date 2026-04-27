@@ -1,4 +1,3 @@
-```gitignore
 # Python cache
 __pycache__/
 *.py[cod]
@@ -9,14 +8,18 @@ __pycache__/
 venv/
 env/
 
-# Jupyter Notebook checkpoints
+# Jupyter notebook checkpoints
 .ipynb_checkpoints/
 
-# Data and outputs
-dataset/
-outputs/
-results/
-examples/demo_patches/
+# Local datasets
+/dataset/
+
+# Generated outputs
+/outputs/
+/results/
+
+# Auto-generated demo images
+/examples/demo_patches/
 
 # Model weights and embeddings
 *.pt
