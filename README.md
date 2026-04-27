@@ -85,6 +85,23 @@ This design keeps the toolkit compatible with CPU-only environments while allowi
 
 The retrieval-metrics demo (`examples/04_retrieval_metrics_demo.py`) does not use a model and therefore does not need a `--device` argument.
 
+## Prompt Templates
+
+PathVLM-LiteBench includes a small built-in prompt template library for common pathology concepts such as `tumor`, `normal`, `necrosis`, `inflammation`, `stroma`, `lymphocyte`, and `gland`.
+
+These templates are intended for lightweight experimentation with zero-shot classification and prompt sensitivity analysis.
+
+Example:
+
+```python
+from pathvlm_litebench.prompts import get_prompt_variants, build_class_prompts
+
+tumor_prompts = get_prompt_variants("tumor")
+class_prompts = build_class_prompts(["tumor", "normal", "necrosis"])
+```
+
+The prompt library is not a clinical ontology. It is a lightweight research utility for reproducible prompt experiments.
+
 ## Repository Structure
 
 ```text

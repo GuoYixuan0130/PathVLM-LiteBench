@@ -89,6 +89,7 @@ The current implementation supports:
 - image-text retrieval
 - zero-shot classification
 - prompt sensitivity analysis
+- built-in pathology prompt template library for zero-shot and prompt sensitivity experiments
 - Recall@K retrieval metrics
 - embedding caching
 - top-k image grid visualization
