@@ -2,12 +2,17 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import sys
 
 from PIL import Image
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from pathvlm_litebench.data import load_patch_images
 from pathvlm_litebench.evaluation import analyze_prompt_sensitivity
-from pathvlm_litebench.models import CLIPWrapper
+from pathvlm_litebench.models import create_model
 
 
 def create_demo_images(output_dir: str | Path) -> Path:
@@ -68,7 +73,7 @@ def get_default_prompt_groups() -> tuple[list[str], list[list[str]]]:
 def run_prompt_sensitivity_demo(
     image_dir: str | Path | None = None,
     top_k: int = 3,
-    model_name: str = "openai/clip-vit-base-patch32",
+    model: str = "clip",
 ) -> None:
     """
     Run a minimal patch-level prompt sensitivity analysis demo.
@@ -91,17 +96,17 @@ def run_prompt_sensitivity_demo(
         for prompt in prompt_texts:
             print(f"      * {prompt}")
 
-    print("[INFO] Loading CLIP model...")
-    model = CLIPWrapper(model_name=model_name)
+    print(f"[INFO] Loading model: {model}")
+    vlm = create_model(model)
 
     print("[INFO] Encoding images...")
-    image_embeddings = model.encode_images(images)
+    image_embeddings = vlm.encode_images(images)
 
     print("[INFO] Encoding prompt variants...")
     prompt_embeddings_by_concept = []
 
     for prompt_texts in prompt_texts_by_concept:
-        prompt_embeddings = model.encode_text(prompt_texts)
+        prompt_embeddings = vlm.encode_text(prompt_texts)
         prompt_embeddings_by_concept.append(prompt_embeddings)
 
     print("[INFO] Analyzing prompt sensitivity...")
@@ -160,10 +165,10 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--model_name",
+        "--model",
         type=str,
-        default="openai/clip-vit-base-patch32",
-        help="Hugging Face model name for CLIP-style model.",
+        default="clip",
+        help="Registered model key or Hugging Face model name. Example: 'clip' or 'openai/clip-vit-base-patch32'.",
     )
 
     return parser.parse_args()
@@ -175,5 +180,5 @@ if __name__ == "__main__":
     run_prompt_sensitivity_demo(
         image_dir=args.image_dir,
         top_k=args.top_k,
-        model_name=args.model_name,
+        model=args.model,
     )
