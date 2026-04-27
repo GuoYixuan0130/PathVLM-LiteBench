@@ -92,6 +92,12 @@ The results will be printed in the terminal. If visualization and HTML report op
 outputs/retrieval_demo/
 ```
 
+For reproducible retrieval experiments, you can copy `configs/retrieval_demo_config.json`, edit `image_dir` and `prompts`, and run:
+
+```bash
+python examples/01_patch_text_retrieval_demo.py --config configs/retrieval_demo_config.json
+```
+
 ## Running Zero-Shot Classification on Your Own Patches
 
 Example:

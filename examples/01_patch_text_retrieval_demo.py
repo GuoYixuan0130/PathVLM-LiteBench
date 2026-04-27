@@ -17,6 +17,7 @@ from pathvlm_litebench.data import (
     save_metadata,
     load_metadata,
 )
+from pathvlm_litebench.config import load_benchmark_config
 from pathvlm_litebench.models import create_model
 from pathvlm_litebench.retrieval import retrieve_topk_images
 from pathvlm_litebench.visualization import (
@@ -173,9 +174,78 @@ def run_patch_text_retrieval_demo(
     print("\n[INFO] Demo finished successfully.")
 
 
+def merge_args_with_config(args: argparse.Namespace) -> dict:
+    """
+    Merge command-line arguments with optional benchmark config values.
+    """
+    default_values = {
+        "image_dir": None,
+        "prompts": None,
+        "top_k": 3,
+        "model": "clip",
+        "device": "auto",
+        "save_visualization": False,
+        "output_dir": "outputs/retrieval_demo",
+        "use_cache": False,
+        "cache_dir": "outputs/cache",
+        "save_html_report": False,
+        "html_report_path": "outputs/retrieval_demo/retrieval_report.html",
+    }
+
+    if args.config is None:
+        return {
+            "image_dir": args.image_dir,
+            "prompts": args.prompts,
+            "top_k": args.top_k if args.top_k is not None else default_values["top_k"],
+            "model": args.model if args.model is not None else default_values["model"],
+            "device": args.device if args.device is not None else default_values["device"],
+            "save_visualization": args.save_visualization,
+            "output_dir": args.output_dir if args.output_dir is not None else default_values["output_dir"],
+            "use_cache": args.use_cache,
+            "cache_dir": args.cache_dir if args.cache_dir is not None else default_values["cache_dir"],
+            "save_html_report": args.save_html_report,
+            "html_report_path": (
+                args.html_report_path
+                if args.html_report_path is not None
+                else default_values["html_report_path"]
+            ),
+        }
+
+    config = load_benchmark_config(args.config)
+    if config.task != "retrieval":
+        raise ValueError(
+            f"Config task must be 'retrieval' for this demo, got '{config.task}'."
+        )
+
+    return {
+        "image_dir": args.image_dir if args.image_dir is not None else config.image_dir,
+        "prompts": args.prompts if args.prompts is not None else config.prompts,
+        "top_k": args.top_k if args.top_k is not None else config.top_k,
+        "model": args.model if args.model is not None else config.model,
+        "device": args.device if args.device is not None else config.device,
+        "save_visualization": args.save_visualization or config.save_visualization,
+        "output_dir": args.output_dir if args.output_dir is not None else config.output_dir,
+        "use_cache": args.use_cache or config.use_cache,
+        "cache_dir": args.cache_dir if args.cache_dir is not None else config.cache_dir,
+        "save_html_report": args.save_html_report or config.save_html_report,
+        "html_report_path": (
+            args.html_report_path
+            if args.html_report_path is not None
+            else config.html_report_path
+        ),
+    }
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run a minimal patch-level image-text retrieval demo."
+    )
+
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help="Path to a JSON benchmark config file. Command-line arguments override config values when explicitly provided.",
     )
 
     parser.add_argument(
@@ -195,21 +265,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--top_k",
         type=int,
-        default=3,
+        default=None,
         help="Number of top images to retrieve for each prompt.",
     )
 
     parser.add_argument(
         "--model",
         type=str,
-        default="clip",
+        default=None,
         help="Registered model key or Hugging Face model name. Example: 'clip' or 'openai/clip-vit-base-patch32'.",
     )
 
     parser.add_argument(
         "--device",
         type=str,
-        default="auto",
+        default=None,
         choices=["auto", "cpu", "cuda"],
         help="Device for model inference. Use 'auto' to select CUDA if available, otherwise CPU.",
     )
@@ -223,7 +293,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="outputs/retrieval_demo",
+        default=None,
         help="Directory for saving visualization outputs.",
     )
 
@@ -236,7 +306,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--cache_dir",
         type=str,
-        default="outputs/cache",
+        default=None,
         help="Directory for saving/loading embedding cache.",
     )
 
@@ -249,7 +319,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--html_report_path",
         type=str,
-        default="outputs/retrieval_demo/retrieval_report.html",
+        default=None,
         help="Output path for the HTML retrieval report.",
     )
 
@@ -259,16 +329,19 @@ def parse_args() -> argparse.Namespace:
 if __name__ == "__main__":
     args = parse_args()
 
-    run_patch_text_retrieval_demo(
-        image_dir=args.image_dir,
-        prompts=args.prompts,
-        top_k=args.top_k,
-        model=args.model,
-        device=args.device,
-        save_visualization=args.save_visualization,
-        output_dir=args.output_dir,
-        use_cache=args.use_cache,
-        cache_dir=args.cache_dir,
-        save_html_report=args.save_html_report,
-        html_report_path=args.html_report_path,
-    )
+    run_kwargs = merge_args_with_config(args)
+
+    if args.config is not None:
+        print(f"[INFO] Loaded benchmark config: {args.config}")
+
+    print("[INFO] Final run configuration:")
+    print(f"  model: {run_kwargs['model']}")
+    print(f"  device: {run_kwargs['device']}")
+    print(f"  image_dir: {run_kwargs['image_dir']}")
+    print(f"  top_k: {run_kwargs['top_k']}")
+    print(f"  num_prompts: {len(run_kwargs['prompts']) if run_kwargs['prompts'] else 0}")
+    print(f"  use_cache: {run_kwargs['use_cache']}")
+    print(f"  save_visualization: {run_kwargs['save_visualization']}")
+    print(f"  save_html_report: {run_kwargs['save_html_report']}")
+
+    run_patch_text_retrieval_demo(**run_kwargs)

@@ -116,6 +116,24 @@ python examples/03_prompt_sensitivity_demo.py --model clip --device auto --use_p
 
 If no real pathology patch folder is passed, the demos still use generated RGB images as smoke tests. For meaningful CPath experiments, provide `--image_dir path/to/your_patch_folder`.
 
+## Benchmark Configuration
+
+PathVLM-LiteBench supports lightweight JSON configuration files for reproducible experiments.
+
+Example retrieval config:
+
+```text
+configs/retrieval_demo_config.json
+```
+
+Run retrieval demo with config:
+
+```bash
+python examples/01_patch_text_retrieval_demo.py --config configs/retrieval_demo_config.json
+```
+
+JSON config can store model, device, image_dir, prompts, top_k, cache, visualization, and report settings. Command-line arguments can override config values. Currently config execution is integrated for the retrieval demo.
+
 ## Repository Structure
 
 ```text
