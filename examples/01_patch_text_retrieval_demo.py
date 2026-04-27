@@ -17,7 +17,7 @@ from pathvlm_litebench.data import (
     save_metadata,
     load_metadata,
 )
-from pathvlm_litebench.models import CLIPWrapper
+from pathvlm_litebench.models import create_model
 from pathvlm_litebench.retrieval import retrieve_topk_images
 from pathvlm_litebench.visualization import (
     save_topk_image_grids,
@@ -55,7 +55,7 @@ def run_patch_text_retrieval_demo(
     image_dir: str | Path | None = None,
     prompts: list[str] | None = None,
     top_k: int = 3,
-    model_name: str = "openai/clip-vit-base-patch32",
+    model: str = "clip",
     save_visualization: bool = False,
     output_dir: str | Path = "outputs/retrieval_demo",
     use_cache: bool = False,
@@ -84,8 +84,8 @@ def run_patch_text_retrieval_demo(
 
     print(f"[INFO] Loaded {len(images)} images from {image_dir}")
 
-    print("[INFO] Loading CLIP model...")
-    model = CLIPWrapper(model_name=model_name)
+    print(f"[INFO] Loading model: {model}")
+    vlm = create_model(model)
 
     if use_cache:
         cache_dir = Path(cache_dir)
@@ -108,23 +108,23 @@ def run_patch_text_retrieval_demo(
                 image_embeddings = load_embeddings(image_embedding_cache_path)
             else:
                 print("[INFO] Cache mismatch: image paths changed. Re-encoding images.")
-                image_embeddings = model.encode_images(images)
+                image_embeddings = vlm.encode_images(images)
                 save_embeddings(image_embeddings, image_embedding_cache_path)
                 save_metadata(image_paths, image_paths_cache_path)
                 print("[INFO] Updated image embedding cache.")
         else:
             print("[INFO] Cache miss: encoding images and saving cache.")
-            image_embeddings = model.encode_images(images)
+            image_embeddings = vlm.encode_images(images)
             save_embeddings(image_embeddings, image_embedding_cache_path)
             save_metadata(image_paths, image_paths_cache_path)
             print("[INFO] Saved image embedding cache.")
     else:
         print("[INFO] Embedding cache disabled.")
         print("[INFO] Encoding images...")
-        image_embeddings = model.encode_images(images)
+        image_embeddings = vlm.encode_images(images)
 
     print("[INFO] Encoding text prompts...")
-    text_embeddings = model.encode_text(prompts)
+    text_embeddings = vlm.encode_text(prompts)
 
     print("[INFO] Retrieving top-k images...")
     results = retrieve_topk_images(
@@ -196,10 +196,10 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--model_name",
+        "--model",
         type=str,
-        default="openai/clip-vit-base-patch32",
-        help="Hugging Face model name for CLIP-style model.",
+        default="clip",
+        help="Registered model key or Hugging Face model name. Example: 'clip' or 'openai/clip-vit-base-patch32'.",
     )
 
     parser.add_argument(
@@ -251,7 +251,7 @@ if __name__ == "__main__":
         image_dir=args.image_dir,
         prompts=args.prompts,
         top_k=args.top_k,
-        model_name=args.model_name,
+        model=args.model,
         save_visualization=args.save_visualization,
         output_dir=args.output_dir,
         use_cache=args.use_cache,
