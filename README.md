@@ -291,6 +291,10 @@ PathVLM-LiteBench is intended as a lightweight research engineering project for 
 
 The project does not aim to reproduce large-scale foundation model pretraining. Instead, it focuses on reproducible low-compute evaluation workflows that can help students and small research groups analyze pathology vision-language models.
 
+## Contributing
+
+Contributions are welcome. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development principles, testing instructions, and contribution guidelines.
+
 ## License
 
 This project is released for academic and research purposes.
