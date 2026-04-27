@@ -117,16 +117,6 @@ The project demonstrates several research engineering capabilities:
 5. **Extensibility**
    The model registry and modular structure allow future support for pathology-specific VLMs such as PLIP and CONCH.
 
-## Suggested PhD Application Description
-
-A concise description for a CV or research statement:
-
-> Developed PathVLM-LiteBench, a low-compute and laptop-friendly toolkit for evaluating pathology vision-language models. The toolkit supports CPU-compatible workflows and optional CUDA acceleration on consumer-grade GPUs, enabling patch-level image-text retrieval, zero-shot classification, prompt sensitivity analysis, retrieval metrics, embedding caching, and HTML-based visualization without large-scale model training.
-
-A shorter version:
-
-> Built PathVLM-LiteBench, a lightweight open-source toolkit for low-compute evaluation of computational pathology vision-language models, including patch-level retrieval, zero-shot classification, prompt sensitivity analysis, and visualization.
-
 ## Limitations
 
 The current version has several limitations:
