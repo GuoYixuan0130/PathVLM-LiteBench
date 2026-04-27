@@ -12,12 +12,21 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from pathvlm_litebench.data import (
     load_patch_images,
+    load_patch_images_from_paths,
+    load_patch_manifest,
+    records_to_image_paths,
+    records_to_labels,
+    filter_records_by_split,
     save_embeddings,
     load_embeddings,
     save_metadata,
     load_metadata,
 )
 from pathvlm_litebench.config import load_benchmark_config
+from pathvlm_litebench.evaluation import (
+    compute_text_to_image_recall_at_k,
+    compute_mean_recall,
+)
 from pathvlm_litebench.models import create_model
 from pathvlm_litebench.retrieval import retrieve_topk_images
 from pathvlm_litebench.visualization import (
@@ -52,9 +61,50 @@ def create_demo_images(output_dir: str | Path) -> Path:
     return output_dir
 
 
+def build_text_to_image_positive_pairs(
+    labels: list[str | None],
+    label_prompts: list[str],
+) -> dict[int, set[int]]:
+    """
+    Build text-to-image positive index mapping from image labels.
+    """
+    if len(labels) == 0:
+        raise ValueError("labels must not be empty.")
+
+    if len(label_prompts) == 0:
+        raise ValueError("label_prompts must not be empty.")
+
+    if any(label is None for label in labels):
+        raise ValueError("labels contain None values. labels must be complete.")
+
+    positive_pairs: dict[int, set[int]] = {}
+
+    for prompt_idx, label_name in enumerate(label_prompts):
+        positives = {
+            image_idx
+            for image_idx, image_label in enumerate(labels)
+            if image_label == label_name
+        }
+
+        if len(positives) == 0:
+            raise ValueError(
+                f"No positive images found for label prompt '{label_name}'."
+            )
+
+        positive_pairs[prompt_idx] = positives
+
+    return positive_pairs
+
+
 def run_patch_text_retrieval_demo(
     image_dir: str | Path | None = None,
     prompts: list[str] | None = None,
+    manifest: str | Path | None = None,
+    image_root: str | Path | None = None,
+    split: str | None = None,
+    label_prompts: list[str] | None = None,
+    recall_k: list[int] | None = None,
+    max_images: int | None = None,
     top_k: int = 3,
     model: str = "clip",
     device: str = "auto",
@@ -68,11 +118,44 @@ def run_patch_text_retrieval_demo(
     """
     Run a minimal patch-level image-text retrieval demo.
     """
-    if image_dir is None:
+    labels: list[str | None] | None = None
+    records = None
+
+    if manifest is not None:
+        if image_dir is not None:
+            print("[INFO] --manifest is provided. --image_dir will be ignored.")
+
+        records = load_patch_manifest(manifest, image_root=image_root)
+        if split is not None:
+            records = filter_records_by_split(records, split)
+            print(f"[INFO] Applied split filter: {split}")
+
+        if len(records) == 0:
+            raise ValueError("No records available after manifest loading/filtering.")
+
+        if max_images is not None:
+            records = records[:max_images]
+
+        image_paths = records_to_image_paths(records)
+        labels = records_to_labels(records)
+        images, image_paths = load_patch_images_from_paths(image_paths)
+
+        print(f"[INFO] Loaded patch records from manifest: {manifest}")
+        print(f"[INFO] Number of records: {len(records)}")
+        if labels and all(label is not None for label in labels):
+            unique_labels = sorted({str(label) for label in labels})
+            print(f"[INFO] Unique labels in manifest records: {unique_labels}")
+    elif image_dir is not None:
+        image_dir = Path(image_dir)
+        print("[INFO] Loading patch images...")
+        images, image_paths = load_patch_images(image_dir, max_images=max_images)
+        print(f"[INFO] Loaded {len(images)} images from {image_dir}")
+    else:
         image_dir = create_demo_images(Path("examples") / "demo_patches")
         print(f"[INFO] No image_dir provided. Created demo images at: {image_dir}")
-    else:
-        image_dir = Path(image_dir)
+        print("[INFO] Loading patch images...")
+        images, image_paths = load_patch_images(image_dir, max_images=max_images)
+        print(f"[INFO] Loaded {len(images)} images from {image_dir}")
 
     if prompts is None or len(prompts) == 0:
         prompts = [
@@ -80,11 +163,6 @@ def run_patch_text_retrieval_demo(
             "a blue image",
             "a white image",
         ]
-
-    print("[INFO] Loading patch images...")
-    images, image_paths = load_patch_images(image_dir)
-
-    print(f"[INFO] Loaded {len(images)} images from {image_dir}")
 
     print(f"[INFO] Loading model: {model}")
     print(f"[INFO] Requested device: {device}")
@@ -151,6 +229,43 @@ def run_patch_text_retrieval_demo(
                 f"path={item.get('path', 'N/A')}"
             )
 
+    if manifest is not None:
+        if labels is None or len(labels) == 0:
+            print("\n[INFO] Manifest labels are unavailable. Skipping Recall@K.")
+        elif any(label is None for label in labels):
+            print("\n[INFO] Manifest labels are incomplete. Skipping Recall@K.")
+        elif label_prompts is None:
+            print(
+                "\n[INFO] Manifest labels detected, but --label_prompts was not provided. "
+                "Skipping Recall@K."
+            )
+        else:
+            if len(label_prompts) != len(prompts):
+                raise ValueError(
+                    "label_prompts and prompts must have the same length when "
+                    "computing Recall@K."
+                )
+
+            recall_k_values = recall_k if recall_k is not None else [1, 5, 10]
+            positive_pairs = build_text_to_image_positive_pairs(
+                labels=labels,
+                label_prompts=label_prompts,
+            )
+            recall_metrics = compute_text_to_image_recall_at_k(
+                image_embeddings=image_embeddings,
+                text_embeddings=text_embeddings,
+                positive_pairs=positive_pairs,
+                k_values=recall_k_values,
+                normalize=True,
+            )
+            mean_recall = compute_mean_recall(recall_metrics)
+
+            print("\n========== Retrieval Metrics ==========")
+            print("Text-to-image Recall@K:")
+            for metric_name, metric_value in recall_metrics.items():
+                print(f"  {metric_name}: {metric_value:.4f}")
+            print(f"Mean Recall: {mean_recall:.4f}")
+
     if save_visualization:
         print("\n[INFO] Saving top-k visualization grids...")
         saved_paths = save_topk_image_grids(
@@ -190,12 +305,19 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
         "cache_dir": "outputs/cache",
         "save_html_report": False,
         "html_report_path": "outputs/retrieval_demo/retrieval_report.html",
+        "recall_k": [1, 5, 10],
     }
 
     if args.config is None:
         return {
             "image_dir": args.image_dir,
             "prompts": args.prompts,
+            "manifest": args.manifest,
+            "image_root": args.image_root,
+            "split": args.split,
+            "label_prompts": args.label_prompts,
+            "recall_k": args.recall_k if args.recall_k is not None else default_values["recall_k"],
+            "max_images": args.max_images,
             "top_k": args.top_k if args.top_k is not None else default_values["top_k"],
             "model": args.model if args.model is not None else default_values["model"],
             "device": args.device if args.device is not None else default_values["device"],
@@ -220,6 +342,12 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
     return {
         "image_dir": args.image_dir if args.image_dir is not None else config.image_dir,
         "prompts": args.prompts if args.prompts is not None else config.prompts,
+        "manifest": args.manifest,
+        "image_root": args.image_root,
+        "split": args.split,
+        "label_prompts": args.label_prompts,
+        "recall_k": args.recall_k if args.recall_k is not None else default_values["recall_k"],
+        "max_images": args.max_images,
         "top_k": args.top_k if args.top_k is not None else config.top_k,
         "model": args.model if args.model is not None else config.model,
         "device": args.device if args.device is not None else config.device,
@@ -256,10 +384,53 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--manifest",
+        type=str,
+        default=None,
+        help="Path to a CSV patch manifest. If provided, images and optional labels are loaded from the manifest.",
+    )
+
+    parser.add_argument(
+        "--image_root",
+        type=str,
+        default=None,
+        help="Optional root directory used to resolve relative image paths in the manifest.",
+    )
+
+    parser.add_argument(
+        "--split",
+        type=str,
+        default=None,
+        help="Optional split name to filter manifest records, such as train, val, or test.",
+    )
+
+    parser.add_argument(
         "--prompts",
         nargs="+",
         default=None,
         help="Text prompts for image-text retrieval.",
+    )
+
+    parser.add_argument(
+        "--label_prompts",
+        nargs="+",
+        default=None,
+        help="Labels corresponding to each text prompt. Used to compute text-to-image Recall@K when manifest labels are available.",
+    )
+
+    parser.add_argument(
+        "--recall_k",
+        nargs="+",
+        type=int,
+        default=[1, 5, 10],
+        help="K values for Recall@K when evaluating retrieval with manifest labels.",
+    )
+
+    parser.add_argument(
+        "--max_images",
+        type=int,
+        default=None,
+        help="Optional maximum number of images to load.",
     )
 
     parser.add_argument(
@@ -337,9 +508,18 @@ if __name__ == "__main__":
     print("[INFO] Final run configuration:")
     print(f"  model: {run_kwargs['model']}")
     print(f"  device: {run_kwargs['device']}")
+    print(f"  manifest: {run_kwargs['manifest']}")
+    print(f"  image_root: {run_kwargs['image_root']}")
+    print(f"  split: {run_kwargs['split']}")
     print(f"  image_dir: {run_kwargs['image_dir']}")
+    print(f"  max_images: {run_kwargs['max_images']}")
     print(f"  top_k: {run_kwargs['top_k']}")
     print(f"  num_prompts: {len(run_kwargs['prompts']) if run_kwargs['prompts'] else 0}")
+    print(
+        f"  num_label_prompts: "
+        f"{len(run_kwargs['label_prompts']) if run_kwargs['label_prompts'] else 0}"
+    )
+    print(f"  recall_k: {run_kwargs['recall_k']}")
     print(f"  use_cache: {run_kwargs['use_cache']}")
     print(f"  save_visualization: {run_kwargs['save_visualization']}")
     print(f"  save_html_report: {run_kwargs['save_html_report']}")

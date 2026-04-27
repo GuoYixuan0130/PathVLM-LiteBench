@@ -91,6 +91,27 @@ python examples/01_patch_text_retrieval_demo.py \
 
 `--use_cache` saves image embeddings so that repeated runs do not need to re-encode all patches.
 
+Manifest-based retrieval evaluation with Recall@K:
+
+```bash
+python examples/01_patch_text_retrieval_demo.py \
+  --manifest path/to/manifest.csv \
+  --image_root path/to/dataset_root \
+  --model clip \
+  --device auto \
+  --split test \
+  --prompts \
+    "a histopathology image of tumor tissue" \
+    "a histopathology image of normal tissue" \
+    "a histopathology image showing necrosis" \
+  --label_prompts tumor normal necrosis \
+  --recall_k 1 5 10 \
+  --top_k 5 \
+  --save_html_report
+```
+
+`label_prompts` maps each text prompt to a manifest label. When labels are available, the retrieval demo computes text-to-image Recall@K automatically.
+
 ## 4. Inspect Outputs
 
 By default, generated outputs are saved under:

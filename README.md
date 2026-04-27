@@ -134,6 +134,8 @@ python examples/01_patch_text_retrieval_demo.py --config configs/retrieval_demo_
 
 JSON config can store model, device, image_dir, prompts, top_k, cache, visualization, and report settings. Command-line arguments can override config values. Currently config execution is integrated for the retrieval demo.
 
+Manifest-specific retrieval evaluation options such as `--manifest`, `--image_root`, `--split`, `--label_prompts`, and `--recall_k` are currently passed via CLI.
+
 ## Patch Manifest Support
 
 PathVLM-LiteBench can also read CSV manifests for real patch datasets.
@@ -303,6 +305,27 @@ Patch-text retrieval on your own patch image folder:
 ```bash
 python examples/01_patch_text_retrieval_demo.py --model clip --device auto --image_dir path/to/your/patches --prompts "tumor region" "normal tissue" --top_k 5
 ```
+
+Manifest-based patch-text retrieval with Recall@K:
+
+```bash
+python examples/01_patch_text_retrieval_demo.py \
+  --manifest path/to/manifest.csv \
+  --image_root path/to/dataset_root \
+  --model clip \
+  --device auto \
+  --split test \
+  --prompts \
+    "a histopathology image of tumor tissue" \
+    "a histopathology image of normal tissue" \
+    "a histopathology image showing necrosis" \
+  --label_prompts tumor normal necrosis \
+  --recall_k 1 5 10 \
+  --top_k 5 \
+  --save_html_report
+```
+
+`--label_prompts` maps each text prompt to a manifest label. If labels are available, the demo prints text-to-image Recall@K for lightweight patch-level retrieval benchmarking.
 
 Save top-k visualization grids:
 

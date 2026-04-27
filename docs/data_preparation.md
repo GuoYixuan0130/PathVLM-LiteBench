@@ -72,6 +72,26 @@ In this workflow:
 - `split` can be used to evaluate a target subset such as `test`.
 - `case_id` and `slide_id` are useful metadata fields for future grouped analysis.
 
+The same manifest labels can be used in the retrieval demo to compute text-to-image Recall@K:
+
+```bash
+python examples/01_patch_text_retrieval_demo.py \
+  --manifest path/to/manifest.csv \
+  --image_root path/to/dataset_root \
+  --model clip \
+  --device auto \
+  --split test \
+  --prompts \
+    "a histopathology image of tumor tissue" \
+    "a histopathology image of normal tissue" \
+    "a histopathology image showing necrosis" \
+  --label_prompts tumor normal necrosis \
+  --recall_k 1 5 10 \
+  --top_k 5
+```
+
+`label_prompts` should align one-to-one with `prompts`, mapping each text prompt to its target manifest label.
+
 ## Patch-Level Workflow
 
 The current toolkit works at patch level:
