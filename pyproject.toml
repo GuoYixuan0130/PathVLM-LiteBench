@@ -44,6 +44,9 @@ dependencies = [
     "tqdm",
 ]
 
+[project.scripts]
+pathvlm-litebench = "pathvlm_litebench.cli:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest",

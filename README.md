@@ -126,6 +126,24 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+## Command-Line Interface
+
+After editable installation:
+
+```bash
+pip install -e .
+```
+
+You can inspect the toolkit with:
+
+```bash
+pathvlm-litebench version
+pathvlm-litebench models
+pathvlm-litebench demos
+```
+
+The CLI does not download models by default. It only lists registry information and available demo commands.
+
 ## Data Preparation
 
 To run PathVLM-LiteBench on real pathology patches, prepare a folder of patch-level images and pass it with `--image_dir`.
