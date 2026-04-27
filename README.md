@@ -39,6 +39,33 @@ The current version supports a minimal but complete patch-level workflow:
 
 The current demos use simple RGB images for smoke testing. These demo images are not pathology images.
 
+## Model Registry
+
+PathVLM-LiteBench uses a lightweight model registry so that demos can accept either a short model key or a Hugging Face model name.
+
+Currently supported model keys:
+
+| Model key | Resolved model name | Status | Notes |
+|---|---|---|---|
+| `clip` | `openai/clip-vit-base-patch32` | Implemented | Default CLIP baseline |
+| `clip-vit-base-patch32` | `openai/clip-vit-base-patch32` | Implemented | Alias for CLIP ViT-B/32 |
+| `plip` | `vinid/plip` | Placeholder | Registered for future pathology-specific VLM support |
+| `conch` | `MahmoodLab/CONCH` | Placeholder | Registered for future pathology-specific VLM support |
+
+You can run demos with a registered model key:
+
+```bash
+python examples/01_patch_text_retrieval_demo.py --model clip
+```
+
+or with a Hugging Face model name:
+
+```bash
+python examples/01_patch_text_retrieval_demo.py --model openai/clip-vit-base-patch32
+```
+
+Pathology-specific wrappers such as PLIP and CONCH are planned but not implemented yet. Passing `--model plip` or `--model conch` will raise a clear `NotImplementedError` in the current version.
+
 ## Repository Structure
 
 ```text
@@ -106,7 +133,7 @@ pip install -r requirements.txt
 Run the minimal patch-text retrieval demo:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py
+python examples/01_patch_text_retrieval_demo.py --model clip
 ```
 
 If no image folder is provided, the script automatically creates a small demo folder with simple RGB images. These demo images are only used to verify that the pipeline works end-to-end.
@@ -116,7 +143,7 @@ If no image folder is provided, the script automatically creates a small demo fo
 Run the zero-shot classification demo:
 
 ```bash
-python examples/02_zero_shot_classification_demo.py
+python examples/02_zero_shot_classification_demo.py --model clip
 ```
 
 This demo classifies each patch by comparing its image embedding with class text prompt embeddings.
@@ -126,7 +153,7 @@ This demo classifies each patch by comparing its image embedding with class text
 Run the prompt sensitivity demo:
 
 ```bash
-python examples/03_prompt_sensitivity_demo.py
+python examples/03_prompt_sensitivity_demo.py --model clip
 ```
 
 This demo evaluates whether different prompt variants for the same concept retrieve similar top-k image results.
@@ -136,49 +163,49 @@ This demo evaluates whether different prompt variants for the same concept retri
 Patch-text retrieval with custom prompts:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py --prompts "a red image" "a blue image" "a black image" --top_k 2
+python examples/01_patch_text_retrieval_demo.py --model clip --prompts "a red image" "a blue image" "a black image" --top_k 2
 ```
 
 Patch-text retrieval on your own patch image folder:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py --image_dir path/to/your/patches --prompts "tumor region" "normal tissue" --top_k 5
+python examples/01_patch_text_retrieval_demo.py --model clip --image_dir path/to/your/patches --prompts "tumor region" "normal tissue" --top_k 5
 ```
 
 Save top-k visualization grids:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py --save_visualization
+python examples/01_patch_text_retrieval_demo.py --model clip --save_visualization
 ```
 
 Generate an HTML retrieval report:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py --save_html_report
+python examples/01_patch_text_retrieval_demo.py --model clip --save_html_report
 ```
 
 Use image embedding cache:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py --use_cache
+python examples/01_patch_text_retrieval_demo.py --model clip --use_cache
 ```
 
 Combine cache, visualization, and HTML report:
 
 ```bash
-python examples/01_patch_text_retrieval_demo.py --use_cache --save_visualization --save_html_report --top_k 3
+python examples/01_patch_text_retrieval_demo.py --model clip --use_cache --save_visualization --save_html_report --top_k 3
 ```
 
 Zero-shot classification with custom pathology-style class prompts:
 
 ```bash
-python examples/02_zero_shot_classification_demo.py --class_names tumor normal necrosis --class_prompts "a histopathology image of tumor tissue" "a histopathology image of normal tissue" "a histopathology image showing necrosis" --top_k 2
+python examples/02_zero_shot_classification_demo.py --model clip --class_names tumor normal necrosis --class_prompts "a histopathology image of tumor tissue" "a histopathology image of normal tissue" "a histopathology image showing necrosis" --top_k 2
 ```
 
 Prompt sensitivity with a different top-k value:
 
 ```bash
-python examples/03_prompt_sensitivity_demo.py --top_k 2
+python examples/03_prompt_sensitivity_demo.py --model clip --top_k 2
 ```
 
 ## Example Output
@@ -257,6 +284,8 @@ Current design choices:
 ## Current Limitations
 
 - The current implementation uses CLIP by default rather than a pathology-specific VLM.
+- The current implemented model wrapper uses CLIP-style Hugging Face models.
+- PLIP and CONCH are registered as placeholders but are not implemented in the current version.
 - The built-in demo images are not pathology images.
 - WSI-level processing is not supported in the current version.
 - No large-scale benchmark dataset is included.
@@ -279,7 +308,10 @@ These features may be added in later milestones.
 - [x] Add zero-shot classification demo
 - [x] Add prompt sensitivity analysis utility
 - [x] Add prompt sensitivity demo
+- [x] Add lightweight model registry
 - [ ] Add pathology-specific PLIP wrapper
+- [ ] Implement PLIP wrapper
+- [ ] Implement CONCH wrapper
 - [ ] Add retrieval metrics such as Recall@K
 - [ ] Add classification metrics beyond accuracy
 - [ ] Add example with real public pathology patch data
