@@ -13,6 +13,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from pathvlm_litebench.data import load_patch_images
 from pathvlm_litebench.evaluation import zero_shot_predict
 from pathvlm_litebench.models import create_model
+from pathvlm_litebench.prompts import build_class_prompts as build_pathology_class_prompts
 
 
 def create_demo_images(output_dir: str | Path) -> Path:
@@ -39,24 +40,6 @@ def create_demo_images(output_dir: str | Path) -> Path:
             Image.new("RGB", (224, 224), color=color).save(image_path)
 
     return output_dir
-
-
-def build_class_prompts(
-    class_names: list[str],
-    class_prompts: list[str] | None = None,
-) -> list[str]:
-    """
-    Build text prompts for zero-shot classification.
-    """
-    if class_prompts is not None:
-        if len(class_prompts) != len(class_names):
-            raise ValueError(
-                f"class_prompts and class_names must have the same length: "
-                f"{len(class_prompts)} vs {len(class_names)}"
-            )
-        return class_prompts
-
-    return [f"a histopathology image of {class_name}" for class_name in class_names]
 
 
 def run_zero_shot_classification_demo(
@@ -88,10 +71,14 @@ def run_zero_shot_classification_demo(
             "a green image",
         ]
 
-    class_prompts = build_class_prompts(
-        class_names=class_names,
-        class_prompts=class_prompts,
-    )
+    if class_prompts is not None:
+        if len(class_prompts) != len(class_names):
+            raise ValueError(
+                f"class_prompts and class_names must have the same length: "
+                f"{len(class_prompts)} vs {len(class_names)}"
+            )
+    else:
+        class_prompts = build_pathology_class_prompts(class_names)
 
     print("[INFO] Loading patch images...")
     images, image_paths = load_patch_images(image_dir)

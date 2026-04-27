@@ -102,6 +102,20 @@ class_prompts = build_class_prompts(["tumor", "normal", "necrosis"])
 
 The prompt library is not a clinical ontology. It is a lightweight research utility for reproducible prompt experiments.
 
+Zero-shot with built-in class prompt generation:
+
+```bash
+python examples/02_zero_shot_classification_demo.py --model clip --device auto --class_names tumor normal necrosis --top_k 2
+```
+
+Prompt sensitivity with pathology prompt templates:
+
+```bash
+python examples/03_prompt_sensitivity_demo.py --model clip --device auto --use_pathology_prompts --concepts tumor normal necrosis --top_k 2
+```
+
+If no real pathology patch folder is passed, the demos still use generated RGB images as smoke tests. For meaningful CPath experiments, provide `--image_dir path/to/your_patch_folder`.
+
 ## Repository Structure
 
 ```text
@@ -262,10 +276,22 @@ Zero-shot classification with custom pathology-style class prompts:
 python examples/02_zero_shot_classification_demo.py --model clip --device auto --class_names tumor normal necrosis --class_prompts "a histopathology image of tumor tissue" "a histopathology image of normal tissue" "a histopathology image showing necrosis" --top_k 2
 ```
 
+Zero-shot classification with built-in class prompt generation:
+
+```bash
+python examples/02_zero_shot_classification_demo.py --model clip --device auto --class_names tumor normal necrosis --top_k 2
+```
+
 Prompt sensitivity with a different top-k value:
 
 ```bash
 python examples/03_prompt_sensitivity_demo.py --model clip --device auto --top_k 2
+```
+
+Prompt sensitivity with pathology prompt templates:
+
+```bash
+python examples/03_prompt_sensitivity_demo.py --model clip --device auto --use_pathology_prompts --concepts tumor normal necrosis --top_k 2
 ```
 
 ## Example Output

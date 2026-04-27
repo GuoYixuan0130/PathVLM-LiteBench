@@ -13,6 +13,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from pathvlm_litebench.data import load_patch_images
 from pathvlm_litebench.evaluation import analyze_prompt_sensitivity
 from pathvlm_litebench.models import create_model
+from pathvlm_litebench.prompts import build_prompt_groups
 
 
 def create_demo_images(output_dir: str | Path) -> Path:
@@ -75,17 +76,31 @@ def run_prompt_sensitivity_demo(
     top_k: int = 3,
     model: str = "clip",
     device: str = "auto",
+    use_pathology_prompts: bool = False,
+    concepts: list[str] | None = None,
 ) -> None:
     """
     Run a minimal patch-level prompt sensitivity analysis demo.
     """
-    if image_dir is None:
+    using_demo_images = image_dir is None
+
+    if using_demo_images:
         image_dir = create_demo_images(Path("examples") / "demo_patches")
         print(f"[INFO] No image_dir provided. Created demo images at: {image_dir}")
     else:
         image_dir = Path(image_dir)
 
-    concept_names, prompt_texts_by_concept = get_default_prompt_groups()
+    if use_pathology_prompts:
+        concept_names, prompt_texts_by_concept = build_prompt_groups(concepts)
+        print("[INFO] Using built-in pathology prompt templates.")
+        if using_demo_images:
+            print(
+                "[INFO] Built-in demo images are smoke tests and are not pathology images. "
+                "For meaningful pathology prompt analysis, pass --image_dir path/to/your_patch_folder."
+            )
+    else:
+        concept_names, prompt_texts_by_concept = get_default_prompt_groups()
+        print("[INFO] Using default color prompt groups for smoke testing.")
 
     print("[INFO] Loading patch images...")
     images, image_paths = load_patch_images(image_dir)
@@ -183,6 +198,19 @@ def parse_args() -> argparse.Namespace:
         help="Device for model inference. Use 'auto' to select CUDA if available, otherwise CPU.",
     )
 
+    parser.add_argument(
+        "--use_pathology_prompts",
+        action="store_true",
+        help="Use built-in pathology prompt templates instead of color smoke-test prompts.",
+    )
+
+    parser.add_argument(
+        "--concepts",
+        nargs="+",
+        default=None,
+        help="Pathology concepts to use when --use_pathology_prompts is enabled. Example: tumor normal necrosis.",
+    )
+
     return parser.parse_args()
 
 
@@ -194,4 +222,6 @@ if __name__ == "__main__":
         top_k=args.top_k,
         model=args.model,
         device=args.device,
+        use_pathology_prompts=args.use_pathology_prompts,
+        concepts=args.concepts,
     )
