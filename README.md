@@ -217,6 +217,7 @@ The CLI does not download models by default. It only lists registry information 
 To run PathVLM-LiteBench on real pathology patches, prepare a folder of patch-level images and pass it with `--image_dir`.
 
 See [docs/data_preparation.md](docs/data_preparation.md) for details.
+For a step-by-step guide on running the toolkit with real pathology patch folders, see [docs/real_patch_workflow.md](docs/real_patch_workflow.md).
 
 ## Quick Start
 
