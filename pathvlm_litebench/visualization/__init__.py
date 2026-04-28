@@ -8,6 +8,11 @@ from .retrieval_report import (
     save_retrieval_results_csv,
     save_retrieval_metrics_json,
 )
+from .prompt_sensitivity_report import (
+    save_prompt_sensitivity_summary_csv,
+    save_prompt_sensitivity_details_csv,
+    save_prompt_sensitivity_metrics_json,
+)
 
 __all__ = [
     "save_topk_image_grids",
@@ -16,4 +21,7 @@ __all__ = [
     "save_classification_metrics_json",
     "save_retrieval_results_csv",
     "save_retrieval_metrics_json",
+    "save_prompt_sensitivity_summary_csv",
+    "save_prompt_sensitivity_details_csv",
+    "save_prompt_sensitivity_metrics_json",
 ]

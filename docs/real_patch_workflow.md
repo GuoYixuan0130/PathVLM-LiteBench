@@ -232,6 +232,22 @@ For example, the concept `tumor` includes multiple prompts such as:
 
 The prompt sensitivity module compares whether these variants retrieve similar top-k patches.
 
+Use `--save_report` to save structured prompt sensitivity outputs:
+
+```bash
+python examples/03_prompt_sensitivity_demo.py \
+  --model clip \
+  --device auto \
+  --image_dir path/to/your_patch_folder \
+  --use_pathology_prompts \
+  --concepts tumor normal necrosis \
+  --top_k 5 \
+  --save_report \
+  --report_dir outputs/prompt_sensitivity_demo
+```
+
+`prompt_sensitivity_summary.csv` is for concept-level `mean_topk_overlap` and `mean_similarity_std`. `prompt_sensitivity_details.csv` stores top-k retrieval rows for each prompt variant. `prompt_sensitivity_metrics.json` records full results and experiment metadata. Do not commit `outputs/`.
+
 ## 7. Run Zero-Shot Classification
 
 You can also run zero-shot patch classification:

@@ -379,6 +379,28 @@ python examples/03_prompt_sensitivity_demo.py --model clip --device auto
 
 This demo evaluates whether different prompt variants for the same concept retrieve similar top-k image results.
 
+To save prompt sensitivity results:
+
+```bash
+python examples/03_prompt_sensitivity_demo.py \
+  --model clip \
+  --device auto \
+  --image_dir dataset/MHIST/images \
+  --use_pathology_prompts \
+  --concepts tumor normal necrosis \
+  --top_k 5 \
+  --save_report \
+  --report_dir outputs/prompt_sensitivity_demo
+```
+
+This generates:
+
+- `prompt_sensitivity_summary.csv`
+- `prompt_sensitivity_details.csv`
+- `prompt_sensitivity_metrics.json`
+
+The summary CSV stores concept-level stability metrics. The details CSV stores prompt-level top-k retrieved indices and scores. The JSON stores full results and experiment metadata.
+
 ## Example Commands
 
 Patch-text retrieval with custom prompts:

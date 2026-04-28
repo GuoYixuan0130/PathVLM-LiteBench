@@ -14,6 +14,11 @@ from pathvlm_litebench.data import load_patch_images
 from pathvlm_litebench.evaluation import analyze_prompt_sensitivity
 from pathvlm_litebench.models import create_model
 from pathvlm_litebench.prompts import build_prompt_groups
+from pathvlm_litebench.visualization import (
+    save_prompt_sensitivity_summary_csv,
+    save_prompt_sensitivity_details_csv,
+    save_prompt_sensitivity_metrics_json,
+)
 
 
 def create_demo_images(output_dir: str | Path) -> Path:
@@ -78,6 +83,8 @@ def run_prompt_sensitivity_demo(
     device: str = "auto",
     use_pathology_prompts: bool = False,
     concepts: list[str] | None = None,
+    save_report: bool = False,
+    report_dir: str | Path = "outputs/prompt_sensitivity_demo",
 ) -> None:
     """
     Run a minimal patch-level prompt sensitivity analysis demo.
@@ -161,6 +168,41 @@ def run_prompt_sensitivity_demo(
                     f"path={image_path}"
                 )
 
+    if save_report:
+        report_dir = Path(report_dir)
+        summary_path = report_dir / "prompt_sensitivity_summary.csv"
+        details_path = report_dir / "prompt_sensitivity_details.csv"
+        metrics_path = report_dir / "prompt_sensitivity_metrics.json"
+
+        saved_summary_path = save_prompt_sensitivity_summary_csv(
+            results=results,
+            output_csv_path=summary_path,
+        )
+        saved_details_path = save_prompt_sensitivity_details_csv(
+            results=results,
+            output_csv_path=details_path,
+        )
+
+        metadata = {
+            "model": model,
+            "device": device,
+            "image_dir": str(image_dir) if image_dir is not None else None,
+            "top_k": top_k,
+            "use_pathology_prompts": use_pathology_prompts,
+            "concepts": concept_names,
+            "num_images": len(image_paths),
+            "num_concepts": len(concept_names),
+        }
+        saved_metrics_path = save_prompt_sensitivity_metrics_json(
+            results=results,
+            output_json_path=metrics_path,
+            metadata=metadata,
+        )
+
+        print(f"\n[INFO] Saved prompt sensitivity summary: {saved_summary_path}")
+        print(f"[INFO] Saved prompt sensitivity details: {saved_details_path}")
+        print(f"[INFO] Saved prompt sensitivity metrics: {saved_metrics_path}")
+
     print("\n[INFO] Prompt sensitivity demo finished successfully.")
 
 
@@ -211,6 +253,19 @@ def parse_args() -> argparse.Namespace:
         help="Pathology concepts to use when --use_pathology_prompts is enabled. Example: tumor normal necrosis.",
     )
 
+    parser.add_argument(
+        "--save_report",
+        action="store_true",
+        help="Save prompt sensitivity results as CSV/JSON reports.",
+    )
+
+    parser.add_argument(
+        "--report_dir",
+        type=str,
+        default="outputs/prompt_sensitivity_demo",
+        help="Directory for saving prompt sensitivity report files.",
+    )
+
     return parser.parse_args()
 
 
@@ -224,4 +279,6 @@ if __name__ == "__main__":
         device=args.device,
         use_pathology_prompts=args.use_pathology_prompts,
         concepts=args.concepts,
+        save_report=args.save_report,
+        report_dir=args.report_dir,
     )
