@@ -129,6 +129,26 @@ python examples/01_patch_text_retrieval_demo.py \
 
 When both manifest labels and `label_prompts` are available, the HTML retrieval report also shows each retrieved patch's label, target label, and match status (`yes`/`no`). This makes it easier to inspect not only ranking quality but also class-consistent retrieval behavior.
 
+Use `--save_report` to persist structured retrieval outputs:
+
+```bash
+python examples/01_patch_text_retrieval_demo.py \
+  --manifest path/to/manifest.csv \
+  --image_root path/to/dataset_root \
+  --model clip \
+  --device auto \
+  --split test \
+  --prompts \
+    "a histopathology image of tumor tissue" \
+    "a histopathology image of normal tissue" \
+  --label_prompts tumor normal \
+  --top_k 5 \
+  --save_report \
+  --report_dir outputs/retrieval_demo
+```
+
+`retrieval_results.csv` helps inspect top-k matches for each prompt, and `retrieval_metrics.json` records Recall@K and experiment parameters for reproducibility. Do not commit `outputs/`.
+
 ## 4. Inspect Outputs
 
 By default, generated outputs are saved under:

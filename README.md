@@ -420,6 +420,34 @@ When `--label_prompts` is used with a labeled manifest, retrieval results in the
 - whether each retrieved patch is a positive match
 - Recall@K metrics in the terminal
 
+To save structured retrieval outputs:
+
+```bash
+python examples/01_patch_text_retrieval_demo.py \
+  --manifest dataset/MHIST/manifest.csv \
+  --image_root dataset/MHIST/images \
+  --model clip \
+  --device auto \
+  --split test \
+  --prompts \
+    "a histopathology image of hyperplastic polyp" \
+    "a histopathology image of sessile serrated adenoma" \
+  --label_prompts HP SSA \
+  --recall_k 1 5 10 \
+  --top_k 5 \
+  --save_html_report \
+  --save_report \
+  --report_dir outputs/retrieval_demo
+```
+
+This generates:
+
+- `retrieval_results.csv`
+- `retrieval_metrics.json`
+- optionally `retrieval_report.html`
+
+`retrieval_results.csv` stores prompt-level top-k retrieval results. `retrieval_metrics.json` stores Recall@K metrics and experiment metadata when labels are available. Outputs are ignored by Git.
+
 Save top-k visualization grids:
 
 ```bash

@@ -32,6 +32,8 @@ from pathvlm_litebench.retrieval import retrieve_topk_images
 from pathvlm_litebench.visualization import (
     save_topk_image_grids,
     save_retrieval_html_report,
+    save_retrieval_results_csv,
+    save_retrieval_metrics_json,
 )
 
 
@@ -162,6 +164,8 @@ def run_patch_text_retrieval_demo(
     cache_dir: str | Path = "outputs/cache",
     save_html_report: bool = False,
     html_report_path: str | Path = "outputs/retrieval_demo/retrieval_report.html",
+    save_report: bool = False,
+    report_dir: str | Path = "outputs/retrieval_demo",
 ) -> None:
     """
     Run a minimal patch-level image-text retrieval demo.
@@ -291,6 +295,9 @@ def run_patch_text_retrieval_demo(
             summary += f"path={item.get('path', 'N/A')}"
             print(summary)
 
+    recall_metrics: dict[str, float] | None = None
+    mean_recall: float | None = None
+
     if manifest is not None:
         if labels is None or len(labels) == 0:
             print("\n[INFO] Manifest labels are unavailable. Skipping Recall@K.")
@@ -327,6 +334,51 @@ def run_patch_text_retrieval_demo(
             for metric_name, metric_value in recall_metrics.items():
                 print(f"  {metric_name}: {metric_value:.4f}")
             print(f"Mean Recall: {mean_recall:.4f}")
+
+    if save_report:
+        report_dir = Path(report_dir)
+        results_csv_path = report_dir / "retrieval_results.csv"
+        metrics_json_path = report_dir / "retrieval_metrics.json"
+
+        saved_results_path = save_retrieval_results_csv(
+            prompts=prompts,
+            retrieval_results=results,
+            output_csv_path=results_csv_path,
+            label_prompts=label_prompts,
+        )
+        print(f"\n[INFO] Saved retrieval results: {saved_results_path}")
+
+        metadata = {
+            "model": model,
+            "device": device,
+            "manifest": str(manifest) if manifest is not None else None,
+            "image_root": str(image_root) if image_root is not None else None,
+            "image_dir": str(image_dir) if image_dir is not None else None,
+            "split": split,
+            "prompts": prompts,
+            "label_prompts": label_prompts,
+            "top_k": top_k,
+            "recall_k": recall_k,
+            "num_images": len(image_paths),
+            "num_prompts": len(prompts),
+        }
+
+        metrics_payload: dict[str, object] = {}
+        if recall_metrics is not None and mean_recall is not None:
+            metrics_payload["recall_at_k"] = recall_metrics
+            metrics_payload["mean_recall"] = mean_recall
+        else:
+            metrics_payload["note"] = (
+                "Recall@K was not computed because manifest labels or label_prompts "
+                "were unavailable."
+            )
+
+        saved_metrics_path = save_retrieval_metrics_json(
+            metrics=metrics_payload,
+            output_json_path=metrics_json_path,
+            metadata=metadata,
+        )
+        print(f"[INFO] Saved retrieval metrics: {saved_metrics_path}")
 
     if save_visualization:
         print("\n[INFO] Saving top-k visualization grids...")
@@ -367,6 +419,8 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
         "cache_dir": "outputs/cache",
         "save_html_report": False,
         "html_report_path": "outputs/retrieval_demo/retrieval_report.html",
+        "save_report": False,
+        "report_dir": "outputs/retrieval_demo",
         "recall_k": [1, 5, 10],
     }
 
@@ -393,6 +447,8 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
                 if args.html_report_path is not None
                 else default_values["html_report_path"]
             ),
+            "save_report": args.save_report,
+            "report_dir": args.report_dir if args.report_dir is not None else default_values["report_dir"],
         }
 
     config = load_benchmark_config(args.config)
@@ -423,6 +479,8 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
             if args.html_report_path is not None
             else config.html_report_path
         ),
+        "save_report": args.save_report,
+        "report_dir": args.report_dir if args.report_dir is not None else default_values["report_dir"],
     }
 
 
@@ -556,6 +614,19 @@ def parse_args() -> argparse.Namespace:
         help="Output path for the HTML retrieval report.",
     )
 
+    parser.add_argument(
+        "--save_report",
+        action="store_true",
+        help="Save retrieval results and metrics as CSV/JSON reports.",
+    )
+
+    parser.add_argument(
+        "--report_dir",
+        type=str,
+        default="outputs/retrieval_demo",
+        help="Directory for saving retrieval CSV/JSON report files.",
+    )
+
     return parser.parse_args()
 
 
@@ -585,5 +656,7 @@ if __name__ == "__main__":
     print(f"  use_cache: {run_kwargs['use_cache']}")
     print(f"  save_visualization: {run_kwargs['save_visualization']}")
     print(f"  save_html_report: {run_kwargs['save_html_report']}")
+    print(f"  save_report: {run_kwargs['save_report']}")
+    print(f"  report_dir: {run_kwargs['report_dir']}")
 
     run_patch_text_retrieval_demo(**run_kwargs)
