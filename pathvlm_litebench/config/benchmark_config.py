@@ -16,16 +16,23 @@ class BenchmarkConfig:
     model: str = "clip"
     device: str = "auto"
     image_dir: str | None = None
+    manifest: str | None = None
+    image_root: str | None = None
+    split: str | None = None
+    max_images: int | None = None
     prompts: list[str] | None = None
     class_names: list[str] | None = None
     class_prompts: list[str] | None = None
     concepts: list[str] | None = None
     top_k: int = 5
+    use_pathology_prompts: bool = False
     use_cache: bool = False
     cache_dir: str = "outputs/cache"
     save_visualization: bool = False
     save_html_report: bool = False
+    save_report: bool = False
     output_dir: str = "outputs/retrieval_demo"
+    report_dir: str = "outputs/prompt_sensitivity_demo"
     html_report_path: str = "outputs/retrieval_demo/retrieval_report.html"
 
     def __post_init__(self) -> None:
@@ -46,6 +53,9 @@ class BenchmarkConfig:
         if self.top_k <= 0:
             raise ValueError(f"top_k must be > 0. Got: {self.top_k}")
 
+        if self.max_images is not None and self.max_images <= 0:
+            raise ValueError(f"max_images must be > 0 when provided. Got: {self.max_images}")
+
         if self.task == "retrieval":
             _validate_optional_string_list(self.prompts, "prompts")
 
@@ -61,6 +71,8 @@ class BenchmarkConfig:
 
         if self.task == "prompt_sensitivity":
             _validate_optional_string_list(self.concepts, "concepts")
+            if not isinstance(self.use_pathology_prompts, bool):
+                raise ValueError("use_pathology_prompts must be a bool.")
 
 
 def _validate_optional_string_list(value: list[str] | None, field_name: str) -> None:

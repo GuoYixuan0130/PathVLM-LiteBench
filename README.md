@@ -132,7 +132,31 @@ Run retrieval demo with config:
 python examples/01_patch_text_retrieval_demo.py --config configs/retrieval_demo_config.json
 ```
 
-JSON config can store model, device, image_dir, prompts, top_k, cache, visualization, and report settings. Command-line arguments can override config values. Currently config execution is integrated for the retrieval demo.
+JSON config can store model, device, image_dir, prompts, top_k, cache, visualization, and report settings. Command-line arguments can override config values.
+
+Prompt sensitivity analysis also supports config-driven runs:
+
+```bash
+python examples/03_prompt_sensitivity_demo.py --config configs/prompt_sensitivity_demo_config.json
+```
+
+Example config:
+
+```json
+{
+  "task": "prompt_sensitivity",
+  "model": "clip",
+  "device": "auto",
+  "image_dir": "dataset/MHIST/images",
+  "top_k": 5,
+  "use_pathology_prompts": true,
+  "concepts": ["tumor", "normal", "necrosis"],
+  "save_report": true,
+  "report_dir": "outputs/prompt_sensitivity_demo"
+}
+```
+
+The `dataset/` folder is local and ignored by Git. The config file is a template and does not include data.
 
 Manifest-specific retrieval evaluation options such as `--manifest`, `--image_root`, `--split`, `--label_prompts`, and `--recall_k` are currently passed via CLI.
 
@@ -439,6 +463,14 @@ This generates:
 - `prompt_sensitivity_metrics.json`
 
 The summary CSV stores concept-level stability metrics. The details CSV stores prompt-level top-k retrieved indices and scores. The JSON stores full results and experiment metadata.
+
+Prompt sensitivity analysis can also be configured with JSON:
+
+```bash
+python examples/03_prompt_sensitivity_demo.py --config configs/prompt_sensitivity_demo_config.json
+```
+
+Command-line arguments can override config values. For meaningful analysis, use real pathology patch images via `--image_dir` or `config.image_dir`.
 
 ## Example Commands
 

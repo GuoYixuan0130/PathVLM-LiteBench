@@ -4,21 +4,11 @@ import argparse
 from pathlib import Path
 import sys
 
-from PIL import Image
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from pathvlm_litebench.data import load_patch_images
-from pathvlm_litebench.evaluation import analyze_prompt_sensitivity
-from pathvlm_litebench.models import create_model
-from pathvlm_litebench.prompts import build_prompt_groups
-from pathvlm_litebench.visualization import (
-    save_prompt_sensitivity_summary_csv,
-    save_prompt_sensitivity_details_csv,
-    save_prompt_sensitivity_metrics_json,
-)
+from pathvlm_litebench.config import load_benchmark_config
 
 
 def create_demo_images(output_dir: str | Path) -> Path:
@@ -30,6 +20,7 @@ def create_demo_images(output_dir: str | Path) -> Path:
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    from PIL import Image
 
     demo_images = {
         "patch_red.png": "red",
@@ -89,6 +80,16 @@ def run_prompt_sensitivity_demo(
     """
     Run a minimal patch-level prompt sensitivity analysis demo.
     """
+    from pathvlm_litebench.data import load_patch_images
+    from pathvlm_litebench.evaluation import analyze_prompt_sensitivity
+    from pathvlm_litebench.models import create_model
+    from pathvlm_litebench.prompts import build_prompt_groups
+    from pathvlm_litebench.visualization import (
+        save_prompt_sensitivity_summary_csv,
+        save_prompt_sensitivity_details_csv,
+        save_prompt_sensitivity_metrics_json,
+    )
+
     using_demo_images = image_dir is None
 
     if using_demo_images:
@@ -212,6 +213,13 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help="Path to a JSON benchmark config file. Command-line arguments override config values when explicitly provided.",
+    )
+
+    parser.add_argument(
         "--image_dir",
         type=str,
         default=None,
@@ -221,21 +229,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--top_k",
         type=int,
-        default=3,
+        default=None,
         help="Number of top retrieved images used to measure overlap.",
     )
 
     parser.add_argument(
         "--model",
         type=str,
-        default="clip",
+        default=None,
         help="Registered model key or Hugging Face model name. Example: 'clip' or 'openai/clip-vit-base-patch32'.",
     )
 
     parser.add_argument(
         "--device",
         type=str,
-        default="auto",
+        default=None,
         choices=["auto", "cpu", "cuda"],
         help="Device for model inference. Use 'auto' to select CUDA if available, otherwise CPU.",
     )
@@ -262,23 +270,84 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--report_dir",
         type=str,
-        default="outputs/prompt_sensitivity_demo",
+        default=None,
         help="Directory for saving prompt sensitivity report files.",
     )
 
     return parser.parse_args()
 
 
+def merge_args_with_config(args: argparse.Namespace) -> dict:
+    """
+    Merge command-line arguments with optional benchmark config values.
+    """
+    default_values = {
+        "model": "clip",
+        "device": "auto",
+        "top_k": 3,
+        "use_pathology_prompts": False,
+        "save_report": False,
+        "report_dir": "outputs/prompt_sensitivity_demo",
+    }
+
+    if args.config is None:
+        return {
+            "image_dir": args.image_dir,
+            "top_k": args.top_k if args.top_k is not None else default_values["top_k"],
+            "model": args.model if args.model is not None else default_values["model"],
+            "device": args.device if args.device is not None else default_values["device"],
+            "use_pathology_prompts": args.use_pathology_prompts,
+            "concepts": args.concepts,
+            "save_report": args.save_report,
+            "report_dir": (
+                args.report_dir
+                if args.report_dir is not None
+                else default_values["report_dir"]
+            ),
+        }
+
+    config = load_benchmark_config(args.config)
+    if config.task != "prompt_sensitivity":
+        raise ValueError(
+            f"Config task must be 'prompt_sensitivity' for this demo, got '{config.task}'."
+        )
+
+    return {
+        "image_dir": args.image_dir if args.image_dir is not None else config.image_dir,
+        "top_k": args.top_k if args.top_k is not None else config.top_k,
+        "model": args.model if args.model is not None else config.model,
+        "device": args.device if args.device is not None else config.device,
+        "use_pathology_prompts": (
+            args.use_pathology_prompts
+            if args.use_pathology_prompts
+            else config.use_pathology_prompts
+        ),
+        "concepts": args.concepts if args.concepts is not None else config.concepts,
+        "save_report": args.save_report if args.save_report else config.save_report,
+        "report_dir": (
+            args.report_dir
+            if args.report_dir is not None
+            else config.report_dir
+        ),
+    }
+
+
 if __name__ == "__main__":
     args = parse_args()
+    run_kwargs = merge_args_with_config(args)
 
-    run_prompt_sensitivity_demo(
-        image_dir=args.image_dir,
-        top_k=args.top_k,
-        model=args.model,
-        device=args.device,
-        use_pathology_prompts=args.use_pathology_prompts,
-        concepts=args.concepts,
-        save_report=args.save_report,
-        report_dir=args.report_dir,
-    )
+    if args.config is not None:
+        print(f"[INFO] Loaded benchmark config: {args.config}")
+
+    print("[INFO] Final run configuration:")
+    print("  task: prompt_sensitivity")
+    print(f"  model: {run_kwargs['model']}")
+    print(f"  device: {run_kwargs['device']}")
+    print(f"  image_dir: {run_kwargs['image_dir']}")
+    print(f"  top_k: {run_kwargs['top_k']}")
+    print(f"  use_pathology_prompts: {run_kwargs['use_pathology_prompts']}")
+    print(f"  concepts: {run_kwargs['concepts']}")
+    print(f"  save_report: {run_kwargs['save_report']}")
+    print(f"  report_dir: {run_kwargs['report_dir']}")
+
+    run_prompt_sensitivity_demo(**run_kwargs)

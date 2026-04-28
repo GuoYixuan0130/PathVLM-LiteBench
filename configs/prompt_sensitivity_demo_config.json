@@ -1,0 +1,15 @@
+{
+  "task": "prompt_sensitivity",
+  "model": "clip",
+  "device": "auto",
+  "image_dir": "dataset/MHIST/images",
+  "top_k": 5,
+  "use_pathology_prompts": true,
+  "concepts": [
+    "tumor",
+    "normal",
+    "necrosis"
+  ],
+  "save_report": true,
+  "report_dir": "outputs/prompt_sensitivity_demo"
+}

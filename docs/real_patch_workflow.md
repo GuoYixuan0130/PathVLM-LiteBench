@@ -263,6 +263,14 @@ python examples/03_prompt_sensitivity_demo.py \
 
 `prompt_sensitivity_summary.csv` is for concept-level `mean_topk_overlap` and `mean_similarity_std`. `prompt_sensitivity_details.csv` stores top-k retrieval rows for each prompt variant. `prompt_sensitivity_metrics.json` records full results and experiment metadata. Do not commit `outputs/`.
 
+Prompt sensitivity also supports config-driven runs:
+
+```bash
+python examples/03_prompt_sensitivity_demo.py --config configs/prompt_sensitivity_demo_config.json
+```
+
+Update `image_dir` and `concepts` in the config based on your dataset. Config-driven runs help keep experiments reproducible across machines and reruns.
+
 ## 7. Run Zero-Shot Classification
 
 You can also run zero-shot patch classification:

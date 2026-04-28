@@ -65,3 +65,21 @@ def test_zero_shot_prompt_length_mismatch():
             class_names=["tumor", "normal"],
             class_prompts=["tumor prompt"],
         )
+
+
+def test_prompt_sensitivity_config_roundtrip_json(tmp_path: Path):
+    config = BenchmarkConfig(
+        task="prompt_sensitivity",
+        image_dir="dataset/MHIST/images",
+        model="clip",
+        device="auto",
+        concepts=["tumor", "normal", "necrosis"],
+        top_k=5,
+        use_pathology_prompts=True,
+        save_report=True,
+        report_dir="outputs/prompt_sensitivity_demo",
+    )
+    path = tmp_path / "prompt_sensitivity_config.json"
+    save_benchmark_config(config, path)
+    loaded = load_benchmark_config(path)
+    assert loaded == config
