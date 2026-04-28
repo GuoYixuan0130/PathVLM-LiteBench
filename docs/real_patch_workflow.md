@@ -243,6 +243,23 @@ If labels are available in the manifest, the demo prints a fuller classification
 
 These metrics are for lightweight model behavior analysis and benchmarking only, not clinical validation.
 
+Use `--save_report` to save zero-shot outputs for later analysis:
+
+```bash
+python examples/02_zero_shot_classification_demo.py \
+  --manifest path/to/manifest.csv \
+  --image_root path/to/dataset_root \
+  --model clip \
+  --device auto \
+  --split test \
+  --class_names tumor normal necrosis \
+  --top_k 3 \
+  --save_report \
+  --report_dir outputs/zero_shot_demo
+```
+
+This writes `predictions.csv` and `metrics.json`, which are useful for experiment tracking and downstream analysis. Do not commit `outputs/`.
+
 ## 8. Suggested Interpretation
 
 When inspecting results, consider:

@@ -344,6 +344,31 @@ The current CLIP baseline is not pathology-specific, so low performance is expec
 
 This demo classifies each patch by comparing its image embedding with class text prompt embeddings.
 
+To save predictions and metrics:
+
+```bash
+python examples/02_zero_shot_classification_demo.py \
+  --manifest dataset/MHIST/manifest.csv \
+  --image_root dataset/MHIST/images \
+  --model clip \
+  --device auto \
+  --split test \
+  --class_names HP SSA \
+  --class_prompts \
+    "a histopathology image of hyperplastic polyp" \
+    "a histopathology image of sessile serrated adenoma" \
+  --top_k 2 \
+  --save_report \
+  --report_dir outputs/zero_shot_demo
+```
+
+This generates:
+
+- `predictions.csv`
+- `metrics.json`
+
+`predictions.csv` stores per-image predictions. `metrics.json` stores aggregate classification metrics when labels are available.
+
 ### Demo 3: Prompt Sensitivity Analysis
 
 Run the prompt sensitivity demo:

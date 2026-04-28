@@ -25,6 +25,10 @@ from pathvlm_litebench.evaluation import (
 )
 from pathvlm_litebench.models import create_model
 from pathvlm_litebench.prompts import build_class_prompts as build_pathology_class_prompts
+from pathvlm_litebench.visualization import (
+    save_zero_shot_predictions_csv,
+    save_classification_metrics_json,
+)
 
 
 def create_demo_images(output_dir: str | Path) -> Path:
@@ -64,6 +68,8 @@ def run_zero_shot_classification_demo(
     top_k: int = 3,
     model: str = "clip",
     device: str = "auto",
+    save_report: bool = False,
+    report_dir: str | Path = "outputs/zero_shot_demo",
 ) -> None:
     """
     Run a minimal patch-level zero-shot classification demo.
@@ -177,30 +183,34 @@ def run_zero_shot_classification_demo(
                 f"logit={item['logit']:.4f}"
             )
 
+    classification_report: dict | None = None
+    complete_true_labels: list[str] | None = None
+
     if true_labels is not None:
         if all(label is not None for label in true_labels):
-            report = compute_classification_report(
-                true_labels=[str(label) for label in true_labels],
+            complete_true_labels = [str(label) for label in true_labels]
+            classification_report = compute_classification_report(
+                true_labels=complete_true_labels,
                 predicted_labels=predicted_labels,
                 class_names=class_names,
             )
 
             print("\n========== Classification Metrics ==========")
-            print(f"Accuracy: {report['accuracy']:.4f}")
-            print(f"Balanced Accuracy: {report['balanced_accuracy']:.4f}")
-            print(f"Macro Precision: {report['macro_precision']:.4f}")
-            print(f"Macro Recall: {report['macro_recall']:.4f}")
-            print(f"Macro F1: {report['macro_f1']:.4f}")
+            print(f"Accuracy: {classification_report['accuracy']:.4f}")
+            print(f"Balanced Accuracy: {classification_report['balanced_accuracy']:.4f}")
+            print(f"Macro Precision: {classification_report['macro_precision']:.4f}")
+            print(f"Macro Recall: {classification_report['macro_recall']:.4f}")
+            print(f"Macro F1: {classification_report['macro_f1']:.4f}")
 
             print("\nPer-class metrics:")
-            for class_name, class_metrics in report["per_class"].items():
+            for class_name, class_metrics in classification_report["per_class"].items():
                 print(f"  {class_name}:")
                 print(f"    precision={class_metrics['precision']:.4f}")
                 print(f"    recall={class_metrics['recall']:.4f}")
                 print(f"    f1={class_metrics['f1']:.4f}")
                 print(f"    support={class_metrics['support']}")
 
-            confusion = report["confusion_matrix"]
+            confusion = classification_report["confusion_matrix"]
             confusion_class_names = confusion["class_names"]
             confusion_matrix = confusion["matrix"]
             print("\nConfusion matrix:")
@@ -211,6 +221,43 @@ def run_zero_shot_classification_demo(
                 print(f"    {row_class_name}: {row_values}")
         else:
             print("\n[INFO] Manifest labels are incomplete. Skipping classification metrics.")
+
+    if save_report:
+        report_dir = Path(report_dir)
+        predictions_path = report_dir / "predictions.csv"
+        metrics_path = report_dir / "metrics.json"
+
+        saved_predictions_path = save_zero_shot_predictions_csv(
+            image_paths=image_paths,
+            results=results,
+            output_csv_path=predictions_path,
+            true_labels=complete_true_labels,
+        )
+        print(f"\n[INFO] Saved zero-shot predictions: {saved_predictions_path}")
+
+        if classification_report is not None:
+            metadata = {
+                "model": model,
+                "device": device,
+                "split": split,
+                "manifest": str(manifest) if manifest is not None else None,
+                "image_dir": str(image_dir) if image_dir is not None else None,
+                "class_names": class_names,
+                "class_prompts": class_prompts,
+                "top_k": top_k,
+                "num_images": len(image_paths),
+            }
+            saved_metrics_path = save_classification_metrics_json(
+                metrics=classification_report,
+                output_json_path=metrics_path,
+                metadata=metadata,
+            )
+            print(f"[INFO] Saved zero-shot metrics: {saved_metrics_path}")
+        else:
+            print(
+                "[INFO] Classification metrics unavailable (missing complete true labels). "
+                "Skipped metrics.json."
+            )
 
     print("\n[INFO] Zero-shot classification demo finished successfully.")
 
@@ -291,6 +338,19 @@ def parse_args() -> argparse.Namespace:
         help="Device for model inference. Use 'auto' to select CUDA if available, otherwise CPU.",
     )
 
+    parser.add_argument(
+        "--save_report",
+        action="store_true",
+        help="Save zero-shot predictions and metrics reports.",
+    )
+
+    parser.add_argument(
+        "--report_dir",
+        type=str,
+        default="outputs/zero_shot_demo",
+        help="Directory for saving zero-shot report files.",
+    )
+
     return parser.parse_args()
 
 
@@ -308,4 +368,6 @@ if __name__ == "__main__":
         top_k=args.top_k,
         model=args.model,
         device=args.device,
+        save_report=args.save_report,
+        report_dir=args.report_dir,
     )
