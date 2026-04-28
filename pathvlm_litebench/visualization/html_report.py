@@ -139,6 +139,14 @@ def save_retrieval_html_report(
     .score {
       font-weight: bold;
     }
+    .match-yes {
+      color: #0a7f33;
+      font-weight: bold;
+    }
+    .match-no {
+      color: #b00020;
+      font-weight: bold;
+    }
   </style>
         """
     )
@@ -191,6 +199,8 @@ def save_retrieval_html_report(
 
             index = item.get("index", "N/A")
             score = item.get("score", 0.0)
+            match_css = "match-yes" if item.get("is_positive") else "match-no"
+            match_text = "yes" if item.get("is_positive") else "no"
 
             html_parts.append("      <div class='card'>")
             html_parts.append(
@@ -201,6 +211,20 @@ def save_retrieval_html_report(
             html_parts.append(f"          <div><strong>Rank:</strong> {rank}</div>")
             html_parts.append(f"          <div><strong>Index:</strong> {html.escape(str(index))}</div>")
             html_parts.append(f"          <div class='score'>Score: {float(score):.4f}</div>")
+            if "label" in item:
+                html_parts.append(
+                    f"          <div><strong>Label:</strong> {html.escape(str(item.get('label')))}</div>"
+                )
+            if "target_label" in item:
+                html_parts.append(
+                    f"          <div><strong>Target:</strong> "
+                    f"{html.escape(str(item.get('target_label')))}</div>"
+                )
+            if "is_positive" in item:
+                html_parts.append(
+                    f"          <div><strong>Match:</strong> "
+                    f"<span class='{match_css}'>{match_text}</span></div>"
+                )
             html_parts.append(f"          <div><strong>Path:</strong> {html.escape(str(image_path))}</div>")
             html_parts.append("        </div>")
             html_parts.append("      </div>")

@@ -96,6 +96,54 @@ def build_text_to_image_positive_pairs(
     return positive_pairs
 
 
+def enrich_retrieval_results_with_labels(
+    retrieval_results: list[list[dict]],
+    labels: list[str | None] | None = None,
+    label_prompts: list[str] | None = None,
+) -> list[list[dict]]:
+    """
+    Enrich retrieval results with label and prompt-target match metadata.
+    """
+    if labels is None:
+        return retrieval_results
+
+    if label_prompts is not None and len(label_prompts) != len(retrieval_results):
+        raise ValueError(
+            "label_prompts and retrieval_results must have the same length when "
+            "enriching retrieval results."
+        )
+
+    enriched_results: list[list[dict]] = []
+
+    for prompt_idx, prompt_results in enumerate(retrieval_results):
+        enriched_prompt_results: list[dict] = []
+
+        for item in prompt_results:
+            enriched_item = dict(item)
+            index = enriched_item.get("index")
+            if not isinstance(index, int):
+                raise ValueError("Each retrieval result item must contain an integer 'index'.")
+
+            if index < 0 or index >= len(labels):
+                raise ValueError(
+                    f"Retrieved index {index} is out of range for labels of length {len(labels)}."
+                )
+
+            label = labels[index]
+            enriched_item["label"] = label
+
+            if label_prompts is not None:
+                target_label = label_prompts[prompt_idx]
+                enriched_item["target_label"] = target_label
+                enriched_item["is_positive"] = label is not None and label == target_label
+
+            enriched_prompt_results.append(enriched_item)
+
+        enriched_results.append(enriched_prompt_results)
+
+    return enriched_results
+
+
 def run_patch_text_retrieval_demo(
     image_dir: str | Path | None = None,
     prompts: list[str] | None = None,
@@ -216,18 +264,32 @@ def run_patch_text_retrieval_demo(
         image_paths=image_paths,
         top_k=top_k,
     )
+    results = enrich_retrieval_results_with_labels(
+        retrieval_results=results,
+        labels=labels,
+        label_prompts=label_prompts,
+    )
 
     print("\n========== Retrieval Results ==========")
 
     for prompt, prompt_results in zip(prompts, results):
         print(f"\nPrompt: {prompt}")
         for rank, item in enumerate(prompt_results, start=1):
-            print(
+            summary = (
                 f"  Top {rank}: "
                 f"index={item['index']}, "
                 f"score={item['score']:.4f}, "
-                f"path={item.get('path', 'N/A')}"
             )
+
+            if all(field in item for field in ("label", "target_label", "is_positive")):
+                summary += (
+                    f"label={item['label']}, "
+                    f"target={item['target_label']}, "
+                    f"match={item['is_positive']}, "
+                )
+
+            summary += f"path={item.get('path', 'N/A')}"
+            print(summary)
 
     if manifest is not None:
         if labels is None or len(labels) == 0:

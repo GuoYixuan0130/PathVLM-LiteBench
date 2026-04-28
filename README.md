@@ -364,6 +364,12 @@ python examples/01_patch_text_retrieval_demo.py \
 
 `--label_prompts` maps each text prompt to a manifest label. If labels are available, the demo prints text-to-image Recall@K for lightweight patch-level retrieval benchmarking.
 
+When `--label_prompts` is used with a labeled manifest, retrieval results in the terminal and HTML report also include:
+- the retrieved patch label
+- the target label for each text prompt
+- whether each retrieved patch is a positive match
+- Recall@K metrics in the terminal
+
 Save top-k visualization grids:
 
 ```bash

@@ -127,6 +127,8 @@ python examples/01_patch_text_retrieval_demo.py \
 
 `label_prompts` maps each text prompt to a manifest label. When labels are available, the retrieval demo computes text-to-image Recall@K automatically.
 
+When both manifest labels and `label_prompts` are available, the HTML retrieval report also shows each retrieved patch's label, target label, and match status (`yes`/`no`). This makes it easier to inspect not only ranking quality but also class-consistent retrieval behavior.
+
 ## 4. Inspect Outputs
 
 By default, generated outputs are saved under:
