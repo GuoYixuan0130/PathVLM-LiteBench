@@ -294,7 +294,9 @@ python examples/02_zero_shot_classification_demo.py \
   --report_dir outputs/zero_shot_demo
 ```
 
-This writes `predictions.csv` and `metrics.json`, which are useful for experiment tracking and downstream analysis. Do not commit `outputs/`.
+This writes `predictions.csv`, `errors.csv`, and `metrics.json`, which are useful for experiment tracking and downstream analysis. Do not commit `outputs/`.
+
+If the model predicts almost everything as one class, `metrics.json` includes a warning message about possible prediction collapse or class bias. `errors.csv` helps you quickly inspect misclassified samples. For CLIP baselines on fine-grained pathology tasks, this kind of class bias can happen and does not imply a toolkit bug.
 
 ## 8. Suggested Interpretation
 

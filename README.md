@@ -365,9 +365,21 @@ python examples/02_zero_shot_classification_demo.py \
 This generates:
 
 - `predictions.csv`
+- `errors.csv`
 - `metrics.json`
 
 `predictions.csv` stores per-image predictions. `metrics.json` stores aggregate classification metrics when labels are available.
+
+When labels are available, `--save_report` also generates:
+
+- `errors.csv`: misclassified samples only
+- prediction distribution summary in `metrics.json`
+- true label distribution
+- predicted label distribution
+- error rate
+- optional warning when predictions collapse into one class
+
+This is useful for detecting class bias in general CLIP baselines.
 
 ### Demo 3: Prompt Sensitivity Analysis
 

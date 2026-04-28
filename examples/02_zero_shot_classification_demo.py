@@ -29,6 +29,10 @@ from pathvlm_litebench.visualization import (
     save_zero_shot_predictions_csv,
     save_classification_metrics_json,
 )
+from pathvlm_litebench.visualization.zero_shot_report import (
+    save_zero_shot_errors_csv,
+    compute_zero_shot_error_summary,
+)
 
 
 def create_demo_images(output_dir: str | Path) -> Path:
@@ -226,38 +230,60 @@ def run_zero_shot_classification_demo(
         report_dir = Path(report_dir)
         predictions_path = report_dir / "predictions.csv"
         metrics_path = report_dir / "metrics.json"
+        errors_path = report_dir / "errors.csv"
 
         saved_predictions_path = save_zero_shot_predictions_csv(
             image_paths=image_paths,
             results=results,
             output_csv_path=predictions_path,
-            true_labels=complete_true_labels,
+            true_labels=true_labels,
         )
         print(f"\n[INFO] Saved zero-shot predictions: {saved_predictions_path}")
 
+        metrics_payload: dict = {}
         if classification_report is not None:
-            metadata = {
-                "model": model,
-                "device": device,
-                "split": split,
-                "manifest": str(manifest) if manifest is not None else None,
-                "image_dir": str(image_dir) if image_dir is not None else None,
-                "class_names": class_names,
-                "class_prompts": class_prompts,
-                "top_k": top_k,
-                "num_images": len(image_paths),
-            }
-            saved_metrics_path = save_classification_metrics_json(
-                metrics=classification_report,
-                output_json_path=metrics_path,
-                metadata=metadata,
+            metrics_payload["classification_report"] = classification_report
+
+        error_summary = compute_zero_shot_error_summary(
+            results=results,
+            true_labels=true_labels,
+        )
+        metrics_payload["error_summary"] = error_summary
+
+        if true_labels is not None:
+            saved_errors_path = save_zero_shot_errors_csv(
+                image_paths=image_paths,
+                results=results,
+                output_csv_path=errors_path,
+                true_labels=true_labels,
             )
-            print(f"[INFO] Saved zero-shot metrics: {saved_metrics_path}")
+            print(f"[INFO] Saved zero-shot errors: {saved_errors_path}")
         else:
             print(
-                "[INFO] Classification metrics unavailable (missing complete true labels). "
-                "Skipped metrics.json."
+                "[INFO] true_labels were not provided. Skipped errors.csv."
             )
+
+        metadata = {
+            "model": model,
+            "device": device,
+            "split": split,
+            "manifest": str(manifest) if manifest is not None else None,
+            "image_dir": str(image_dir) if image_dir is not None else None,
+            "class_names": class_names,
+            "class_prompts": class_prompts,
+            "top_k": top_k,
+            "num_images": len(image_paths),
+        }
+        saved_metrics_path = save_classification_metrics_json(
+            metrics=metrics_payload,
+            output_json_path=metrics_path,
+            metadata=metadata,
+        )
+        print(f"[INFO] Saved zero-shot metrics: {saved_metrics_path}")
+
+        warning = error_summary.get("warning")
+        if isinstance(warning, str) and len(warning) > 0:
+            print(f"[WARNING] {warning}")
 
     print("\n[INFO] Zero-shot classification demo finished successfully.")
 
