@@ -9,6 +9,11 @@ from .retrieval_metrics import (
     compute_image_to_text_recall_at_k,
     compute_mean_recall,
 )
+from .classification_metrics import (
+    compute_classification_report,
+    compute_confusion_matrix,
+    get_class_names_from_labels,
+)
 
 __all__ = [
     "zero_shot_predict",
@@ -19,4 +24,7 @@ __all__ = [
     "compute_text_to_image_recall_at_k",
     "compute_image_to_text_recall_at_k",
     "compute_mean_recall",
+    "compute_classification_report",
+    "compute_confusion_matrix",
+    "get_class_names_from_labels",
 ]

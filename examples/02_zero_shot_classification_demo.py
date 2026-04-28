@@ -19,7 +19,10 @@ from pathvlm_litebench.data import (
     get_unique_labels,
     filter_records_by_split,
 )
-from pathvlm_litebench.evaluation import zero_shot_predict, compute_accuracy
+from pathvlm_litebench.evaluation import (
+    zero_shot_predict,
+    compute_classification_report,
+)
 from pathvlm_litebench.models import create_model
 from pathvlm_litebench.prompts import build_class_prompts as build_pathology_class_prompts
 
@@ -176,13 +179,38 @@ def run_zero_shot_classification_demo(
 
     if true_labels is not None:
         if all(label is not None for label in true_labels):
-            accuracy = compute_accuracy(
-                predicted_labels=predicted_labels,
+            report = compute_classification_report(
                 true_labels=[str(label) for label in true_labels],
+                predicted_labels=predicted_labels,
+                class_names=class_names,
             )
-            print(f"\nAccuracy: {accuracy:.4f}")
+
+            print("\n========== Classification Metrics ==========")
+            print(f"Accuracy: {report['accuracy']:.4f}")
+            print(f"Balanced Accuracy: {report['balanced_accuracy']:.4f}")
+            print(f"Macro Precision: {report['macro_precision']:.4f}")
+            print(f"Macro Recall: {report['macro_recall']:.4f}")
+            print(f"Macro F1: {report['macro_f1']:.4f}")
+
+            print("\nPer-class metrics:")
+            for class_name, class_metrics in report["per_class"].items():
+                print(f"  {class_name}:")
+                print(f"    precision={class_metrics['precision']:.4f}")
+                print(f"    recall={class_metrics['recall']:.4f}")
+                print(f"    f1={class_metrics['f1']:.4f}")
+                print(f"    support={class_metrics['support']}")
+
+            confusion = report["confusion_matrix"]
+            confusion_class_names = confusion["class_names"]
+            confusion_matrix = confusion["matrix"]
+            print("\nConfusion matrix:")
+            print(f"  classes: {', '.join(confusion_class_names)}")
+            print("  matrix:")
+            for row_class_name, row in zip(confusion_class_names, confusion_matrix):
+                row_values = ", ".join(str(value) for value in row)
+                print(f"    {row_class_name}: {row_values}")
         else:
-            print("\n[INFO] Manifest labels are incomplete. Skipping accuracy.")
+            print("\n[INFO] Manifest labels are incomplete. Skipping classification metrics.")
 
     print("\n[INFO] Zero-shot classification demo finished successfully.")
 

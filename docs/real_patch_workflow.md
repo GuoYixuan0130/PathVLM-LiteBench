@@ -239,7 +239,9 @@ python examples/02_zero_shot_classification_demo.py \
   --top_k 3
 ```
 
-If labels are available in the manifest, the demo can compute accuracy. If labels are missing, you can still inspect predictions but accuracy is skipped.
+If labels are available in the manifest, the demo prints a fuller classification report including accuracy, balanced accuracy, macro-F1, and confusion matrix. If labels are missing, you can still inspect predictions but classification metrics are skipped.
+
+These metrics are for lightweight model behavior analysis and benchmarking only, not clinical validation.
 
 ## 8. Suggested Interpretation
 

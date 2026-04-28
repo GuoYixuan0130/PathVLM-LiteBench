@@ -315,7 +315,32 @@ python examples/02_zero_shot_classification_demo.py \
   --top_k 3
 ```
 
-If labels are available in the manifest, the demo prints accuracy. If `class_names` are not provided, they can be inferred from manifest labels. This is intended for lightweight patch-level evaluation, not clinical diagnosis.
+If labels are available in the manifest, the demo reports:
+- accuracy
+- balanced accuracy
+- macro precision / recall / F1
+- per-class precision / recall / F1
+- confusion matrix
+
+If `class_names` are not provided, they can be inferred from manifest labels. This is intended for lightweight patch-level evaluation, not clinical diagnosis.
+
+Example MHIST-style manifest evaluation command:
+
+```bash
+python examples/02_zero_shot_classification_demo.py \
+  --manifest dataset/MHIST/manifest.csv \
+  --image_root dataset/MHIST/images \
+  --model clip \
+  --device auto \
+  --split test \
+  --class_names HP SSA \
+  --class_prompts \
+    "a histopathology image of hyperplastic polyp" \
+    "a histopathology image of sessile serrated adenoma" \
+  --top_k 2
+```
+
+The current CLIP baseline is not pathology-specific, so low performance is expected and should be interpreted as a baseline.
 
 This demo classifies each patch by comparing its image embedding with class text prompt embeddings.
 
