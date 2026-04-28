@@ -123,6 +123,21 @@ python examples/01_patch_text_retrieval_demo.py \
 
 `label_prompts` should align one-to-one with `prompts`, mapping each text prompt to its target manifest label.
 
+## Sampling a Small Manifest
+
+For large datasets, you can first sample a smaller balanced subset for quick testing:
+
+```bash
+pathvlm-litebench sample-manifest \
+  --input dataset/MHIST/manifest.csv \
+  --output dataset/MHIST/manifest_test_50_per_class.csv \
+  --split test \
+  --samples_per_label 50 \
+  --seed 42
+```
+
+This is useful for low-compute experiments on laptops. In practice, sampling 20-100 patches per class is a good starting range for smoke tests. Balanced sampling also helps reduce misleading conclusions caused by class imbalance in raw accuracy.
+
 ## Patch-Level Workflow
 
 The current toolkit works at patch level:

@@ -65,6 +65,21 @@ Then run retrieval and zero-shot demos with `dataset/MHIST/manifest.csv`.
 
 `dataset/` is a local dataset directory and is ignored by Git. Do not commit real pathology images.
 
+### Optional: Create a Small Balanced Manifest
+
+For quick laptop-friendly testing, you can sample a smaller balanced subset first:
+
+```bash
+pathvlm-litebench sample-manifest \
+  --input dataset/MHIST/manifest.csv \
+  --output dataset/MHIST/manifest_test_50_per_class.csv \
+  --split test \
+  --samples_per_label 50 \
+  --seed 42
+```
+
+It is usually faster to validate your workflow on a sampled manifest first, then run the full test split.
+
 ## 2. Choose Text Prompts
 
 You can start with pathology-style prompts such as:

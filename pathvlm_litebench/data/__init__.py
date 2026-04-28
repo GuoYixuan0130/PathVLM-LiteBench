@@ -15,6 +15,7 @@ from .manifest_loader import (
     filter_records_by_label,
 )
 from .manifest_converter import convert_manifest, convert_mhist_manifest
+from .manifest_sampler import sample_manifest, summarize_manifest
 
 __all__ = [
     "load_patch_images",
@@ -32,4 +33,6 @@ __all__ = [
     "filter_records_by_label",
     "convert_manifest",
     "convert_mhist_manifest",
+    "sample_manifest",
+    "summarize_manifest",
 ]

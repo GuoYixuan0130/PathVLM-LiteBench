@@ -197,6 +197,33 @@ pathvlm-litebench convert-manifest \
 
 The local `dataset/` folder is intended for private local datasets and is ignored by Git.
 
+## Manifest Sampling
+
+For quick low-compute experiments, users can create a smaller balanced manifest:
+
+```bash
+pathvlm-litebench sample-manifest \
+  --input dataset/MHIST/manifest.csv \
+  --output dataset/MHIST/manifest_test_50_per_class.csv \
+  --split test \
+  --samples_per_label 50 \
+  --seed 42
+```
+
+This does not copy images. It only creates a smaller CSV manifest.
+
+Then run retrieval or zero-shot evaluation with:
+
+```bash
+python examples/01_patch_text_retrieval_demo.py \
+  --manifest dataset/MHIST/manifest_test_50_per_class.csv \
+  --image_root dataset/MHIST/images \
+  --model clip \
+  --device auto
+```
+
+This is useful for laptop-friendly testing and balanced class evaluation. `dataset/` is local and ignored by Git.
+
 ## Repository Structure
 
 ```text

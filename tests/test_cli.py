@@ -95,3 +95,37 @@ def test_cli_convert_manifest_requires_path_column_without_preset(tmp_path: Path
 
     assert exit_code == 1
     assert "path_column" in captured.out
+
+
+def test_cli_sample_manifest(tmp_path: Path, capsys):
+    input_csv = tmp_path / "manifest.csv"
+    input_csv.write_text(
+        "image_path,label,split\n"
+        "a.png,HP,test\n"
+        "b.png,HP,test\n"
+        "c.png,SSA,test\n",
+        encoding="utf-8",
+    )
+    output_csv = tmp_path / "sampled_manifest.csv"
+
+    exit_code = main(
+        [
+            "sample-manifest",
+            "--input",
+            str(input_csv),
+            "--output",
+            str(output_csv),
+            "--split",
+            "test",
+            "--samples_per_label",
+            "1",
+            "--seed",
+            "42",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert output_csv.exists()
+    assert "Saved sampled manifest" in captured.out
+    assert "Label distribution" in captured.out

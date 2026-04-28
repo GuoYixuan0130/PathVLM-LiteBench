@@ -3,7 +3,12 @@ from __future__ import annotations
 import argparse
 
 from . import version
-from .data import convert_manifest, convert_mhist_manifest
+from .data import (
+    convert_manifest,
+    convert_mhist_manifest,
+    sample_manifest,
+    summarize_manifest,
+)
 from .models import list_available_models
 
 
@@ -20,6 +25,10 @@ def build_parser() -> argparse.ArgumentParser:
     convert_manifest_parser = subparsers.add_parser(
         "convert-manifest",
         help="Convert dataset-specific annotations CSV to standard patch manifest CSV.",
+    )
+    sample_manifest_parser = subparsers.add_parser(
+        "sample-manifest",
+        help="Sample a smaller balanced subset from a standard manifest CSV.",
     )
     convert_manifest_parser.add_argument(
         "--input",
@@ -82,6 +91,49 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Disable fallback case_id derivation from image filename stem.",
     )
+    sample_manifest_parser.add_argument(
+        "--input",
+        required=True,
+        help="Input manifest CSV path.",
+    )
+    sample_manifest_parser.add_argument(
+        "--output",
+        required=True,
+        help="Output sampled manifest CSV path.",
+    )
+    sample_manifest_parser.add_argument(
+        "--label_column",
+        default="label",
+        help="Label column name in input manifest.",
+    )
+    sample_manifest_parser.add_argument(
+        "--split_column",
+        default="split",
+        help="Split column name in input manifest.",
+    )
+    sample_manifest_parser.add_argument(
+        "--split",
+        default=None,
+        help="Optional split value to filter before sampling.",
+    )
+    sample_manifest_parser.add_argument(
+        "--samples_per_label",
+        type=int,
+        default=None,
+        help="Maximum samples per label for balanced sampling.",
+    )
+    sample_manifest_parser.add_argument(
+        "--max_total",
+        type=int,
+        default=None,
+        help="Optional maximum total sampled records.",
+    )
+    sample_manifest_parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for reproducible sampling.",
+    )
 
     return parser
 
@@ -142,6 +194,29 @@ def _handle_convert_manifest(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_sample_manifest(args: argparse.Namespace) -> int:
+    saved_path = sample_manifest(
+        input_csv=args.input,
+        output_csv=args.output,
+        label_column=args.label_column,
+        split_column=args.split_column,
+        split=args.split,
+        samples_per_label=args.samples_per_label,
+        max_total=args.max_total,
+        seed=args.seed,
+    )
+    summary = summarize_manifest(
+        manifest_csv=saved_path,
+        label_column=args.label_column,
+        split_column=args.split_column,
+    )
+    print(f"Saved sampled manifest to: {saved_path}")
+    print(f"Number of records: {summary['num_records']}")
+    print(f"Label distribution: {summary['label_distribution']}")
+    print(f"Split distribution: {summary['split_distribution']}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -161,6 +236,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "convert-manifest":
         return _handle_convert_manifest(args)
+
+    if args.command == "sample-manifest":
+        return _handle_sample_manifest(args)
 
     parser.print_help()
     return 0
