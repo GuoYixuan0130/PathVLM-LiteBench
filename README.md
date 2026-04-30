@@ -697,6 +697,8 @@ These features may be added in later milestones.
 - [ ] Implement CONCH wrapper
 - [ ] Add optional WSI-level text-guided heatmap demo
 
+For release readiness notes, see [docs/release_checklist_v0.1.0.md](docs/release_checklist_v0.1.0.md).
+
 ## Academic Positioning
 
 PathVLM-LiteBench is intended as a lightweight research engineering project for computational pathology and medical vision-language model evaluation.
