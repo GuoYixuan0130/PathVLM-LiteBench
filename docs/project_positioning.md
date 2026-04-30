@@ -84,6 +84,7 @@ The current implementation supports:
 
 - CLIP-style model wrapping
 - model registry
+- PLIP support through a CLIP-compatible Hugging Face wrapper
 - explicit CPU/CUDA device selection
 - patch image loading
 - image-text retrieval
@@ -97,7 +98,7 @@ The current implementation supports:
 - command-line demos
 - lightweight unit tests and CI
 
-Pathology-specific models such as PLIP and CONCH are registered as placeholders for future support but are not fully implemented in the current version.
+PLIP is supported through a CLIP-compatible Hugging Face wrapper. CONCH is registered as a placeholder for future support but is not implemented in the current version.
 
 ## Research Value
 
@@ -116,14 +117,15 @@ The project demonstrates several research engineering capabilities:
    The project includes tests, CI, documentation, and deterministic toy examples.
 
 5. **Extensibility**
-   The model registry and modular structure allow future support for pathology-specific VLMs such as PLIP and CONCH.
+   The model registry and modular structure support PLIP and allow future support for additional pathology-specific VLMs such as CONCH.
 
 ## Limitations
 
 The current version has several limitations:
 
 - It uses CLIP as the implemented baseline model.
-- PLIP and CONCH wrappers are not yet fully implemented.
+- CONCH is not yet implemented.
+- PLIP support depends on the Hugging Face `vinid/plip` checkpoint remaining accessible and CLIP-compatible.
 - Built-in demo images are smoke tests, not pathology data.
 - The toolkit does not include full WSI processing.
 - Evaluation results depend heavily on prompt design and dataset quality.
@@ -133,7 +135,7 @@ The current version has several limitations:
 
 Possible future extensions include:
 
-- PLIP wrapper implementation
+- CLIP vs PLIP baseline comparison on sampled pathology manifests
 - CONCH wrapper implementation
 - public pathology patch dataset demo
 - prompt template library for pathology concepts

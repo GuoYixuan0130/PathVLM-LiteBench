@@ -168,5 +168,5 @@ Recommended order:
 - Use `--device cuda` when a CUDA GPU is available and you want faster patch embedding.
 - Use `--device auto` for portable commands that run on both CPU-only and CUDA machines.
 - `dataset/`, `outputs/`, and `examples/demo_patches/` are ignored by Git.
-- General CLIP can perform poorly on fine-grained pathology labels. This is expected for a baseline and motivates later comparison with pathology-specific VLMs such as PLIP and CONCH.
+- General CLIP can perform poorly on fine-grained pathology labels. This is expected for a baseline and motivates comparison with pathology-specific VLMs such as PLIP.
 - PathVLM-LiteBench is for research and educational use only, not clinical diagnosis.

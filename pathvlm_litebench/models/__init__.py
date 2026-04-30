@@ -8,6 +8,7 @@ from .registry import (
 
 __all__ = [
     "CLIPWrapper",
+    "PLIPWrapper",
     "MODEL_REGISTRY",
     "create_model",
     "list_available_models",
@@ -21,4 +22,8 @@ def __getattr__(name: str):
         from .clip_wrapper import CLIPWrapper
 
         return CLIPWrapper
+    if name == "PLIPWrapper":
+        from .plip_wrapper import PLIPWrapper
+
+        return PLIPWrapper
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

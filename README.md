@@ -58,7 +58,7 @@ Currently supported model keys:
 |---|---|---|---|
 | `clip` | `openai/clip-vit-base-patch32` | Implemented | Default CLIP baseline |
 | `clip-vit-base-patch32` | `openai/clip-vit-base-patch32` | Implemented | Alias for CLIP ViT-B/32 |
-| `plip` | `vinid/plip` | Placeholder | Registered for future pathology-specific VLM support |
+| `plip` | `vinid/plip` | Implemented | Pathology-specific CLIP-compatible PLIP wrapper |
 | `conch` | `MahmoodLab/CONCH` | Placeholder | Registered for future pathology-specific VLM support |
 
 You can run demos with a registered model key:
@@ -73,7 +73,7 @@ or with a Hugging Face model name:
 python examples/01_patch_text_retrieval_demo.py --model openai/clip-vit-base-patch32
 ```
 
-Pathology-specific wrappers such as PLIP and CONCH are planned but not implemented yet. Passing `--model plip` or `--model conch` will raise a clear `NotImplementedError` in the current version.
+PLIP is supported through a CLIP-compatible Hugging Face wrapper. CONCH is still planned but not implemented yet. Passing `--model conch` will raise a clear `NotImplementedError` in the current version.
 
 ## Device Support
 
@@ -670,8 +670,8 @@ Current design choices:
 
 ## Current Limitations
 
-- The current implementation uses CLIP by default rather than a pathology-specific VLM.
-- PLIP and CONCH are registered as placeholders but are not implemented in the current version.
+- The current implementation uses CLIP by default; PLIP is available as an optional pathology-specific model key.
+- CONCH is registered as a placeholder but is not implemented in the current version.
 - The built-in demo images are not pathology images.
 - WSI-level processing is not supported in the current version.
 - No large-scale benchmark dataset is included.
@@ -699,7 +699,7 @@ These features may be added in later milestones.
 - [x] Add classification metrics beyond accuracy
 - [x] Add config-driven retrieval, zero-shot, and prompt sensitivity demos
 - [x] Document MHIST CLIP baseline observation
-- [ ] Add pathology-specific PLIP wrapper
+- [x] Add pathology-specific PLIP wrapper
 - [ ] Implement CONCH wrapper
 - [ ] Add optional WSI-level text-guided heatmap demo
 

@@ -6,6 +6,25 @@ The goal is to verify model access, dependency compatibility, embedding APIs, an
 
 Do not add these checks to CI. They may download model weights and depend on local hardware, network access, and Hugging Face availability.
 
+## Local Result Summary
+
+Local feasibility checks passed on the development laptop:
+
+- model id: `vinid/plip`
+- private: `False`
+- revision: `67ade53ddd32195868f422585f72698ef5d15094`
+- processor class: `CLIPProcessor`
+- model class: `CLIPModel`
+- `get_text_features`: available
+- `get_image_features`: available
+- CPU text embeddings: `torch.Size([2, 512])`
+- CPU image embeddings: `torch.Size([2, 512])`
+- CUDA image embeddings: `torch.Size([1, 512])`
+- CUDA device: `cuda:0`
+- peak CUDA memory for batch size 1 image smoke test: about `589 MB`
+
+The model returns `BaseModelOutputWithPooling` from `get_text_features` and `get_image_features` in this environment. The wrapper must use `.pooler_output` when the returned object is not already a tensor. This matches the compatibility logic already used by `CLIPWrapper`.
+
 ## Questions to Answer
 
 Before implementing PLIP, confirm:

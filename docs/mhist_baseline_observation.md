@@ -105,7 +105,7 @@ This failure mode supports the next engineering priorities:
 - Emphasize balanced accuracy, macro-F1, per-class metrics, and confusion matrices.
 - Use saved predictions and error reports to inspect class bias.
 - Keep the workflow laptop-friendly by using sampled manifests for quick checks.
-- Add PLIP / CONCH later through the same wrapper and reporting interface for fair comparison.
+- Compare CLIP against PLIP through the same wrapper and reporting interface.
 
 ## Limitations
 

@@ -12,6 +12,10 @@ def test_resolve_huggingface_model_name():
     assert resolve_model_name("openai/clip-vit-base-patch32") == "openai/clip-vit-base-patch32"
 
 
+def test_resolve_plip_model_key():
+    assert resolve_model_name("plip") == "vinid/plip"
+
+
 def test_list_available_models():
     models = list_available_models()
     keys = {item["key"] for item in models}
@@ -21,13 +25,21 @@ def test_list_available_models():
     assert "conch" in keys
 
 
-def test_placeholder_model_raises_not_implemented():
+def test_plip_is_marked_implemented():
+    models = list_available_models()
+    plip = next(item for item in models if item["key"] == "plip")
+
+    assert plip["implemented"] is True
+    assert plip["model_name"] == "vinid/plip"
+
+
+def test_conch_placeholder_model_raises_not_implemented():
     try:
-        resolve_model_name("plip")
+        resolve_model_name("conch")
     except NotImplementedError:
         pass
     else:
-        raise AssertionError("Expected NotImplementedError for PLIP placeholder.")
+        raise AssertionError("Expected NotImplementedError for CONCH placeholder.")
 
 
 def test_unknown_model_key_raises_value_error():

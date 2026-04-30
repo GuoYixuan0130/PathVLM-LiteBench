@@ -20,8 +20,8 @@ MODEL_REGISTRY: dict[str, dict[str, Any]] = {
     },
     "plip": {
         "model_name": "vinid/plip",
-        "implemented": False,
-        "description": "Placeholder for PLIP pathology vision-language model.",
+        "implemented": True,
+        "description": "PLIP pathology vision-language model using a CLIP-compatible wrapper.",
     },
     "conch": {
         "model_name": "MahmoodLab/CONCH",
@@ -144,6 +144,14 @@ def create_model(
     """
     model_name = resolve_model_name(model_key_or_name)
     resolved_device = resolve_device(device)
+
+    if model_key_or_name == "plip":
+        from .plip_wrapper import PLIPWrapper
+
+        return PLIPWrapper(
+            model_name=model_name,
+            device=resolved_device,
+        )
 
     from .clip_wrapper import CLIPWrapper
 
