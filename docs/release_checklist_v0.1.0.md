@@ -164,4 +164,4 @@ Tag v0.1.0 when:
 
 ## Release Note Draft
 
-PathVLM-LiteBench v0.1.0 provides a low-compute, patch-level CPath vision-language evaluation toolkit centered on a frozen CLIP baseline. It includes retrieval, zero-shot classification, prompt sensitivity analysis, manifest conversion and sampling, embedding caching, CSV / JSON reports, HTML retrieval reports, config-driven demos, tests, and CI. The release is intended for research and educational use only. PLIP and CONCH are registered as future extension points but are not implemented in this version.
+See `docs/release_notes_v0.1.0.md` for the full GitHub Release draft.
