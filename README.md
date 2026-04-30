@@ -704,7 +704,7 @@ These features may be added in later milestones.
 - [ ] Add optional WSI-level text-guided heatmap demo
 
 For release readiness notes, see [docs/release_checklist_v0.1.0.md](docs/release_checklist_v0.1.0.md).
-For a GitHub Release draft, see [docs/release_notes_v0.1.0.md](docs/release_notes_v0.1.0.md).
+For release notes, see [docs/release_notes_v0.1.0.md](docs/release_notes_v0.1.0.md).
 
 ## Academic Positioning
 

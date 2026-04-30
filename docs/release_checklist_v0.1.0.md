@@ -162,6 +162,6 @@ Tag v0.1.0 when:
 - [ ] Optional MHIST sampled workflow has been tested locally
 - [ ] Release notes mention that PLIP / CONCH are not implemented yet
 
-## Release Note Draft
+## Release Notes
 
-See `docs/release_notes_v0.1.0.md` for the full GitHub Release draft.
+See `docs/release_notes_v0.1.0.md` for the release notes.

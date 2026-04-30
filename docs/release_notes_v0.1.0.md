@@ -1,6 +1,4 @@
-# v0.1.0 Release Notes Draft
-
-This document is a draft GitHub Release description for PathVLM-LiteBench v0.1.0.
+# v0.1.0 Release Notes
 
 ## Summary
 
