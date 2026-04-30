@@ -42,6 +42,12 @@ The current version supports a minimal but complete patch-level workflow:
 
 The current demos use simple RGB images for smoke testing. These demo images are not pathology images.
 
+## Example Observation on MHIST
+
+A local zero-shot run on MHIST with the default CLIP baseline showed strong class bias toward `HP` and very low `SSA` recall. This is a useful baseline observation rather than a toolkit bug: it shows why accuracy alone can be misleading for fine-grained pathology tasks and why balanced accuracy, macro-F1, confusion matrices, and error reports are included.
+
+See [docs/mhist_baseline_observation.md](docs/mhist_baseline_observation.md) for the setup, observed metrics, and interpretation.
+
 ## Model Registry
 
 PathVLM-LiteBench uses a lightweight model registry so that demos can accept either a short model key or a Hugging Face model name.
@@ -685,7 +691,7 @@ These features may be added in later milestones.
 - [x] Add retrieval metrics such as Recall@K
 - [x] Add classification metrics beyond accuracy
 - [x] Add config-driven retrieval, zero-shot, and prompt sensitivity demos
-- [ ] Document MHIST CLIP baseline observation
+- [x] Document MHIST CLIP baseline observation
 - [ ] Add pathology-specific PLIP wrapper
 - [ ] Implement CONCH wrapper
 - [ ] Add optional WSI-level text-guided heatmap demo
