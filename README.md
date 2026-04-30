@@ -704,6 +704,7 @@ These features may be added in later milestones.
 - [ ] Add optional WSI-level text-guided heatmap demo
 
 For the next milestone plan, see [docs/v0.2.0_plan.md](docs/v0.2.0_plan.md).
+For PLIP local feasibility checks, see [docs/plip_feasibility_check.md](docs/plip_feasibility_check.md).
 For release readiness notes, see [docs/release_checklist_v0.1.0.md](docs/release_checklist_v0.1.0.md).
 For release notes, see [docs/release_notes_v0.1.0.md](docs/release_notes_v0.1.0.md).
 
