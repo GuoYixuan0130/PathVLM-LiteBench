@@ -1,0 +1,19 @@
+{
+  "task": "zero_shot",
+  "model": "clip",
+  "device": "auto",
+  "manifest": "dataset/MHIST/manifest.csv",
+  "image_root": "dataset/MHIST/images",
+  "split": "test",
+  "class_names": [
+    "HP",
+    "SSA"
+  ],
+  "class_prompts": [
+    "a histopathology image of hyperplastic polyp",
+    "a histopathology image of sessile serrated adenoma"
+  ],
+  "top_k": 2,
+  "save_report": true,
+  "report_dir": "outputs/zero_shot_demo"
+}

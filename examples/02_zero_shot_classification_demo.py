@@ -19,6 +19,7 @@ from pathvlm_litebench.data import (
     get_unique_labels,
     filter_records_by_split,
 )
+from pathvlm_litebench.config import load_benchmark_config
 from pathvlm_litebench.evaluation import (
     zero_shot_predict,
     compute_classification_report,
@@ -294,6 +295,13 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help="Path to a JSON benchmark config file. Command-line arguments override config values when explicitly provided.",
+    )
+
+    parser.add_argument(
         "--image_dir",
         type=str,
         default=None,
@@ -345,21 +353,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--top_k",
         type=int,
-        default=3,
+        default=None,
         help="Number of top class predictions to show for each image.",
     )
 
     parser.add_argument(
         "--model",
         type=str,
-        default="clip",
+        default=None,
         help="Registered model key or Hugging Face model name. Example: 'clip' or 'openai/clip-vit-base-patch32'.",
     )
 
     parser.add_argument(
         "--device",
         type=str,
-        default="auto",
+        default=None,
         choices=["auto", "cpu", "cuda"],
         help="Device for model inference. Use 'auto' to select CUDA if available, otherwise CPU.",
     )
@@ -373,27 +381,88 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--report_dir",
         type=str,
-        default="outputs/zero_shot_demo",
+        default=None,
         help="Directory for saving zero-shot report files.",
     )
 
     return parser.parse_args()
 
 
+def merge_args_with_config(args: argparse.Namespace) -> dict:
+    """
+    Merge command-line arguments with optional benchmark config values.
+    """
+    default_values = {
+        "image_dir": None,
+        "manifest": None,
+        "image_root": None,
+        "split": None,
+        "max_images": None,
+        "class_names": None,
+        "class_prompts": None,
+        "top_k": 3,
+        "model": "clip",
+        "device": "auto",
+        "save_report": False,
+        "report_dir": "outputs/zero_shot_demo",
+    }
+
+    if args.config is None:
+        return {
+            "image_dir": args.image_dir,
+            "class_names": args.class_names,
+            "class_prompts": args.class_prompts,
+            "manifest": args.manifest,
+            "image_root": args.image_root,
+            "split": args.split,
+            "max_images": args.max_images,
+            "top_k": args.top_k if args.top_k is not None else default_values["top_k"],
+            "model": args.model if args.model is not None else default_values["model"],
+            "device": args.device if args.device is not None else default_values["device"],
+            "save_report": args.save_report,
+            "report_dir": args.report_dir if args.report_dir is not None else default_values["report_dir"],
+        }
+
+    config = load_benchmark_config(args.config)
+    if config.task != "zero_shot":
+        raise ValueError(
+            f"Config task must be 'zero_shot' for this demo, got '{config.task}'."
+        )
+
+    return {
+        "image_dir": args.image_dir if args.image_dir is not None else config.image_dir,
+        "class_names": args.class_names if args.class_names is not None else config.class_names,
+        "class_prompts": args.class_prompts if args.class_prompts is not None else config.class_prompts,
+        "manifest": args.manifest if args.manifest is not None else config.manifest,
+        "image_root": args.image_root if args.image_root is not None else config.image_root,
+        "split": args.split if args.split is not None else config.split,
+        "max_images": args.max_images if args.max_images is not None else config.max_images,
+        "top_k": args.top_k if args.top_k is not None else config.top_k,
+        "model": args.model if args.model is not None else config.model,
+        "device": args.device if args.device is not None else config.device,
+        "save_report": args.save_report or config.save_report,
+        "report_dir": args.report_dir if args.report_dir is not None else config.report_dir,
+    }
+
+
 if __name__ == "__main__":
     args = parse_args()
+    run_kwargs = merge_args_with_config(args)
+
+    if args.config is not None:
+        print(f"[INFO] Loaded benchmark config: {args.config}")
+
+    print("[INFO] Final run configuration:")
+    print("  task: zero_shot")
+    print(f"  model: {run_kwargs['model']}")
+    print(f"  device: {run_kwargs['device']}")
+    print(f"  manifest: {run_kwargs['manifest']}")
+    print(f"  image_root: {run_kwargs['image_root']}")
+    print(f"  image_dir: {run_kwargs['image_dir']}")
+    print(f"  split: {run_kwargs['split']}")
+    print(f"  top_k: {run_kwargs['top_k']}")
+    print(f"  save_report: {run_kwargs['save_report']}")
 
     run_zero_shot_classification_demo(
-        image_dir=args.image_dir,
-        class_names=args.class_names,
-        class_prompts=args.class_prompts,
-        manifest=args.manifest,
-        image_root=args.image_root,
-        split=args.split,
-        max_images=args.max_images,
-        top_k=args.top_k,
-        model=args.model,
-        device=args.device,
-        save_report=args.save_report,
-        report_dir=args.report_dir,
+        **run_kwargs,
     )

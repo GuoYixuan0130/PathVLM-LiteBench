@@ -67,6 +67,27 @@ def test_zero_shot_prompt_length_mismatch():
         )
 
 
+def test_zero_shot_config_roundtrip_json(tmp_path: Path):
+    config = BenchmarkConfig(
+        task="zero_shot",
+        manifest="dataset/MHIST/manifest.csv",
+        image_root="dataset/MHIST/images",
+        split="test",
+        class_names=["HP", "SSA"],
+        class_prompts=[
+            "a histopathology image of hyperplastic polyp",
+            "a histopathology image of sessile serrated adenoma",
+        ],
+        top_k=2,
+        save_report=True,
+        report_dir="outputs/zero_shot_demo",
+    )
+    path = tmp_path / "zero_shot_config.json"
+    save_benchmark_config(config, path)
+    loaded = load_benchmark_config(path)
+    assert loaded == config
+
+
 def test_prompt_sensitivity_config_roundtrip_json(tmp_path: Path):
     config = BenchmarkConfig(
         task="prompt_sensitivity",

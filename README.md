@@ -140,6 +140,12 @@ python examples/01_patch_text_retrieval_demo.py --config configs/retrieval_demo_
 
 JSON config can store model, device, image_dir, prompts, top_k, cache, visualization, and report settings. Command-line arguments can override config values.
 
+Zero-shot classification also supports config-driven runs:
+
+```bash
+python examples/02_zero_shot_classification_demo.py --config configs/zero_shot_demo_config.json
+```
+
 Prompt sensitivity analysis also supports config-driven runs:
 
 ```bash
