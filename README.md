@@ -252,33 +252,23 @@ This is useful for laptop-friendly testing and balanced class evaluation. `datas
 
 ```text
 PathVLM-LiteBench/
-├── pathvlm_litebench/
-│   ├── data/
-│   │   ├── __init__.py
-│   │   ├── patch_loader.py
-│   │   └── embedding_cache.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── clip_wrapper.py
-│   ├── retrieval/
-│   │   ├── __init__.py
-│   │   └── image_text_search.py
-│   ├── evaluation/
-│   │   ├── __init__.py
-│   │   ├── zero_shot.py
-│   │   └── prompt_sensitivity.py
-│   └── visualization/
-│       ├── __init__.py
-│       ├── topk_viewer.py
-│       └── html_report.py
-├── examples/
-│   ├── 01_quick_start.ipynb
-│   ├── 01_patch_text_retrieval_demo.py
-│   ├── 02_zero_shot_classification_demo.py
-│   └── 03_prompt_sensitivity_demo.py
-├── README.md
-├── requirements.txt
-└── .gitignore
+|-- pathvlm_litebench/
+|   |-- data/
+|   |-- models/
+|   |-- retrieval/
+|   |-- evaluation/
+|   |-- prompts/
+|   `-- visualization/
+|-- examples/
+|   |-- 01_quick_start.ipynb
+|   |-- 01_patch_text_retrieval_demo.py
+|   |-- 02_zero_shot_classification_demo.py
+|   `-- 03_prompt_sensitivity_demo.py
+|-- configs/
+|-- docs/
+|-- tests/
+|-- README.md
+`-- pyproject.toml
 ```
 
 ## Installation
@@ -633,12 +623,12 @@ Typical outputs include:
 
 ```text
 outputs/
-├── cache/
-│   ├── image_embeddings.pt
-│   └── image_paths.json
-└── retrieval_demo/
-    ├── retrieval_report.html
-    └── topk_prompt_*.png
+|-- cache/
+|   |-- image_embeddings.pt
+|   `-- image_paths.json
+`-- retrieval_demo/
+    |-- retrieval_report.html
+    `-- topk_prompt_*.png
 ```
 
 The automatically generated demo images are saved under:
@@ -668,12 +658,10 @@ Current design choices:
 ## Current Limitations
 
 - The current implementation uses CLIP by default rather than a pathology-specific VLM.
-- The current implemented model wrapper uses CLIP-style Hugging Face models.
 - PLIP and CONCH are registered as placeholders but are not implemented in the current version.
 - The built-in demo images are not pathology images.
 - WSI-level processing is not supported in the current version.
 - No large-scale benchmark dataset is included.
-- No PLIP/CONCH-specific wrapper is included yet.
 - Prompt sensitivity analysis currently focuses on retrieval stability rather than clinical validity.
 
 These features may be added in later milestones.
@@ -693,12 +681,13 @@ These features may be added in later milestones.
 - [x] Add prompt sensitivity analysis utility
 - [x] Add prompt sensitivity demo
 - [x] Add lightweight model registry
+- [x] Add manifest conversion and balanced sampling utilities
+- [x] Add retrieval metrics such as Recall@K
+- [x] Add classification metrics beyond accuracy
+- [x] Add config-driven retrieval, zero-shot, and prompt sensitivity demos
+- [ ] Document MHIST CLIP baseline observation
 - [ ] Add pathology-specific PLIP wrapper
-- [ ] Implement PLIP wrapper
 - [ ] Implement CONCH wrapper
-- [ ] Add retrieval metrics such as Recall@K
-- [ ] Add classification metrics beyond accuracy
-- [ ] Add example with real public pathology patch data
 - [ ] Add optional WSI-level text-guided heatmap demo
 
 ## Academic Positioning

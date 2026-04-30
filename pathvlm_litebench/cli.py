@@ -3,13 +3,9 @@ from __future__ import annotations
 import argparse
 
 from . import version
-from .data import (
-    convert_manifest,
-    convert_mhist_manifest,
-    sample_manifest,
-    summarize_manifest,
-)
-from .models import list_available_models
+from .data.manifest_converter import convert_manifest, convert_mhist_manifest
+from .data.manifest_sampler import sample_manifest, summarize_manifest
+from .models.registry import list_available_models
 
 
 def build_parser() -> argparse.ArgumentParser:

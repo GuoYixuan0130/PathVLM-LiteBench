@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Any
 
-import torch
-
-from .clip_wrapper import CLIPWrapper
+if TYPE_CHECKING:
+    from .clip_wrapper import CLIPWrapper
 
 
 MODEL_REGISTRY: dict[str, dict[str, Any]] = {
@@ -115,6 +115,8 @@ def resolve_device(device: str | None = None) -> str | None:
         return "cpu"
 
     if device == "cuda":
+        import torch
+
         if torch.cuda.is_available():
             return "cuda"
         raise ValueError("CUDA was requested but is not available")
@@ -127,7 +129,7 @@ def resolve_device(device: str | None = None) -> str | None:
 def create_model(
     model_key_or_name: str = "clip",
     device: str | None = None,
-) -> CLIPWrapper:
+) -> "CLIPWrapper":
     """
     Create a model wrapper from a model key or Hugging Face model name.
 
@@ -142,6 +144,8 @@ def create_model(
     """
     model_name = resolve_model_name(model_key_or_name)
     resolved_device = resolve_device(device)
+
+    from .clip_wrapper import CLIPWrapper
 
     return CLIPWrapper(
         model_name=model_name,

@@ -1,3 +1,5 @@
+import subprocess
+import sys
 from pathlib import Path
 
 from pathvlm_litebench.cli import main
@@ -37,6 +39,26 @@ def test_cli_no_subcommand_shows_help(capsys):
     assert exit_code == 0
     assert "usage:" in captured.out
     assert "pathvlm-litebench" in captured.out
+
+
+def test_cli_import_does_not_load_model_dependencies():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys; "
+                "import pathvlm_litebench.cli; "
+                "print('torch' in sys.modules); "
+                "print('transformers' in sys.modules)"
+            ),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.stdout.splitlines() == ["False", "False"]
 
 
 def test_cli_convert_manifest_mhist(tmp_path: Path, capsys):

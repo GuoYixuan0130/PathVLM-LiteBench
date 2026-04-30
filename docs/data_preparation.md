@@ -12,11 +12,11 @@ The simplest input format is a folder containing patch images:
 
 ```text
 your_patch_folder/
-├── patch_001.png
-├── patch_002.png
-├── patch_003.png
-├── patch_004.jpg
-└── patch_005.tif
+|-- patch_001.png
+|-- patch_002.png
+|-- patch_003.png
+|-- patch_004.jpg
+`-- patch_005.tif
 ```
 
 Supported image extensions include:
@@ -144,12 +144,12 @@ The current toolkit works at patch level:
 
 ```text
 patch image folder
-→ load images
-→ encode images with a frozen vision-language model
-→ encode text prompts
-→ compute similarity
-→ retrieve top-k patches
-→ optionally save visualization and HTML report
+-> load images
+-> encode images with a frozen vision-language model
+-> encode text prompts
+-> compute similarity
+-> retrieve top-k patches
+-> optionally save visualization and HTML report
 ```
 
 This design avoids full WSI processing in the early stage and keeps the workflow laptop-friendly.
@@ -253,9 +253,9 @@ When using real pathology data:
 
 For CLIP-style models, common patch sizes include:
 
-- `224 × 224`
-- `256 × 256`
-- `336 × 336`
+- `224 x 224`
+- `256 x 256`
+- `336 x 336`
 
 The current CLIP baseline will internally preprocess images using its Hugging Face processor.
 

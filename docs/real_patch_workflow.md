@@ -10,11 +10,11 @@ Organize your patch images in a single folder:
 
 ```text
 your_patch_folder/
-├── patch_001.png
-├── patch_002.png
-├── patch_003.jpg
-├── patch_004.tif
-└── patch_005.png
+|-- patch_001.png
+|-- patch_002.png
+|-- patch_003.jpg
+|-- patch_004.tif
+`-- patch_005.png
 ```
 
 Supported extensions:
@@ -176,12 +176,12 @@ Typical outputs:
 
 ```text
 outputs/
-├── cache/
-│   ├── image_embeddings.pt
-│   └── image_paths.json
-└── retrieval_demo/
-    ├── retrieval_report.html
-    └── topk_prompt_*.png
+|-- cache/
+|   |-- image_embeddings.pt
+|   `-- image_paths.json
+`-- retrieval_demo/
+    |-- retrieval_report.html
+    `-- topk_prompt_*.png
 ```
 
 Open `retrieval_report.html` in a browser to inspect the retrieved patches for each prompt.
@@ -358,9 +358,9 @@ Do not commit:
 The following folders are ignored by Git:
 
 ```text
+dataset/
 outputs/
 examples/demo_patches/
-dataset/
 ```
 
 ## Summary
@@ -369,10 +369,10 @@ This workflow demonstrates how to use PathVLM-LiteBench for real patch-level CPa
 
 ```text
 patch folder
-→ text prompts
-→ frozen model embeddings
-→ retrieval / zero-shot / prompt sensitivity
-→ visualization and reports
+-> text prompts
+-> frozen model embeddings
+-> retrieval / zero-shot / prompt sensitivity
+-> visualization and reports
 ```
 
 This is intended for research and educational use only.
