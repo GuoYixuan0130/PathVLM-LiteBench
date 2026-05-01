@@ -43,7 +43,7 @@ v0.2.0 should not be described as:
 
 - [ ] Bump package version from `0.1.0` to `0.2.0` in `pyproject.toml`
 - [ ] Bump runtime version from `0.1.0` to `0.2.0` in `pathvlm_litebench/__init__.py`
-- [ ] Add `docs/release_notes_v0.2.0.md`
+- [x] Add `docs/release_notes_v0.2.0.md`
 - [ ] Verify GitHub Actions CI passes on the release commit
 - [ ] Decide whether to tag `v0.2.0` after the release notes are reviewed
 
@@ -169,4 +169,4 @@ Tag v0.2.0 when:
 - [ ] README and docs render correctly on GitHub
 - [ ] `.gitignore` excludes local data and generated outputs
 - [ ] The latest release commit is pushed to `main`
-- [ ] `docs/release_notes_v0.2.0.md` is complete
+- [x] `docs/release_notes_v0.2.0.md` is complete

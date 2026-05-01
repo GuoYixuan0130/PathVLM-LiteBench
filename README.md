@@ -712,6 +712,7 @@ For PLIP local feasibility checks, see [docs/plip_feasibility_check.md](docs/pli
 For CLIP vs PLIP MHIST comparison, see [docs/clip_vs_plip_mhist_protocol.md](docs/clip_vs_plip_mhist_protocol.md).
 For preliminary CLIP vs PLIP MHIST observations, see [docs/clip_vs_plip_mhist_observation.md](docs/clip_vs_plip_mhist_observation.md).
 For v0.2.0 release readiness notes, see [docs/release_checklist_v0.2.0.md](docs/release_checklist_v0.2.0.md).
+For v0.2.0 release notes, see [docs/release_notes_v0.2.0.md](docs/release_notes_v0.2.0.md).
 For release readiness notes, see [docs/release_checklist_v0.1.0.md](docs/release_checklist_v0.1.0.md).
 For release notes, see [docs/release_notes_v0.1.0.md](docs/release_notes_v0.1.0.md).
 
