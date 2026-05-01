@@ -41,8 +41,8 @@ v0.2.0 should not be described as:
 
 ## Current Release Blockers
 
-- [ ] Bump package version from `0.1.0` to `0.2.0` in `pyproject.toml`
-- [ ] Bump runtime version from `0.1.0` to `0.2.0` in `pathvlm_litebench/__init__.py`
+- [x] Bump package version from `0.1.0` to `0.2.0` in `pyproject.toml`
+- [x] Bump runtime version from `0.1.0` to `0.2.0` in `pathvlm_litebench/__init__.py`
 - [x] Add `docs/release_notes_v0.2.0.md`
 - [ ] Verify GitHub Actions CI passes on the release commit
 - [ ] Decide whether to tag `v0.2.0` after the release notes are reviewed
