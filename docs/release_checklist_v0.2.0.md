@@ -6,7 +6,7 @@ The goal of v0.2.0 is to extend the v0.1.0 CLIP baseline into a same-pipeline CL
 
 ## Release Positioning
 
-v0.2.0 should be described as:
+v0.2.0 positioning includes:
 
 - a CPU-compatible and CUDA-accelerated toolkit
 - a low-compute patch-level evaluation workflow
@@ -15,7 +15,7 @@ v0.2.0 should be described as:
 - a toolkit for evaluating model behavior, prompt sensitivity, and class-bias failure modes
 - a research and educational tool
 
-v0.2.0 should not be described as:
+v0.2.0 positioning excludes:
 
 - a clinical diagnostic system
 - a CPU-only project
@@ -126,9 +126,9 @@ Do not add a root-level `data/` ignore rule because `pathvlm_litebench/data/` is
 - [x] Documentation avoids claiming full WSI processing support
 - [x] Documentation states that generated outputs and real pathology data should not be committed
 
-## Release Notes Draft Points
+## Release Notes Coverage
 
-The v0.2.0 release notes should mention:
+The v0.2.0 release notes cover:
 
 - PLIP support through `vinid/plip`
 - CLIP-compatible PLIP wrapper implementation
@@ -140,9 +140,9 @@ The v0.2.0 release notes should mention:
 - PLIP weights are downloaded locally through Hugging Face when used
 - tests and CI remain lightweight and do not download models
 
-## Claims to Avoid
+## Claim Boundaries
 
-Do not claim:
+The release documentation avoids claiming:
 
 - PLIP is clinically reliable
 - PLIP diagnoses MHIST correctly
@@ -151,14 +151,14 @@ Do not claim:
 - PathVLM-LiteBench trains pathology foundation models
 - the local MHIST observation is a definitive benchmark result
 
-Use cautious language:
+Preferred wording:
 
 - "local full-test MHIST zero-shot observation"
 - "PLIP improved balanced accuracy and SSA recall in this run, while still showing SSA prediction bias"
 - "CLIP and PLIP showed opposite class-bias patterns under simple prompts"
 - "prompt wording affected PLIP prediction distribution"
 
-## Suggested Tag Criteria
+## Tag Criteria
 
 Tag v0.2.0 when:
 

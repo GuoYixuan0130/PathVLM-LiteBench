@@ -27,7 +27,6 @@ Local feasibility and documentation:
 - added a CLIP vs PLIP MHIST comparison protocol
 - added a full-test CLIP vs PLIP MHIST observation document
 - updated README with the full-test MHIST observation
-- added v0.2.0 release readiness notes
 
 ## MHIST CLIP vs PLIP Observation
 
@@ -130,11 +129,9 @@ python examples/02_zero_shot_classification_demo.py \
 
 Do not add PLIP model downloads or MHIST runs to CI.
 
-## Suggested GitHub Release Text
+## Release Highlights
 
 PathVLM-LiteBench v0.2.0 adds PLIP support to the existing low-compute CLIP baseline toolkit for patch-level computational pathology vision-language evaluation.
-
-Highlights:
 
 - PLIP wrapper through `vinid/plip`
 - same-pipeline CLIP vs PLIP evaluation

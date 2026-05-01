@@ -132,7 +132,7 @@ For this task, balanced accuracy, macro-F1, and `SSA` recall are more informativ
 
 ## Quick Metrics Extraction
 
-Use this local helper command to print a compact comparison:
+Local helper command for printing a compact comparison:
 
 ```powershell
 @'
@@ -161,9 +161,9 @@ for name, path in paths.items():
 '@ | python -
 ```
 
-## Result Table Template
+## Result Table
 
-Use this template when reporting results:
+Record results in this format:
 
 ```text
 Dataset:
@@ -187,9 +187,9 @@ Possible failure mode:
 Next prompt/model check:
 ```
 
-## Interpretation Rules
+## Interpretation
 
-Use cautious language:
+Interpret results conservatively:
 
 - Good: "PLIP improved balanced accuracy on this sampled MHIST run."
 - Good: "PLIP reduced the HP prediction bias in this local zero-shot setup."
@@ -197,19 +197,19 @@ Use cautious language:
 - Avoid: "PLIP is clinically reliable."
 - Avoid: "This proves pathology-specific VLMs solve MHIST."
 
-The result should be described as a local zero-shot baseline comparison.
+Describe the result as a local zero-shot baseline comparison.
 
-## Next Step After Running
+## Recording Results
 
-After running both models, copy the compact metrics output into the development notes or chat.
+After running both models, record the compact metrics output in the project notes or observation document.
 
-If the comparison is informative, create a follow-up observation document:
+The main observation document for this comparison is:
 
 ```text
 docs/clip_vs_plip_mhist_observation.md
 ```
 
-That document should record:
+That document records:
 
 - setup
 - metrics table
@@ -217,4 +217,4 @@ That document should record:
 - prediction distributions
 - representative error-analysis notes
 - limitations
-- whether PLIP motivates further wrapper work
+- implications for future pathology-specific wrapper work

@@ -321,7 +321,7 @@ This writes `predictions.csv`, `errors.csv`, and `metrics.json`, which are usefu
 
 If the model predicts almost everything as one class, `metrics.json` includes a warning message about possible prediction collapse or class bias. `errors.csv` helps you quickly inspect misclassified samples. For CLIP baselines on fine-grained pathology tasks, this kind of class bias can happen and does not imply a toolkit bug.
 
-## 8. Suggested Interpretation
+## 8. Interpreting Results
 
 When inspecting results, consider:
 

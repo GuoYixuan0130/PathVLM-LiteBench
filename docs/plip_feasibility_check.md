@@ -179,7 +179,7 @@ If a check fails, record the exact command, error message, package versions, and
 
 ## Result Log Template
 
-Use this template when reporting local results:
+Result log format:
 
 ```text
 Date:
@@ -204,12 +204,12 @@ Peak CUDA memory MB:
 
 Conclusion:
 Blockers:
-Next action:
+Recommended action:
 ```
 
-## Next Step After Success
+## Implementation Follow-up
 
-If all checks pass, the next implementation step is:
+If all checks pass, the implementation follow-up is:
 
 1. Add `PLIPWrapper` with the same interface as `CLIPWrapper`.
 2. Register `plip` as implemented only after local smoke tests pass.

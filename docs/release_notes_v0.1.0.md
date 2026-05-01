@@ -115,11 +115,9 @@ Optional local CUDA check:
 python -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.version.cuda); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'No CUDA')"
 ```
 
-## Suggested GitHub Release Text
+## Release Highlights
 
 PathVLM-LiteBench v0.1.0 is the first stable low-compute release of the project. It provides a patch-level computational pathology vision-language evaluation toolkit centered on a frozen CLIP baseline, with CPU-compatible smoke tests and CUDA acceleration when available.
-
-Highlights:
 
 - CLIP baseline wrapper and model registry
 - patch-text retrieval with Recall@K

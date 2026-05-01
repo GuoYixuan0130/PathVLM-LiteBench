@@ -6,7 +6,7 @@ The goal of v0.1.0 is not to support every pathology VLM or whole-slide workflow
 
 ## Release Positioning
 
-v0.1.0 should be described as:
+v0.1.0 positioning includes:
 
 - a CPU-compatible and CUDA-accelerated toolkit
 - a low-compute patch-level evaluation workflow
@@ -14,7 +14,7 @@ v0.1.0 should be described as:
 - a CLIP baseline implementation with extension points for pathology-specific VLMs
 - a research and educational tool
 
-v0.1.0 should not be described as:
+v0.1.0 positioning excludes:
 
 - a clinical diagnostic system
 - a CPU-only project
@@ -150,7 +150,7 @@ Do not add a root-level `data/` ignore rule because `pathvlm_litebench/data/` is
 - General CLIP may perform poorly on fine-grained pathology tasks.
 - No datasets, real pathology images, model weights, or generated reports are included.
 
-## Suggested Tag Criteria
+## Tag Criteria
 
 Tag v0.1.0 when:
 
