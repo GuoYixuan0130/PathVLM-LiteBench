@@ -44,10 +44,10 @@ v0.2.0 positioning excludes:
 - [x] Bump package version from `0.1.0` to `0.2.0` in `pyproject.toml`
 - [x] Bump runtime version from `0.1.0` to `0.2.0` in `pathvlm_litebench/__init__.py`
 - [x] Add `docs/release_notes_v0.2.0.md`
-- [ ] Verify GitHub Actions CI passes on the release commit
-- [ ] Decide whether to tag `v0.2.0` after the release notes are reviewed
+- [x] Verify GitHub Actions CI passes on the release commit
+- [x] Decide whether to tag `v0.2.0` after the release notes are reviewed
 
-Do not tag v0.2.0 until the blockers above are resolved.
+All release blockers above are resolved for the current `v0.2.0` tag.
 
 ## Validation Checklist
 
@@ -160,13 +160,13 @@ Preferred wording:
 
 ## Tag Criteria
 
-Tag v0.2.0 when:
+The current `v0.2.0` tag satisfies:
 
-- [ ] Release blockers are resolved
-- [ ] `python -m pytest tests` passes locally
-- [ ] CLI smoke commands pass locally
-- [ ] CI passes on GitHub
-- [ ] README and docs render correctly on GitHub
-- [ ] `.gitignore` excludes local data and generated outputs
-- [ ] The latest release commit is pushed to `main`
+- [x] Release blockers are resolved
+- [x] `python -m pytest tests` passes locally
+- [x] CLI smoke commands pass locally
+- [x] CI passes on GitHub
+- [x] README and docs are ready for GitHub-facing release documentation
+- [x] `.gitignore` excludes local data and generated outputs
+- [x] The latest release commit is pushed to `main`
 - [x] `docs/release_notes_v0.2.0.md` is complete
