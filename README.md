@@ -44,10 +44,12 @@ The current demos use simple RGB images for smoke testing. These demo images are
 
 ## Example Observation on MHIST
 
-A local zero-shot run on MHIST with the default CLIP baseline showed strong class bias toward `HP` and very low `SSA` recall. This is a useful baseline observation rather than a toolkit bug: it shows why accuracy alone can be misleading for fine-grained pathology tasks and why balanced accuracy, macro-F1, confusion matrices, and error reports are included.
+A local full-test MHIST zero-shot comparison showed opposite class-bias patterns: CLIP favored `HP`, while PLIP favored `SSA`. CLIP had higher raw accuracy because it predicted the majority `HP` class for most samples, while PLIP improved balanced accuracy and `SSA` recall but still showed strong class bias.
+
+This is a useful baseline observation rather than a clinical result: it shows why accuracy alone can be misleading for fine-grained pathology tasks and why balanced accuracy, macro-F1, confusion matrices, predicted-label distributions, error reports, and prompt-sensitivity checks are included.
 
 See [docs/mhist_baseline_observation.md](docs/mhist_baseline_observation.md) for the setup, observed metrics, and interpretation.
-For a sampled CLIP vs PLIP comparison with prompt-sensitivity checks, see [docs/clip_vs_plip_mhist_observation.md](docs/clip_vs_plip_mhist_observation.md).
+For the full-test CLIP vs PLIP comparison with prompt-sensitivity checks, see [docs/clip_vs_plip_mhist_observation.md](docs/clip_vs_plip_mhist_observation.md).
 
 ## Model Registry
 
