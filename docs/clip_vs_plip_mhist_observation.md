@@ -12,8 +12,6 @@ Dataset:
 - Standard manifest format: `image_path,label,split,case_id`
 - Full test manifest: `dataset/MHIST/manifest.csv`, split `test`
 - Full test samples: 977 total, 617 `HP`, 360 `SSA`
-- Sampled sanity-check manifest: `dataset/MHIST/manifest_test_50_per_class.csv`
-- Sampled sanity-check samples: 100 total, 50 `HP`, 50 `SSA`
 
 Task:
 
@@ -69,48 +67,31 @@ PLIP, default prompts:
 | HP | 122 | 495 |
 | SSA | 4 | 356 |
 
-## Sampled Sanity Checks
+## Full Test Sanity Checks
 
-The sampled sanity-check run used a balanced 100-image manifest with 50 `HP` and 50 `SSA` samples.
+The class-order and prompt-sensitivity checks below were run on the same full MHIST test split as the main comparison.
 
 | Run | Accuracy | Balanced accuracy | Macro-F1 | HP recall | SSA recall | Predicted distribution |
 |---|---:|---:|---:|---:|---:|---|
-| CLIP, default prompts | 0.5000 | 0.5000 | 0.4048 | 0.9000 | 0.1000 | `HP=90, SSA=10` |
-| PLIP, default prompts | 0.5500 | 0.5500 | 0.4357 | 0.1000 | 1.0000 | `SSA=95, HP=5` |
-| PLIP, class order swapped | 0.5500 | 0.5500 | 0.4357 | 0.1000 | 1.0000 | `SSA=95, HP=5` |
-| PLIP, synonym prompts | 0.5200 | 0.5200 | 0.4792 | 0.2400 | 0.8000 | `SSA=78, HP=22` |
+| PLIP, default prompts | 0.4893 | 0.5933 | 0.4582 | 0.1977 | 0.9889 | `SSA=851, HP=126` |
+| PLIP, class order swapped | 0.4893 | 0.5933 | 0.4582 | 0.1977 | 0.9889 | `SSA=851, HP=126` |
+| PLIP, synonym prompts | 0.4933 | 0.5694 | 0.4833 | 0.2804 | 0.8583 | `SSA=753, HP=224` |
 
-Synonym prompts for the sampled sanity check:
+Synonym prompts:
 
 | Class | Prompt |
 |---|---|
 | `HP` | `an H&E histopathology patch showing a hyperplastic colorectal polyp` |
 | `SSA` | `an H&E histopathology patch showing a sessile serrated lesion` |
 
-Sampled confusion matrices:
-
-Rows are true labels and columns are predicted labels.
-
-CLIP, default prompts:
+PLIP synonym-prompt confusion matrix:
 
 | True label | Pred HP | Pred SSA |
 |---|---:|---:|
-| HP | 45 | 5 |
-| SSA | 45 | 5 |
+| HP | 173 | 444 |
+| SSA | 51 | 309 |
 
-PLIP, default prompts:
-
-| True label | Pred HP | Pred SSA |
-|---|---:|---:|
-| HP | 5 | 45 |
-| SSA | 0 | 50 |
-
-PLIP, synonym prompts:
-
-| True label | Pred HP | Pred SSA |
-|---|---:|---:|
-| HP | 12 | 38 |
-| SSA | 10 | 40 |
+The synonym prompts reduced the `SSA` prediction skew from 851 predictions to 753 predictions and removed the prediction-collapse warning, but the model still favored `SSA`.
 
 ## Sanity Checks
 
@@ -120,13 +101,13 @@ PLIP embedding extraction was checked against the Hugging Face `CLIPModel` forwa
 - `PLIPWrapper.encode_images(...)` matched `forward.image_embeds` after normalization.
 - Maximum absolute differences were approximately `1e-8`.
 
-The PLIP class-order swap produced the same metrics and prediction distribution as the default PLIP run. This suggests the observed `SSA` bias is not caused by class-name ordering or label mapping.
+The PLIP class-order swap produced the same metrics and prediction distribution as the default PLIP run on the full test split. This suggests the observed `SSA` bias is not caused by class-name ordering or label mapping.
 
-Changing PLIP prompts reduced, but did not eliminate, the `SSA` prediction bias. This suggests the result is prompt-sensitive and should be treated as a preliminary zero-shot observation rather than a fixed property of the model.
+Changing PLIP prompts reduced, but did not eliminate, the `SSA` prediction bias on the full test split. This suggests the result is prompt-sensitive and should be treated as a preliminary zero-shot observation rather than a fixed property of the model.
 
 ## Interpretation
 
-The full and sampled runs suggest that both CLIP and PLIP can show strong prediction bias on MHIST under simple zero-shot prompts:
+The full test runs suggest that both CLIP and PLIP can show strong prediction bias on MHIST under simple zero-shot prompts:
 
 - CLIP default prompts strongly favored `HP`.
 - PLIP default prompts strongly favored `SSA`.
@@ -144,14 +125,14 @@ This observation supports the current project direction:
 - Use PLIP as a pathology-specific comparison model through the same wrapper interface.
 - Evaluate model behavior with the same manifests, prompts, metrics, and report format.
 - Treat prompt sensitivity as part of the benchmark rather than an afterthought.
-- Keep the workflow laptop-friendly by using sampled manifests for debugging and full test runs for more stable observation.
+- Keep the workflow laptop-friendly by using sampled manifests for early debugging and full test runs for more stable observation.
 
 ## Limitations
 
 - This is a local baseline observation, not a finalized benchmark.
 - Prompt wording can change the result.
 - Model versions, package versions, preprocessing, and sampling seed can affect metrics.
-- The sampled run is useful for debugging, while the full test run is more representative of this local MHIST split.
+- A sampled manifest was useful for early debugging, but the reported sanity checks in this document use the full test split.
 - MHIST labels are used only for research evaluation.
 - PathVLM-LiteBench is for research and educational use only.
 - Outputs under `dataset/` and `outputs/` should not be committed.
