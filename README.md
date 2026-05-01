@@ -47,6 +47,7 @@ The current demos use simple RGB images for smoke testing. These demo images are
 A local zero-shot run on MHIST with the default CLIP baseline showed strong class bias toward `HP` and very low `SSA` recall. This is a useful baseline observation rather than a toolkit bug: it shows why accuracy alone can be misleading for fine-grained pathology tasks and why balanced accuracy, macro-F1, confusion matrices, and error reports are included.
 
 See [docs/mhist_baseline_observation.md](docs/mhist_baseline_observation.md) for the setup, observed metrics, and interpretation.
+For a sampled CLIP vs PLIP comparison with prompt-sensitivity checks, see [docs/clip_vs_plip_mhist_observation.md](docs/clip_vs_plip_mhist_observation.md).
 
 ## Model Registry
 
@@ -700,12 +701,14 @@ These features may be added in later milestones.
 - [x] Add config-driven retrieval, zero-shot, and prompt sensitivity demos
 - [x] Document MHIST CLIP baseline observation
 - [x] Add pathology-specific PLIP wrapper
+- [x] Document preliminary CLIP vs PLIP MHIST observation
 - [ ] Implement CONCH wrapper
 - [ ] Add optional WSI-level text-guided heatmap demo
 
 For the next milestone plan, see [docs/v0.2.0_plan.md](docs/v0.2.0_plan.md).
 For PLIP local feasibility checks, see [docs/plip_feasibility_check.md](docs/plip_feasibility_check.md).
 For CLIP vs PLIP MHIST comparison, see [docs/clip_vs_plip_mhist_protocol.md](docs/clip_vs_plip_mhist_protocol.md).
+For preliminary CLIP vs PLIP MHIST observations, see [docs/clip_vs_plip_mhist_observation.md](docs/clip_vs_plip_mhist_observation.md).
 For release readiness notes, see [docs/release_checklist_v0.1.0.md](docs/release_checklist_v0.1.0.md).
 For release notes, see [docs/release_notes_v0.1.0.md](docs/release_notes_v0.1.0.md).
 
