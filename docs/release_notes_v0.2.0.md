@@ -2,13 +2,13 @@
 
 ## Summary
 
-PathVLM-LiteBench v0.2.0 extends the v0.1.0 CLIP baseline into a same-pipeline CLIP vs PLIP comparison workflow for low-compute computational pathology vision-language evaluation.
+PathVLM-LiteBench v0.2.0 extends the existing CLIP baseline into a same-pipeline CLIP vs PLIP comparison workflow for low-compute computational pathology vision-language evaluation.
 
 The release adds a CLIP-compatible PLIP wrapper, updates the model registry, documents local PLIP feasibility checks, and records a full-test MHIST zero-shot observation comparing CLIP and PLIP under the same patch-level evaluation pipeline.
 
 This release is intended for research and educational use only.
 
-## What Is New Since v0.1.0
+## What Is Included
 
 Model workflow:
 
@@ -58,7 +58,7 @@ The toolkit remains focused on:
 - CUDA acceleration when available
 - lightweight tests and CI
 
-The release still includes the v0.1.0 workflows:
+The release still includes the established lightweight workflows:
 
 - patch-text retrieval
 - manifest-based retrieval evaluation with Recall@K

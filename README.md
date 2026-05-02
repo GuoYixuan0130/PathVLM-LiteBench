@@ -278,7 +278,8 @@ PathVLM-LiteBench/
 |   |-- 01_quick_start.ipynb
 |   |-- 01_patch_text_retrieval_demo.py
 |   |-- 02_zero_shot_classification_demo.py
-|   `-- 03_prompt_sensitivity_demo.py
+|   |-- 03_prompt_sensitivity_demo.py
+|   `-- 04_retrieval_metrics_demo.py
 |-- configs/
 |-- docs/
 |-- tests/
@@ -715,8 +716,6 @@ For CLIP vs PLIP MHIST comparison, see [docs/clip_vs_plip_mhist_protocol.md](doc
 For preliminary CLIP vs PLIP MHIST observations, see [docs/clip_vs_plip_mhist_observation.md](docs/clip_vs_plip_mhist_observation.md).
 For v0.2.0 release readiness notes, see [docs/release_checklist_v0.2.0.md](docs/release_checklist_v0.2.0.md).
 For v0.2.0 release notes, see [docs/release_notes_v0.2.0.md](docs/release_notes_v0.2.0.md).
-For release readiness notes, see [docs/release_checklist_v0.1.0.md](docs/release_checklist_v0.1.0.md).
-For release notes, see [docs/release_notes_v0.1.0.md](docs/release_notes_v0.1.0.md).
 
 ## Research Positioning
 

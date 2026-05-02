@@ -2,7 +2,7 @@
 
 This checklist defines what should be true before presenting PathVLM-LiteBench as a v0.2.0 research engineering release.
 
-The goal of v0.2.0 is to extend the v0.1.0 CLIP baseline into a same-pipeline CLIP vs PLIP comparison workflow while keeping the project low-compute, patch-level, and laptop-friendly.
+The goal of v0.2.0 is to extend the initial CLIP baseline into a same-pipeline CLIP vs PLIP comparison workflow while keeping the project low-compute, patch-level, and laptop-friendly.
 
 ## Release Positioning
 
@@ -24,7 +24,7 @@ v0.2.0 positioning excludes:
 - proof that PLIP solves MHIST
 - an implementation of CONCH
 
-## Scope Since v0.1.0
+## Release Scope
 
 - [x] Add `PLIPWrapper` using the CLIP-compatible Hugging Face PLIP checkpoint
 - [x] Mark `plip` as implemented in the model registry
@@ -41,8 +41,8 @@ v0.2.0 positioning excludes:
 
 ## Current Release Blockers
 
-- [x] Bump package version from `0.1.0` to `0.2.0` in `pyproject.toml`
-- [x] Bump runtime version from `0.1.0` to `0.2.0` in `pathvlm_litebench/__init__.py`
+- [x] Set package version to `0.2.0` in `pyproject.toml`
+- [x] Set runtime version to `0.2.0` in `pathvlm_litebench/__init__.py`
 - [x] Add `docs/release_notes_v0.2.0.md`
 - [x] Verify GitHub Actions CI passes on the release commit
 - [x] Decide whether to tag `v0.2.0` after the release notes are reviewed
