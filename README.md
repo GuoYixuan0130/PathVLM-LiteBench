@@ -718,13 +718,13 @@ For v0.2.0 release notes, see [docs/release_notes_v0.2.0.md](docs/release_notes_
 For release readiness notes, see [docs/release_checklist_v0.1.0.md](docs/release_checklist_v0.1.0.md).
 For release notes, see [docs/release_notes_v0.1.0.md](docs/release_notes_v0.1.0.md).
 
-## Academic Positioning
+## Research Positioning
 
 PathVLM-LiteBench is intended as a lightweight research engineering project for computational pathology and medical vision-language model evaluation.
 
 The project does not aim to reproduce large-scale foundation model pretraining. Instead, it focuses on reproducible low-compute evaluation workflows that can help students and small research groups analyze pathology vision-language models.
 
-For a more detailed discussion of the research motivation and PhD application positioning, see [docs/project_positioning.md](docs/project_positioning.md).
+For a more detailed discussion of the research motivation and scope, see [docs/project_positioning.md](docs/project_positioning.md).
 
 ## Contributing
 
