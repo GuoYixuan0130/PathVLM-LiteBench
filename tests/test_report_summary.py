@@ -291,11 +291,12 @@ def test_build_prompt_sensitivity_experiment_summary(tmp_path: Path):
 
     assert "# Prompt Sensitivity Experiment Summary" in markdown
     assert "| Model | clip |" in markdown
-    assert "| tumor | 2 | 0.5 | 0.03 |" in markdown
+    assert "| tumor | 2 | 0.5000 | 0.0300 |" in markdown
     assert "| Detail rows | 4 |" in markdown
     assert "| Prompt variants in details | 2 |" in markdown
     assert "| prompt_sensitivity_details.csv | found (4 rows) |" in markdown
     assert "not clinical interpretation" in markdown
+    assert "Higher mean top-k overlap" in markdown
 
 
 def test_save_prompt_sensitivity_experiment_summary_default_path(tmp_path: Path):

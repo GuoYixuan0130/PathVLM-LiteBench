@@ -20,10 +20,24 @@ def _format_value(value: Any) -> str:
         return ""
     if isinstance(value, float):
         return f"{value:.4f}"
+    if isinstance(value, Path):
+        return value.as_posix()
     if isinstance(value, list):
         return ", ".join(str(item) for item in value)
     if isinstance(value, dict):
         return json.dumps(value, ensure_ascii=False)
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return ""
+        if "." in text or "e" in text.lower():
+            try:
+                return f"{float(text):.4f}"
+            except ValueError:
+                pass
+        if "\\" in text and " " not in text:
+            return text.replace("\\", "/")
+        return text
     return str(value)
 
 
@@ -424,6 +438,12 @@ def build_prompt_sensitivity_experiment_summary(report_dir: str | Path) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            [
+                "Higher mean top-k overlap indicates that prompt variants retrieved more similar top-k image sets.",
+                "",
+            ]
+        )
     elif isinstance(results, list) and results:
         lines.extend(["## Concept Summary", ""])
         concept_rows = []
@@ -450,6 +470,12 @@ def build_prompt_sensitivity_experiment_summary(report_dir: str | Path) -> str:
             )
         )
         lines.append("")
+        lines.extend(
+            [
+                "Higher mean top-k overlap indicates that prompt variants retrieved more similar top-k image sets.",
+                "",
+            ]
+        )
     else:
         lines.extend(
             [
