@@ -41,8 +41,8 @@ v0.3.0 positioning excludes:
 
 ## Current Release Blockers
 
-- [ ] Bump package version from `0.2.0` to `0.3.0` in `pyproject.toml`
-- [ ] Bump runtime version from `0.2.0` to `0.3.0` in `pathvlm_litebench/__init__.py`
+- [x] Bump package version from `0.2.0` to `0.3.0` in `pyproject.toml`
+- [x] Bump runtime version from `0.2.0` to `0.3.0` in `pathvlm_litebench/__init__.py`
 - [x] Add `docs/release_notes_v0.3.0.md`
 - [ ] Verify GitHub Actions CI passes on the release commit
 - [ ] Decide whether to tag `v0.3.0` after the release notes are reviewed
