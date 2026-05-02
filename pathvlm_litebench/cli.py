@@ -6,6 +6,7 @@ from . import version
 from .data.manifest_converter import convert_manifest, convert_mhist_manifest
 from .data.manifest_sampler import sample_manifest, summarize_manifest
 from .models.registry import list_available_models
+from .visualization.report_summary import save_zero_shot_experiment_summary
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -25,6 +26,10 @@ def build_parser() -> argparse.ArgumentParser:
     sample_manifest_parser = subparsers.add_parser(
         "sample-manifest",
         help="Sample a smaller balanced subset from a standard manifest CSV.",
+    )
+    summarize_report_parser = subparsers.add_parser(
+        "summarize-report",
+        help="Generate a Markdown summary from saved experiment report artifacts.",
     )
     convert_manifest_parser.add_argument(
         "--input",
@@ -130,6 +135,22 @@ def build_parser() -> argparse.ArgumentParser:
         default=42,
         help="Random seed for reproducible sampling.",
     )
+    summarize_report_parser.add_argument(
+        "--task",
+        choices=["zero-shot"],
+        default="zero-shot",
+        help="Report type to summarize.",
+    )
+    summarize_report_parser.add_argument(
+        "--report_dir",
+        required=True,
+        help="Directory containing saved report artifacts.",
+    )
+    summarize_report_parser.add_argument(
+        "--output",
+        default=None,
+        help="Optional output Markdown path. Defaults to report_dir/experiment_summary.md.",
+    )
 
     return parser
 
@@ -213,6 +234,19 @@ def _handle_sample_manifest(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_summarize_report(args: argparse.Namespace) -> int:
+    if args.task == "zero-shot":
+        saved_path = save_zero_shot_experiment_summary(
+            report_dir=args.report_dir,
+            output_path=args.output,
+        )
+        print(f"Saved experiment summary to: {saved_path}")
+        return 0
+
+    print(f"Error: unsupported report task: {args.task}")
+    return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -235,6 +269,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "sample-manifest":
         return _handle_sample_manifest(args)
+
+    if args.command == "summarize-report":
+        return _handle_summarize_report(args)
 
     parser.print_help()
     return 0

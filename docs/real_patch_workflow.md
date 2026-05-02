@@ -321,6 +321,16 @@ This writes `predictions.csv`, `errors.csv`, and `metrics.json`, which are usefu
 
 If the model predicts almost everything as one class, `metrics.json` includes a warning message about possible prediction collapse or class bias. `errors.csv` helps you quickly inspect misclassified samples. For CLIP baselines on fine-grained pathology tasks, this kind of class bias can happen and does not imply a toolkit bug.
 
+To create a compact Markdown summary from these saved zero-shot outputs:
+
+```bash
+pathvlm-litebench summarize-report \
+  --task zero-shot \
+  --report_dir outputs/zero_shot_demo
+```
+
+This writes `experiment_summary.md` in the report directory. It reads saved CSV/JSON artifacts only and does not run model inference.
+
 ## 8. Interpreting Results
 
 When inspecting results, consider:

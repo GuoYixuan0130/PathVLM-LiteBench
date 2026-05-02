@@ -13,6 +13,10 @@ from .prompt_sensitivity_report import (
     save_prompt_sensitivity_details_csv,
     save_prompt_sensitivity_metrics_json,
 )
+from .report_summary import (
+    build_zero_shot_experiment_summary,
+    save_zero_shot_experiment_summary,
+)
 
 __all__ = [
     "save_topk_image_grids",
@@ -24,4 +28,6 @@ __all__ = [
     "save_prompt_sensitivity_summary_csv",
     "save_prompt_sensitivity_details_csv",
     "save_prompt_sensitivity_metrics_json",
+    "build_zero_shot_experiment_summary",
+    "save_zero_shot_experiment_summary",
 ]

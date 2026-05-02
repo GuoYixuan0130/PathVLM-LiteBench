@@ -151,3 +151,39 @@ def test_cli_sample_manifest(tmp_path: Path, capsys):
     assert output_csv.exists()
     assert "Saved sampled manifest" in captured.out
     assert "Label distribution" in captured.out
+
+
+def test_cli_summarize_zero_shot_report(tmp_path: Path, capsys):
+    report_dir = tmp_path / "zero_shot_report"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    (report_dir / "metrics.json").write_text(
+        (
+            '{"metadata": {"model": "clip", "device": "cpu", "num_images": 1}, '
+            '"metrics": {"error_summary": {"num_samples": 1, '
+            '"predicted_label_distribution": {"HP": 1}}}}'
+        ),
+        encoding="utf-8",
+    )
+    (report_dir / "predictions.csv").write_text(
+        "image_index,image_path,true_label,predicted_label,predicted_index,confidence,correct,top_predictions_json\n"
+        "0,a.png,,HP,0,0.8,,[]\n",
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "summary.md"
+
+    exit_code = main(
+        [
+            "summarize-report",
+            "--task",
+            "zero-shot",
+            "--report_dir",
+            str(report_dir),
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert output_path.exists()
+    assert "Saved experiment summary" in captured.out

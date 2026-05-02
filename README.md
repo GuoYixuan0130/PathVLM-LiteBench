@@ -439,6 +439,16 @@ When labels are available, `--save_report` also generates:
 
 This is useful for detecting class bias in general CLIP baselines.
 
+To generate a compact Markdown summary from a saved zero-shot report:
+
+```bash
+pathvlm-litebench summarize-report \
+  --task zero-shot \
+  --report_dir outputs/zero_shot_demo
+```
+
+This writes `experiment_summary.md` in the report directory. The summary is generated from saved artifacts only; it does not run model inference or download model weights.
+
 ### Demo 3: Prompt Sensitivity Analysis
 
 Run the prompt sensitivity demo:
@@ -705,7 +715,8 @@ These features may be added in later milestones.
 - [x] Document MHIST CLIP baseline observation
 - [x] Add pathology-specific PLIP wrapper
 - [x] Document preliminary CLIP vs PLIP MHIST observation
-- [ ] Add experiment summary Markdown utility
+- [x] Add zero-shot experiment summary Markdown utility
+- [ ] Extend experiment summary utility to retrieval and prompt sensitivity reports
 - [ ] Implement CONCH wrapper
 - [ ] Add optional WSI-level text-guided heatmap demo
 
