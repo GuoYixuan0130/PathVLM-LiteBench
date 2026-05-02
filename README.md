@@ -704,10 +704,12 @@ These features may be added in later milestones.
 - [x] Document MHIST CLIP baseline observation
 - [x] Add pathology-specific PLIP wrapper
 - [x] Document preliminary CLIP vs PLIP MHIST observation
+- [ ] Add experiment summary Markdown utility
 - [ ] Implement CONCH wrapper
 - [ ] Add optional WSI-level text-guided heatmap demo
 
-For the next milestone plan, see [docs/v0.2.0_plan.md](docs/v0.2.0_plan.md).
+For the next milestone plan, see [docs/v0.3.0_plan.md](docs/v0.3.0_plan.md).
+For the previous PLIP milestone plan, see [docs/v0.2.0_plan.md](docs/v0.2.0_plan.md).
 For PLIP local feasibility checks, see [docs/plip_feasibility_check.md](docs/plip_feasibility_check.md).
 For CLIP vs PLIP MHIST comparison, see [docs/clip_vs_plip_mhist_protocol.md](docs/clip_vs_plip_mhist_protocol.md).
 For preliminary CLIP vs PLIP MHIST observations, see [docs/clip_vs_plip_mhist_observation.md](docs/clip_vs_plip_mhist_observation.md).
