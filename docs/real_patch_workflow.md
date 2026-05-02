@@ -164,6 +164,16 @@ python examples/01_patch_text_retrieval_demo.py \
 
 `retrieval_results.csv` helps inspect top-k matches for each prompt, and `retrieval_metrics.json` records Recall@K and experiment parameters for reproducibility. Do not commit `outputs/`.
 
+To create a compact Markdown summary from these saved retrieval outputs:
+
+```bash
+pathvlm-litebench summarize-report \
+  --task retrieval \
+  --report_dir outputs/retrieval_demo
+```
+
+This writes `experiment_summary.md` in the report directory. It reads saved CSV/JSON artifacts only and does not run model inference.
+
 ## 4. Inspect Outputs
 
 By default, generated outputs are saved under:

@@ -558,6 +558,16 @@ This generates:
 
 `retrieval_results.csv` stores prompt-level top-k retrieval results. `retrieval_metrics.json` stores Recall@K metrics and experiment metadata when labels are available. Outputs are ignored by Git.
 
+To generate a compact Markdown summary from a saved retrieval report:
+
+```bash
+pathvlm-litebench summarize-report \
+  --task retrieval \
+  --report_dir outputs/retrieval_demo
+```
+
+This writes `experiment_summary.md` in the report directory without rerunning model inference.
+
 Save top-k visualization grids:
 
 ```bash
@@ -715,8 +725,8 @@ These features may be added in later milestones.
 - [x] Document MHIST CLIP baseline observation
 - [x] Add pathology-specific PLIP wrapper
 - [x] Document preliminary CLIP vs PLIP MHIST observation
-- [x] Add zero-shot experiment summary Markdown utility
-- [ ] Extend experiment summary utility to retrieval and prompt sensitivity reports
+- [x] Add zero-shot and retrieval experiment summary Markdown utilities
+- [ ] Extend experiment summary utility to prompt sensitivity reports
 - [ ] Implement CONCH wrapper
 - [ ] Add optional WSI-level text-guided heatmap demo
 

@@ -187,3 +187,38 @@ def test_cli_summarize_zero_shot_report(tmp_path: Path, capsys):
     assert exit_code == 0
     assert output_path.exists()
     assert "Saved experiment summary" in captured.out
+
+
+def test_cli_summarize_retrieval_report(tmp_path: Path, capsys):
+    report_dir = tmp_path / "retrieval_report"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    (report_dir / "retrieval_metrics.json").write_text(
+        (
+            '{"metadata": {"model": "clip", "device": "cpu", "num_images": 2}, '
+            '"metrics": {"recall_at_k": {"R@1": 0.5}, "mean_recall": 0.5}}'
+        ),
+        encoding="utf-8",
+    )
+    (report_dir / "retrieval_results.csv").write_text(
+        "prompt_index,prompt,target_label,rank,image_index,image_path,score,label,is_positive\n"
+        "0,prompt HP,HP,1,0,a.png,0.8,HP,True\n",
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "retrieval_summary.md"
+
+    exit_code = main(
+        [
+            "summarize-report",
+            "--task",
+            "retrieval",
+            "--report_dir",
+            str(report_dir),
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert output_path.exists()
+    assert "Saved experiment summary" in captured.out
