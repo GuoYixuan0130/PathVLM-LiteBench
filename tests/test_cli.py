@@ -222,3 +222,34 @@ def test_cli_summarize_retrieval_report(tmp_path: Path, capsys):
     assert exit_code == 0
     assert output_path.exists()
     assert "Saved experiment summary" in captured.out
+
+
+def test_cli_summarize_prompt_sensitivity_report(tmp_path: Path, capsys):
+    report_dir = tmp_path / "prompt_sensitivity_report"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    (report_dir / "prompt_sensitivity_metrics.json").write_text(
+        (
+            '{"metadata": {"model": "clip", "device": "cpu", "num_images": 2}, '
+            '"results": [{"concept_name": "tumor", "num_prompts": 2, '
+            '"mean_topk_overlap": 0.5, "mean_similarity_std": 0.03}]}'
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "prompt_sensitivity_summary.md"
+
+    exit_code = main(
+        [
+            "summarize-report",
+            "--task",
+            "prompt-sensitivity",
+            "--report_dir",
+            str(report_dir),
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert output_path.exists()
+    assert "Saved experiment summary" in captured.out

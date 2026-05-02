@@ -7,6 +7,7 @@ from .data.manifest_converter import convert_manifest, convert_mhist_manifest
 from .data.manifest_sampler import sample_manifest, summarize_manifest
 from .models.registry import list_available_models
 from .visualization.report_summary import (
+    save_prompt_sensitivity_experiment_summary,
     save_retrieval_experiment_summary,
     save_zero_shot_experiment_summary,
 )
@@ -140,7 +141,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     summarize_report_parser.add_argument(
         "--task",
-        choices=["zero-shot", "retrieval"],
+        choices=["zero-shot", "retrieval", "prompt-sensitivity"],
         default="zero-shot",
         help="Report type to summarize.",
     )
@@ -248,6 +249,14 @@ def _handle_summarize_report(args: argparse.Namespace) -> int:
 
     if args.task == "retrieval":
         saved_path = save_retrieval_experiment_summary(
+            report_dir=args.report_dir,
+            output_path=args.output,
+        )
+        print(f"Saved experiment summary to: {saved_path}")
+        return 0
+
+    if args.task == "prompt-sensitivity":
+        saved_path = save_prompt_sensitivity_experiment_summary(
             report_dir=args.report_dir,
             output_path=args.output,
         )

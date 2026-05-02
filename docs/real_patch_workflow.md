@@ -273,6 +273,16 @@ python examples/03_prompt_sensitivity_demo.py \
 
 `prompt_sensitivity_summary.csv` is for concept-level `mean_topk_overlap` and `mean_similarity_std`. `prompt_sensitivity_details.csv` stores top-k retrieval rows for each prompt variant. `prompt_sensitivity_metrics.json` records full results and experiment metadata. Do not commit `outputs/`.
 
+To create a compact Markdown summary from these saved prompt sensitivity outputs:
+
+```bash
+pathvlm-litebench summarize-report \
+  --task prompt-sensitivity \
+  --report_dir outputs/prompt_sensitivity_demo
+```
+
+This writes `experiment_summary.md` in the report directory. It reads saved CSV/JSON artifacts only and does not run model inference.
+
 Prompt sensitivity also supports config-driven runs:
 
 ```bash

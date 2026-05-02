@@ -4,8 +4,10 @@ from pathlib import Path
 import pytest
 
 from pathvlm_litebench.visualization.report_summary import (
+    build_prompt_sensitivity_experiment_summary,
     build_retrieval_experiment_summary,
     build_zero_shot_experiment_summary,
+    save_prompt_sensitivity_experiment_summary,
     save_retrieval_experiment_summary,
     save_zero_shot_experiment_summary,
 )
@@ -120,6 +122,70 @@ def _write_retrieval_report(report_dir: Path) -> None:
     )
 
 
+def _write_prompt_sensitivity_report(report_dir: Path) -> None:
+    report_dir.mkdir(parents=True, exist_ok=True)
+    results = [
+        {
+            "concept_name": "tumor",
+            "num_prompts": 2,
+            "mean_topk_overlap": 0.5,
+            "mean_similarity_std": 0.03,
+            "prompt_results": [
+                {
+                    "prompt_index": 0,
+                    "prompt_text": "tumor tissue",
+                    "top_indices": [3, 5],
+                    "top_scores": [0.9, 0.8],
+                },
+                {
+                    "prompt_index": 1,
+                    "prompt_text": "malignant tissue",
+                    "top_indices": [5, 7],
+                    "top_scores": [0.85, 0.75],
+                },
+            ],
+        },
+        {
+            "concept_name": "normal",
+            "num_prompts": 2,
+            "mean_topk_overlap": 1.0,
+            "mean_similarity_std": 0.01,
+            "prompt_results": [],
+        },
+    ]
+    metrics_payload = {
+        "metadata": {
+            "model": "clip",
+            "device": "cpu",
+            "image_dir": "dataset/MHIST/images",
+            "top_k": 2,
+            "use_pathology_prompts": True,
+            "concepts": ["tumor", "normal"],
+            "num_images": 4,
+            "num_concepts": 2,
+        },
+        "results": results,
+    }
+    (report_dir / "prompt_sensitivity_metrics.json").write_text(
+        json.dumps(metrics_payload),
+        encoding="utf-8",
+    )
+    (report_dir / "prompt_sensitivity_summary.csv").write_text(
+        "concept_name,num_prompts,mean_topk_overlap,mean_similarity_std\n"
+        "tumor,2,0.5,0.03\n"
+        "normal,2,1.0,0.01\n",
+        encoding="utf-8",
+    )
+    (report_dir / "prompt_sensitivity_details.csv").write_text(
+        "concept_name,prompt_index,prompt_text,rank,image_index,score\n"
+        "tumor,0,tumor tissue,1,3,0.9\n"
+        "tumor,0,tumor tissue,2,5,0.8\n"
+        "tumor,1,malignant tissue,1,5,0.85\n"
+        "tumor,1,malignant tissue,2,7,0.75\n",
+        encoding="utf-8",
+    )
+
+
 def test_build_zero_shot_experiment_summary(tmp_path: Path):
     report_dir = tmp_path / "zero_shot_report"
     _write_zero_shot_report(report_dir)
@@ -215,3 +281,60 @@ def test_build_retrieval_experiment_summary_without_recall_metrics(tmp_path: Pat
 def test_build_retrieval_experiment_summary_requires_metrics(tmp_path: Path):
     with pytest.raises(FileNotFoundError):
         build_retrieval_experiment_summary(tmp_path / "missing_report")
+
+
+def test_build_prompt_sensitivity_experiment_summary(tmp_path: Path):
+    report_dir = tmp_path / "prompt_sensitivity_report"
+    _write_prompt_sensitivity_report(report_dir)
+
+    markdown = build_prompt_sensitivity_experiment_summary(report_dir)
+
+    assert "# Prompt Sensitivity Experiment Summary" in markdown
+    assert "| Model | clip |" in markdown
+    assert "| tumor | 2 | 0.5 | 0.03 |" in markdown
+    assert "| Detail rows | 4 |" in markdown
+    assert "| Prompt variants in details | 2 |" in markdown
+    assert "| prompt_sensitivity_details.csv | found (4 rows) |" in markdown
+    assert "not clinical interpretation" in markdown
+
+
+def test_save_prompt_sensitivity_experiment_summary_default_path(tmp_path: Path):
+    report_dir = tmp_path / "prompt_sensitivity_report"
+    _write_prompt_sensitivity_report(report_dir)
+
+    saved_path = save_prompt_sensitivity_experiment_summary(report_dir)
+
+    assert saved_path == str(report_dir / "experiment_summary.md")
+    assert Path(saved_path).exists()
+    assert "Concept Summary" in Path(saved_path).read_text(encoding="utf-8")
+
+
+def test_build_prompt_sensitivity_experiment_summary_without_csv(tmp_path: Path):
+    report_dir = tmp_path / "prompt_sensitivity_report"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    (report_dir / "prompt_sensitivity_metrics.json").write_text(
+        json.dumps(
+            {
+                "metadata": {"model": "clip"},
+                "results": [
+                    {
+                        "concept_name": "tumor",
+                        "num_prompts": 2,
+                        "mean_topk_overlap": 0.5,
+                        "mean_similarity_std": 0.03,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    markdown = build_prompt_sensitivity_experiment_summary(report_dir)
+
+    assert "| tumor | 2 | 0.5000 | 0.0300 |" in markdown
+    assert "| prompt_sensitivity_summary.csv | missing |" in markdown
+
+
+def test_build_prompt_sensitivity_experiment_summary_requires_metrics(tmp_path: Path):
+    with pytest.raises(FileNotFoundError):
+        build_prompt_sensitivity_experiment_summary(tmp_path / "missing_report")

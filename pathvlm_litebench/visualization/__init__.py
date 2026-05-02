@@ -14,8 +14,10 @@ from .prompt_sensitivity_report import (
     save_prompt_sensitivity_metrics_json,
 )
 from .report_summary import (
+    build_prompt_sensitivity_experiment_summary,
     build_retrieval_experiment_summary,
     build_zero_shot_experiment_summary,
+    save_prompt_sensitivity_experiment_summary,
     save_retrieval_experiment_summary,
     save_zero_shot_experiment_summary,
 )
@@ -30,8 +32,10 @@ __all__ = [
     "save_prompt_sensitivity_summary_csv",
     "save_prompt_sensitivity_details_csv",
     "save_prompt_sensitivity_metrics_json",
+    "build_prompt_sensitivity_experiment_summary",
     "build_retrieval_experiment_summary",
     "build_zero_shot_experiment_summary",
+    "save_prompt_sensitivity_experiment_summary",
     "save_retrieval_experiment_summary",
     "save_zero_shot_experiment_summary",
 ]

@@ -481,6 +481,16 @@ This generates:
 
 The summary CSV stores concept-level stability metrics. The details CSV stores prompt-level top-k retrieved indices and scores. The JSON stores full results and experiment metadata.
 
+To generate a compact Markdown summary from a saved prompt sensitivity report:
+
+```bash
+pathvlm-litebench summarize-report \
+  --task prompt-sensitivity \
+  --report_dir outputs/prompt_sensitivity_demo
+```
+
+This writes `experiment_summary.md` in the report directory without rerunning model inference.
+
 Prompt sensitivity analysis can also be configured with JSON:
 
 ```bash
@@ -725,8 +735,7 @@ These features may be added in later milestones.
 - [x] Document MHIST CLIP baseline observation
 - [x] Add pathology-specific PLIP wrapper
 - [x] Document preliminary CLIP vs PLIP MHIST observation
-- [x] Add zero-shot and retrieval experiment summary Markdown utilities
-- [ ] Extend experiment summary utility to prompt sensitivity reports
+- [x] Add zero-shot, retrieval, and prompt sensitivity experiment summary Markdown utilities
 - [ ] Implement CONCH wrapper
 - [ ] Add optional WSI-level text-guided heatmap demo
 
