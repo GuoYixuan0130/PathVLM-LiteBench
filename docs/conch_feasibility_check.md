@@ -34,9 +34,9 @@ Primary references:
 
 Record any changes to access, license, package, or loading behavior before implementing a wrapper.
 
-## Local Metadata Result Summary
+## Local Result Summary
 
-Metadata-only checks were run locally on May 6, 2026. These checks did not install CONCH, download weights, or load a model.
+Local feasibility checks were run on May 6, 2026. The checks installed the official CONCH package and verified import paths, but model loading stopped before weights were downloaded because this environment is not authenticated for the gated Hugging Face repository.
 
 - OS: Windows
 - Python: `3.13.2`
@@ -50,14 +50,27 @@ Metadata-only checks were run locally on May 6, 2026. These checks did not insta
 - `huggingface_hub.get_token()`: available and returned no token
 - `huggingface_hub.model_info("MahmoodLab/CONCH")`: succeeded without downloading weights
 - model id: `MahmoodLab/CONCH`
+- `MahmoodLab/conch` also resolves to `MahmoodLab/CONCH`
 - private: `False`
 - gated: `auto`
 - revision: `f9ca9f877171a28ade80228fb195ac5d79003357`
 - license: `cc-by-nc-nd-4.0`
-- `conch` package importable: `False`
-- `conch.open_clip_custom` importable: `False`
+- CONCH install command: `python -m pip install git+https://github.com/Mahmoodlab/CONCH.git`
+- CONCH repository commit installed by pip: `141cc09c7d4ff33d8eda562bd75169b457f71a62`
+- installed package: `conch==0.1.0`
+- installed additional dependencies: `timm==1.0.26`, `ftfy==6.3.1`, `h5py==3.16.0`
+- `conch` package importable: `True`
+- `conch.open_clip_custom.create_model_from_pretrained` importable: `True`
+- `conch.open_clip_custom.tokenize` importable: `True`
+- import warning observed: `timm.models.layers` import path is deprecated
+- CPU model load command attempted with `checkpoint_path="hf_hub:MahmoodLab/CONCH"`
+- CPU model load result: failed before weight download with `huggingface_hub.errors.GatedRepoError`
+- access error: HTTP 401 for `https://huggingface.co/MahmoodLab/CONCH/resolve/main/meta.yaml`
+- text embedding smoke test: not run because model loading is blocked
+- image embedding smoke test: not run because model loading is blocked
+- CUDA smoke test: not run because model loading is blocked
 
-Current conclusion: metadata is publicly resolvable, but local authenticated access and the official CONCH package are not available in this environment. Keep `conch` as a placeholder until dependency installation and authenticated model loading are verified locally.
+Current conclusion: package installation and import are feasible in the local `.venv`, but model loading is blocked by missing Hugging Face authentication or missing gated-model approval. Keep `conch` as a placeholder until authenticated model loading is verified locally.
 
 ## Questions to Answer
 
