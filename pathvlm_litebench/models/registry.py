@@ -25,8 +25,11 @@ MODEL_REGISTRY: dict[str, dict[str, Any]] = {
     },
     "conch": {
         "model_name": "MahmoodLab/CONCH",
-        "implemented": False,
-        "description": "Placeholder for CONCH pathology vision-language model.",
+        "implemented": True,
+        "description": (
+            "Optional CONCH pathology vision-language model wrapper. "
+            "Requires gated Hugging Face access and the optional CONCH package."
+        ),
     },
 }
 
@@ -149,6 +152,14 @@ def create_model(
         from .plip_wrapper import PLIPWrapper
 
         return PLIPWrapper(
+            model_name=model_name,
+            device=resolved_device,
+        )
+
+    if model_key_or_name == "conch" or model_name.lower() == "mahmoodlab/conch":
+        from .conch_wrapper import CONCHWrapper
+
+        return CONCHWrapper(
             model_name=model_name,
             device=resolved_device,
         )

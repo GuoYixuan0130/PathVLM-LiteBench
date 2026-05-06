@@ -33,13 +33,17 @@ def test_plip_is_marked_implemented():
     assert plip["model_name"] == "vinid/plip"
 
 
-def test_conch_placeholder_model_raises_not_implemented():
-    try:
-        resolve_model_name("conch")
-    except NotImplementedError:
-        pass
-    else:
-        raise AssertionError("Expected NotImplementedError for CONCH placeholder.")
+def test_resolve_conch_model_key():
+    assert resolve_model_name("conch") == "MahmoodLab/CONCH"
+
+
+def test_conch_is_marked_implemented():
+    models = list_available_models()
+    conch = next(item for item in models if item["key"] == "conch")
+
+    assert conch["implemented"] is True
+    assert conch["model_name"] == "MahmoodLab/CONCH"
+    assert "gated Hugging Face access" in conch["description"]
 
 
 def test_unknown_model_key_raises_value_error():

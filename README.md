@@ -62,7 +62,7 @@ Currently supported model keys:
 | `clip` | `openai/clip-vit-base-patch32` | Implemented | Default CLIP baseline |
 | `clip-vit-base-patch32` | `openai/clip-vit-base-patch32` | Implemented | Alias for CLIP ViT-B/32 |
 | `plip` | `vinid/plip` | Implemented | Pathology-specific CLIP-compatible PLIP wrapper |
-| `conch` | `MahmoodLab/CONCH` | Placeholder | Registered for future pathology-specific VLM support |
+| `conch` | `MahmoodLab/CONCH` | Optional | CONCH wrapper; requires gated Hugging Face access and the optional CONCH package |
 
 You can run demos with a registered model key:
 
@@ -76,7 +76,14 @@ or with a Hugging Face model name:
 python examples/01_patch_text_retrieval_demo.py --model openai/clip-vit-base-patch32
 ```
 
-PLIP is supported through a CLIP-compatible Hugging Face wrapper. CONCH is still planned but not implemented yet. Passing `--model conch` will raise a clear `NotImplementedError` in the current version.
+PLIP is supported through a CLIP-compatible Hugging Face wrapper. CONCH is supported through the official `mahmoodlab/CONCH` package and requires gated Hugging Face access. If the optional package or authentication is missing, `--model conch` raises a clear setup error.
+
+To use CONCH locally, first install its optional package and authenticate with Hugging Face:
+
+```bash
+pip install git+https://github.com/Mahmoodlab/CONCH.git
+hf auth login
+```
 
 ## Device Support
 
@@ -719,7 +726,7 @@ Current design choices:
 ## Current Limitations
 
 - The current implementation uses CLIP by default; PLIP is available as an optional pathology-specific model key.
-- CONCH is registered as a placeholder but is not implemented in the current version.
+- CONCH requires gated Hugging Face access and the optional `mahmoodlab/CONCH` package.
 - The built-in demo images are not pathology images.
 - WSI-level processing is not supported in the current version.
 - No large-scale benchmark dataset is included.
@@ -753,7 +760,7 @@ These features may be added in later milestones.
 - [x] Add multi-run comparison summaries for saved report artifacts
 - [x] Add v0.4.0 CONCH feasibility-first milestone plan
 - [x] Add CONCH local feasibility check protocol
-- [ ] Implement CONCH wrapper
+- [x] Implement optional CONCH wrapper
 - [ ] Add optional WSI-level text-guided heatmap demo
 
 For the v0.4.0 CONCH milestone plan, see [docs/v0.4.0_plan.md](docs/v0.4.0_plan.md).

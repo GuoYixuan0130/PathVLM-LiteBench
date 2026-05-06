@@ -8,15 +8,15 @@ Do not add these checks to CI. They may require Hugging Face authentication, gat
 
 ## Current Status
 
-CONCH is currently registered as a placeholder:
+CONCH is currently registered as an optional model:
 
 ```text
 key: conch
 model_name: MahmoodLab/CONCH
-implemented: False
+implemented: True
 ```
 
-Do not mark `conch` as implemented until the local checks below pass and the integration path is clear.
+The wrapper requires gated Hugging Face access and the optional CONCH package. Keep CI offline and do not add model downloads to tests.
 
 ## Public Access Notes
 
@@ -75,7 +75,7 @@ Local feasibility checks were run on May 6, 2026. The checks installed the offic
 - peak CUDA memory for batch size 1 image smoke test: about `1549 MB`
 - tokenizer compatibility note: `conch.open_clip_custom.custom_tokenizer.tokenize` expects `batch_encode_plus`, but the installed `transformers==5.6.2` tokenizer backend does not expose that method. Calling the tokenizer directly and padding `input_ids` to length 128 works.
 
-Current conclusion: CONCH is feasible for a local optional wrapper. The likely wrapper should depend on optional CONCH installation, use `create_model_from_pretrained`, use `get_tokenizer()`, avoid the package helper `tokenize()` under current `transformers`, and keep CI fully offline with mocked objects. Keep `conch` as a placeholder until the wrapper and offline tests are implemented.
+Current conclusion: CONCH is feasible as a local optional wrapper. The wrapper depends on optional CONCH installation, uses `create_model_from_pretrained`, uses `get_tokenizer()`, avoids the package helper `tokenize()` under current `transformers`, and keeps CI fully offline with mocked objects.
 
 ## Questions to Answer
 
@@ -342,14 +342,14 @@ Recommended action:
 
 ## Implementation Follow-up
 
-If all checks pass, the implementation follow-up is:
+After local checks passed, the implementation follow-up status is:
 
-1. Add optional CONCH dependency documentation.
-2. Add `CONCHWrapper` with the same public interface as `CLIPWrapper`.
-3. Keep `conch` registered as implemented only after local smoke tests pass.
-4. Add tests that use fake objects or monkeypatching and do not download weights.
-5. Update README model registry status.
-6. Update `docs/project_positioning.md`.
-7. Run optional local CLIP vs PLIP vs CONCH comparisons on saved manifests.
+1. Add optional CONCH dependency documentation. Done.
+2. Add `CONCHWrapper` with the same public interface as `CLIPWrapper`. Done.
+3. Register `conch` as implemented only after local smoke tests pass. Done.
+4. Add tests that use fake objects or monkeypatching and do not download weights. Done.
+5. Update README model registry status. Done.
+6. Update `docs/project_positioning.md`. Done.
+7. Run optional local CLIP vs PLIP vs CONCH comparisons on saved manifests. Pending.
 
-If checks fail or access is unavailable, keep `conch` as a documented placeholder and record the blocker here.
+If access is unavailable in another environment, CONCH should fail with a setup error instead of silently falling back to another model.
