@@ -350,6 +350,7 @@ To run PathVLM-LiteBench on real pathology patches, prepare a folder of patch-le
 For the shortest MHIST-style workflow, see [docs/small_dataset_quickstart.md](docs/small_dataset_quickstart.md).
 See [docs/data_preparation.md](docs/data_preparation.md) for details.
 For a step-by-step guide on running the toolkit with real pathology patch folders, see [docs/real_patch_workflow.md](docs/real_patch_workflow.md).
+For an end-to-end public patch benchmark recipe using conversion, sampling, zero-shot, prompt grids, and report comparison, see [docs/public_patch_benchmark_workflow.md](docs/public_patch_benchmark_workflow.md).
 
 ## Quick Start
 
