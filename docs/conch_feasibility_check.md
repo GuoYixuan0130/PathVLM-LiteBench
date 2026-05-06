@@ -34,6 +34,31 @@ Primary references:
 
 Record any changes to access, license, package, or loading behavior before implementing a wrapper.
 
+## Local Metadata Result Summary
+
+Metadata-only checks were run locally on May 6, 2026. These checks did not install CONCH, download weights, or load a model.
+
+- OS: Windows
+- Python: `3.13.2`
+- torch: `2.11.0+cu126`
+- CUDA available: `True`
+- CUDA runtime: `12.6`
+- GPU: `NVIDIA GeForce RTX 4060 Laptop GPU`
+- `huggingface_hub`: `1.12.0`
+- Hugging Face token present in this environment: `False`
+- `huggingface_hub.HfFolder`: unavailable in this installed version
+- `huggingface_hub.get_token()`: available and returned no token
+- `huggingface_hub.model_info("MahmoodLab/CONCH")`: succeeded without downloading weights
+- model id: `MahmoodLab/CONCH`
+- private: `False`
+- gated: `auto`
+- revision: `f9ca9f877171a28ade80228fb195ac5d79003357`
+- license: `cc-by-nc-nd-4.0`
+- `conch` package importable: `False`
+- `conch.open_clip_custom` importable: `False`
+
+Current conclusion: metadata is publicly resolvable, but local authenticated access and the official CONCH package are not available in this environment. Keep `conch` as a placeholder until dependency installation and authenticated model loading are verified locally.
+
 ## Questions to Answer
 
 Before implementing CONCH, confirm:
@@ -72,7 +97,7 @@ Record:
 Check whether `huggingface_hub` is installed and whether a token is visible to the local environment:
 
 ```bash
-python -c "from huggingface_hub import HfFolder; token=HfFolder.get_token(); print('token_present=', token is not None)"
+python -c "from huggingface_hub import get_token; token=get_token(); print('token_present=', token is not None)"
 ```
 
 If no token is present, authenticate through the standard Hugging Face CLI before access checks:
