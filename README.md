@@ -765,6 +765,8 @@ These features may be added in later milestones.
 
 For the v0.4.0 CONCH milestone plan, see [docs/v0.4.0_plan.md](docs/v0.4.0_plan.md).
 For CONCH local feasibility checks, see [docs/conch_feasibility_check.md](docs/conch_feasibility_check.md).
+For v0.4.0 release readiness notes, see [docs/release_checklist_v0.4.0.md](docs/release_checklist_v0.4.0.md).
+For v0.4.0 release notes, see [docs/release_notes_v0.4.0.md](docs/release_notes_v0.4.0.md).
 For the v0.3.0 reporting milestone plan, see [docs/v0.3.0_plan.md](docs/v0.3.0_plan.md).
 For the previous PLIP milestone plan, see [docs/v0.2.0_plan.md](docs/v0.2.0_plan.md).
 For PLIP local feasibility checks, see [docs/plip_feasibility_check.md](docs/plip_feasibility_check.md).
