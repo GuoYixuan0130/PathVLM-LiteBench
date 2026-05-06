@@ -61,8 +61,53 @@ def _distribution_rows(distribution: dict[str, Any]) -> list[list[Any]]:
     return sorted(rows, key=lambda row: str(row[0]))
 
 
+def _format_distribution(distribution: Any) -> str:
+    if not isinstance(distribution, dict) or not distribution:
+        return ""
+    return ", ".join(
+        f"{label}={count}"
+        for label, count in sorted(distribution.items(), key=lambda item: str(item[0]))
+    )
+
+
 def _is_truthy_text(value: str) -> bool:
     return value.strip().lower() in {"true", "1", "yes"}
+
+
+def _run_label(report_dir: Path, index: int, run_names: list[str] | None) -> str:
+    if run_names is not None and index < len(run_names):
+        run_name = run_names[index].strip()
+        if run_name:
+            return run_name
+    return report_dir.name or f"run_{index + 1}"
+
+
+def _require_run_name_count(report_dirs: list[Path], run_names: list[str] | None) -> None:
+    if run_names is not None and len(run_names) != len(report_dirs):
+        raise ValueError(
+            "run_names must contain exactly one label per report directory."
+        )
+
+
+def _mean_numeric(values: list[Any]) -> float | None:
+    numeric_values: list[float] = []
+    for value in values:
+        if value is None:
+            continue
+        try:
+            numeric_values.append(float(value))
+        except (TypeError, ValueError):
+            continue
+    if not numeric_values:
+        return None
+    return sum(numeric_values) / len(numeric_values)
+
+
+def _metric_sort_key(metric_name: str) -> tuple[str, int | str]:
+    prefix, separator, suffix = metric_name.partition("@")
+    if separator and suffix.isdigit():
+        return (prefix, int(suffix))
+    return (metric_name, metric_name)
 
 
 def build_zero_shot_experiment_summary(report_dir: str | Path) -> str:
@@ -516,6 +561,330 @@ def build_prompt_sensitivity_experiment_summary(report_dir: str | Path) -> str:
     return "\n".join(lines)
 
 
+def build_zero_shot_comparison_summary(
+    report_dirs: list[str | Path],
+    run_names: list[str] | None = None,
+) -> str:
+    """
+    Build a Markdown comparison summary for multiple zero-shot report directories.
+    """
+    resolved_report_dirs = [Path(report_dir) for report_dir in report_dirs]
+    if not resolved_report_dirs:
+        raise ValueError("At least one report directory is required.")
+    _require_run_name_count(resolved_report_dirs, run_names)
+
+    rows: list[list[Any]] = []
+    artifact_rows: list[list[Any]] = []
+
+    for index, report_dir in enumerate(resolved_report_dirs):
+        metrics_path = report_dir / "metrics.json"
+        predictions_path = report_dir / "predictions.csv"
+        errors_path = report_dir / "errors.csv"
+        if not metrics_path.exists():
+            raise FileNotFoundError(f"Missing zero-shot metrics file: {metrics_path}")
+
+        payload = _read_json(metrics_path)
+        metadata = payload.get("metadata", {})
+        metrics = payload.get("metrics", {})
+        classification_report = metrics.get("classification_report", {})
+        error_summary = metrics.get("error_summary", {})
+
+        if not isinstance(classification_report, dict):
+            classification_report = {}
+        if not isinstance(error_summary, dict):
+            error_summary = {}
+
+        rows.append(
+            [
+                _run_label(report_dir, index, run_names),
+                metadata.get("model"),
+                metadata.get("split"),
+                metadata.get("num_images"),
+                classification_report.get("accuracy"),
+                classification_report.get("balanced_accuracy"),
+                classification_report.get("macro_f1"),
+                error_summary.get("num_errors"),
+                error_summary.get("error_rate"),
+                _format_distribution(error_summary.get("predicted_label_distribution")),
+                error_summary.get("warning"),
+            ]
+        )
+        artifact_rows.append(
+            [
+                _run_label(report_dir, index, run_names),
+                metrics_path,
+                "found" if predictions_path.exists() else "missing",
+                "found" if errors_path.exists() else "missing",
+            ]
+        )
+
+    lines: list[str] = [
+        "# Zero-Shot Comparison Summary",
+        "",
+        "This summary compares saved PathVLM-LiteBench zero-shot report artifacts.",
+        "It is intended for lightweight model-behavior review, not clinical interpretation.",
+        "",
+        "## Run Comparison",
+        "",
+    ]
+    lines.extend(
+        _markdown_table(
+            [
+                "Run",
+                "Model",
+                "Split",
+                "Images",
+                "Accuracy",
+                "Balanced accuracy",
+                "Macro F1",
+                "Errors",
+                "Error rate",
+                "Predicted distribution",
+                "Warning",
+            ],
+            rows,
+        )
+    )
+    lines.extend(
+        [
+            "",
+            "## Artifacts",
+            "",
+        ]
+    )
+    lines.extend(
+        _markdown_table(
+            ["Run", "metrics.json", "predictions.csv", "errors.csv"],
+            artifact_rows,
+        )
+    )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def build_retrieval_comparison_summary(
+    report_dirs: list[str | Path],
+    run_names: list[str] | None = None,
+) -> str:
+    """
+    Build a Markdown comparison summary for multiple retrieval report directories.
+    """
+    resolved_report_dirs = [Path(report_dir) for report_dir in report_dirs]
+    if not resolved_report_dirs:
+        raise ValueError("At least one report directory is required.")
+    _require_run_name_count(resolved_report_dirs, run_names)
+
+    payloads: list[tuple[str, Path, dict[str, Any], Path]] = []
+    recall_keys: set[str] = set()
+    for index, report_dir in enumerate(resolved_report_dirs):
+        metrics_path = report_dir / "retrieval_metrics.json"
+        results_path = report_dir / "retrieval_results.csv"
+        if not metrics_path.exists():
+            raise FileNotFoundError(f"Missing retrieval metrics file: {metrics_path}")
+
+        payload = _read_json(metrics_path)
+        metrics = payload.get("metrics", {})
+        recall_at_k = metrics.get("recall_at_k", {})
+        if isinstance(recall_at_k, dict):
+            recall_keys.update(str(key) for key in recall_at_k)
+        payloads.append(
+            (
+                _run_label(report_dir, index, run_names),
+                report_dir,
+                payload,
+                results_path,
+            )
+        )
+
+    sorted_recall_keys = sorted(recall_keys, key=_metric_sort_key)
+    rows: list[list[Any]] = []
+    artifact_rows: list[list[Any]] = []
+    for run_label, report_dir, payload, results_path in payloads:
+        metadata = payload.get("metadata", {})
+        metrics = payload.get("metrics", {})
+        recall_at_k = metrics.get("recall_at_k", {})
+        if not isinstance(recall_at_k, dict):
+            recall_at_k = {}
+
+        rows.append(
+            [
+                run_label,
+                metadata.get("model"),
+                metadata.get("split"),
+                metadata.get("num_images"),
+                metadata.get("num_prompts"),
+                *[recall_at_k.get(key) for key in sorted_recall_keys],
+                metrics.get("mean_recall"),
+                metrics.get("note"),
+            ]
+        )
+        artifact_rows.append(
+            [
+                run_label,
+                report_dir / "retrieval_metrics.json",
+                "found" if results_path.exists() else "missing",
+            ]
+        )
+
+    lines: list[str] = [
+        "# Retrieval Comparison Summary",
+        "",
+        "This summary compares saved PathVLM-LiteBench retrieval report artifacts.",
+        "It is intended for lightweight patch-level retrieval review, not clinical interpretation.",
+        "",
+        "## Run Comparison",
+        "",
+    ]
+    lines.extend(
+        _markdown_table(
+            [
+                "Run",
+                "Model",
+                "Split",
+                "Images",
+                "Prompts",
+                *sorted_recall_keys,
+                "Mean recall",
+                "Note",
+            ],
+            rows,
+        )
+    )
+    lines.extend(["", "## Artifacts", ""])
+    lines.extend(
+        _markdown_table(
+            ["Run", "retrieval_metrics.json", "retrieval_results.csv"],
+            artifact_rows,
+        )
+    )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def build_prompt_sensitivity_comparison_summary(
+    report_dirs: list[str | Path],
+    run_names: list[str] | None = None,
+) -> str:
+    """
+    Build a Markdown comparison summary for multiple prompt sensitivity reports.
+    """
+    resolved_report_dirs = [Path(report_dir) for report_dir in report_dirs]
+    if not resolved_report_dirs:
+        raise ValueError("At least one report directory is required.")
+    _require_run_name_count(resolved_report_dirs, run_names)
+
+    rows: list[list[Any]] = []
+    artifact_rows: list[list[Any]] = []
+    for index, report_dir in enumerate(resolved_report_dirs):
+        metrics_path = report_dir / "prompt_sensitivity_metrics.json"
+        summary_path = report_dir / "prompt_sensitivity_summary.csv"
+        details_path = report_dir / "prompt_sensitivity_details.csv"
+        if not metrics_path.exists():
+            raise FileNotFoundError(
+                f"Missing prompt sensitivity metrics file: {metrics_path}"
+            )
+
+        payload = _read_json(metrics_path)
+        metadata = payload.get("metadata", {})
+        results = payload.get("results", [])
+        if not isinstance(results, list):
+            results = []
+
+        topk_values = [
+            item.get("mean_topk_overlap")
+            for item in results
+            if isinstance(item, dict)
+        ]
+        std_values = [
+            item.get("mean_similarity_std")
+            for item in results
+            if isinstance(item, dict)
+        ]
+
+        rows.append(
+            [
+                _run_label(report_dir, index, run_names),
+                metadata.get("model"),
+                metadata.get("num_images"),
+                metadata.get("num_concepts"),
+                _mean_numeric(topk_values),
+                _mean_numeric(std_values),
+                metadata.get("use_pathology_prompts"),
+            ]
+        )
+        artifact_rows.append(
+            [
+                _run_label(report_dir, index, run_names),
+                metrics_path,
+                "found" if summary_path.exists() else "missing",
+                "found" if details_path.exists() else "missing",
+            ]
+        )
+
+    lines: list[str] = [
+        "# Prompt Sensitivity Comparison Summary",
+        "",
+        "This summary compares saved PathVLM-LiteBench prompt sensitivity artifacts.",
+        "It is intended for lightweight prompt-behavior review, not clinical interpretation.",
+        "",
+        "## Run Comparison",
+        "",
+    ]
+    lines.extend(
+        _markdown_table(
+            [
+                "Run",
+                "Model",
+                "Images",
+                "Concepts",
+                "Mean top-k overlap",
+                "Mean similarity std",
+                "Use pathology prompts",
+            ],
+            rows,
+        )
+    )
+    lines.extend(
+        [
+            "",
+            "Mean top-k overlap and mean similarity std are averaged across concepts.",
+            "",
+            "## Artifacts",
+            "",
+        ]
+    )
+    lines.extend(
+        _markdown_table(
+            [
+                "Run",
+                "prompt_sensitivity_metrics.json",
+                "prompt_sensitivity_summary.csv",
+                "prompt_sensitivity_details.csv",
+            ],
+            artifact_rows,
+        )
+    )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def build_experiment_comparison_summary(
+    task: str,
+    report_dirs: list[str | Path],
+    run_names: list[str] | None = None,
+) -> str:
+    """
+    Build a Markdown comparison summary for multiple report directories.
+    """
+    if task == "zero-shot":
+        return build_zero_shot_comparison_summary(report_dirs, run_names)
+    if task == "retrieval":
+        return build_retrieval_comparison_summary(report_dirs, run_names)
+    if task == "prompt-sensitivity":
+        return build_prompt_sensitivity_comparison_summary(report_dirs, run_names)
+    raise ValueError(f"Unsupported comparison task: {task}")
+
+
 def save_zero_shot_experiment_summary(
     report_dir: str | Path,
     output_path: str | Path | None = None,
@@ -562,6 +931,24 @@ def save_retrieval_experiment_summary(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         build_retrieval_experiment_summary(report_dir),
+        encoding="utf-8",
+    )
+    return str(output_path)
+
+
+def save_experiment_comparison_summary(
+    task: str,
+    report_dirs: list[str | Path],
+    output_path: str | Path,
+    run_names: list[str] | None = None,
+) -> str:
+    """
+    Save a Markdown comparison summary for multiple report directories.
+    """
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        build_experiment_comparison_summary(task, report_dirs, run_names),
         encoding="utf-8",
     )
     return str(output_path)

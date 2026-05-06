@@ -7,6 +7,7 @@ from .data.manifest_converter import convert_manifest, convert_mhist_manifest
 from .data.manifest_sampler import sample_manifest, summarize_manifest
 from .models.registry import list_available_models
 from .visualization.report_summary import (
+    save_experiment_comparison_summary,
     save_prompt_sensitivity_experiment_summary,
     save_retrieval_experiment_summary,
     save_zero_shot_experiment_summary,
@@ -34,6 +35,10 @@ def build_parser() -> argparse.ArgumentParser:
     summarize_report_parser = subparsers.add_parser(
         "summarize-report",
         help="Generate a Markdown summary from saved experiment report artifacts.",
+    )
+    compare_reports_parser = subparsers.add_parser(
+        "compare-reports",
+        help="Generate a Markdown comparison from multiple saved report directories.",
     )
     convert_manifest_parser.add_argument(
         "--input",
@@ -155,6 +160,29 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Optional output Markdown path. Defaults to report_dir/experiment_summary.md.",
     )
+    compare_reports_parser.add_argument(
+        "--task",
+        choices=["zero-shot", "retrieval", "prompt-sensitivity"],
+        required=True,
+        help="Report type to compare.",
+    )
+    compare_reports_parser.add_argument(
+        "--report_dirs",
+        nargs="+",
+        required=True,
+        help="Report directories to compare.",
+    )
+    compare_reports_parser.add_argument(
+        "--run_names",
+        nargs="*",
+        default=None,
+        help="Optional run labels. Provide one label per report directory.",
+    )
+    compare_reports_parser.add_argument(
+        "--output",
+        required=True,
+        help="Output Markdown path for the comparison summary.",
+    )
 
     return parser
 
@@ -267,6 +295,22 @@ def _handle_summarize_report(args: argparse.Namespace) -> int:
     return 1
 
 
+def _handle_compare_reports(args: argparse.Namespace) -> int:
+    try:
+        saved_path = save_experiment_comparison_summary(
+            task=args.task,
+            report_dirs=args.report_dirs,
+            run_names=args.run_names,
+            output_path=args.output,
+        )
+    except ValueError as exc:
+        print(f"Error: {exc}")
+        return 1
+
+    print(f"Saved comparison summary to: {saved_path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -292,6 +336,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "summarize-report":
         return _handle_summarize_report(args)
+
+    if args.command == "compare-reports":
+        return _handle_compare_reports(args)
 
     parser.print_help()
     return 0

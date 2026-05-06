@@ -253,3 +253,73 @@ def test_cli_summarize_prompt_sensitivity_report(tmp_path: Path, capsys):
     assert exit_code == 0
     assert output_path.exists()
     assert "Saved experiment summary" in captured.out
+
+
+def test_cli_compare_zero_shot_reports(tmp_path: Path, capsys):
+    first_report = tmp_path / "clip_zero_shot"
+    second_report = tmp_path / "plip_zero_shot"
+    first_report.mkdir(parents=True, exist_ok=True)
+    second_report.mkdir(parents=True, exist_ok=True)
+    metrics_text = (
+        '{"metadata": {"model": "clip", "split": "test", "num_images": 1}, '
+        '"metrics": {"classification_report": {"accuracy": 0.5, '
+        '"balanced_accuracy": 0.5, "macro_f1": 0.5}, '
+        '"error_summary": {"num_errors": 0, "error_rate": 0.0, '
+        '"predicted_label_distribution": {"HP": 1}}}}'
+    )
+    (first_report / "metrics.json").write_text(metrics_text, encoding="utf-8")
+    (second_report / "metrics.json").write_text(
+        metrics_text.replace('"clip"', '"plip"'),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "comparison_summary.md"
+
+    exit_code = main(
+        [
+            "compare-reports",
+            "--task",
+            "zero-shot",
+            "--report_dirs",
+            str(first_report),
+            str(second_report),
+            "--run_names",
+            "clip",
+            "plip",
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert output_path.exists()
+    assert "Saved comparison summary" in captured.out
+    assert "Zero-Shot Comparison Summary" in output_path.read_text(encoding="utf-8")
+
+
+def test_cli_compare_reports_rejects_mismatched_run_names(tmp_path: Path, capsys):
+    report_dir = tmp_path / "zero_shot"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    (report_dir / "metrics.json").write_text(
+        '{"metadata": {"model": "clip"}, "metrics": {}}',
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            "compare-reports",
+            "--task",
+            "zero-shot",
+            "--report_dirs",
+            str(report_dir),
+            "--run_names",
+            "a",
+            "b",
+            "--output",
+            str(tmp_path / "comparison.md"),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "run_names" in captured.out

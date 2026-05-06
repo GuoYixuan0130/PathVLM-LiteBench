@@ -351,7 +351,23 @@ pathvlm-litebench summarize-report \
 
 This writes `experiment_summary.md` in the report directory. It reads saved CSV/JSON artifacts only and does not run model inference.
 
-## 8. Interpreting Results
+## 8. Compare Saved Reports
+
+After running multiple experiments for the same task, create a local Markdown comparison from the saved report directories:
+
+```bash
+pathvlm-litebench compare-reports \
+  --task zero-shot \
+  --report_dirs outputs/zero_shot_clip outputs/zero_shot_plip \
+  --run_names clip plip \
+  --output outputs/zero_shot_comparison.md
+```
+
+Use `--task retrieval` for retrieval reports and `--task prompt-sensitivity` for prompt sensitivity reports. This command reads saved artifacts only and does not run model inference, load images, or download model weights.
+
+Do not commit generated comparisons if they contain local dataset paths, metrics, or other experiment-specific details.
+
+## 9. Interpreting Results
 
 When inspecting results, consider:
 
@@ -363,7 +379,7 @@ When inspecting results, consider:
 
 Do not interpret these outputs as clinical diagnostic results.
 
-## 9. Compute Notes
+## 10. Compute Notes
 
 For small folders, CPU may be sufficient.
 
@@ -375,7 +391,7 @@ For larger patch folders, CUDA is recommended:
 
 The toolkit is designed for consumer-grade laptop GPUs and does not require large-scale training hardware.
 
-## 10. Data Safety
+## 11. Data Safety
 
 Do not commit:
 

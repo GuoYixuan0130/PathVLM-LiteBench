@@ -499,6 +499,20 @@ python examples/03_prompt_sensitivity_demo.py --config configs/prompt_sensitivit
 
 Command-line arguments can override config values. For meaningful analysis, use real pathology patch images via `--image_dir` or `config.image_dir`.
 
+## Compare Saved Reports
+
+After generating multiple reports for the same task, you can create a compact Markdown comparison without rerunning inference:
+
+```bash
+pathvlm-litebench compare-reports \
+  --task zero-shot \
+  --report_dirs outputs/zero_shot_clip outputs/zero_shot_plip \
+  --run_names clip plip \
+  --output outputs/zero_shot_comparison.md
+```
+
+The same command supports `--task retrieval` and `--task prompt-sensitivity`. The comparison reads saved CSV/JSON artifacts only and writes a local Markdown file. Do not commit generated comparisons if they contain dataset-specific paths or metrics.
+
 ## Example Commands
 
 Patch-text retrieval with custom prompts:
@@ -736,10 +750,11 @@ These features may be added in later milestones.
 - [x] Add pathology-specific PLIP wrapper
 - [x] Document preliminary CLIP vs PLIP MHIST observation
 - [x] Add zero-shot, retrieval, and prompt sensitivity experiment summary Markdown utilities
+- [x] Add multi-run comparison summaries for saved report artifacts
 - [ ] Implement CONCH wrapper
 - [ ] Add optional WSI-level text-guided heatmap demo
 
-For the next milestone plan, see [docs/v0.3.0_plan.md](docs/v0.3.0_plan.md).
+For the v0.3.0 reporting milestone plan, see [docs/v0.3.0_plan.md](docs/v0.3.0_plan.md).
 For the previous PLIP milestone plan, see [docs/v0.2.0_plan.md](docs/v0.2.0_plan.md).
 For PLIP local feasibility checks, see [docs/plip_feasibility_check.md](docs/plip_feasibility_check.md).
 For CLIP vs PLIP MHIST comparison, see [docs/clip_vs_plip_mhist_protocol.md](docs/clip_vs_plip_mhist_protocol.md).

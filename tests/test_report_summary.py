@@ -4,9 +4,14 @@ from pathlib import Path
 import pytest
 
 from pathvlm_litebench.visualization.report_summary import (
+    build_experiment_comparison_summary,
     build_prompt_sensitivity_experiment_summary,
+    build_prompt_sensitivity_comparison_summary,
     build_retrieval_experiment_summary,
+    build_retrieval_comparison_summary,
     build_zero_shot_experiment_summary,
+    build_zero_shot_comparison_summary,
+    save_experiment_comparison_summary,
     save_prompt_sensitivity_experiment_summary,
     save_retrieval_experiment_summary,
     save_zero_shot_experiment_summary,
@@ -339,3 +344,130 @@ def test_build_prompt_sensitivity_experiment_summary_without_csv(tmp_path: Path)
 def test_build_prompt_sensitivity_experiment_summary_requires_metrics(tmp_path: Path):
     with pytest.raises(FileNotFoundError):
         build_prompt_sensitivity_experiment_summary(tmp_path / "missing_report")
+
+
+def test_build_zero_shot_comparison_summary(tmp_path: Path):
+    clip_report = tmp_path / "clip_zero_shot"
+    plip_report = tmp_path / "plip_zero_shot"
+    _write_zero_shot_report(clip_report)
+    _write_zero_shot_report(plip_report)
+
+    payload = json.loads((plip_report / "metrics.json").read_text(encoding="utf-8"))
+    payload["metadata"]["model"] = "plip"
+    payload["metrics"]["classification_report"]["accuracy"] = 0.75
+    payload["metrics"]["classification_report"]["balanced_accuracy"] = 0.8
+    payload["metrics"]["classification_report"]["macro_f1"] = 0.7
+    payload["metrics"]["error_summary"]["predicted_label_distribution"] = {
+        "SSA": 3,
+        "HP": 1,
+    }
+    (plip_report / "metrics.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    markdown = build_zero_shot_comparison_summary(
+        [clip_report, plip_report],
+        run_names=["CLIP default", "PLIP default"],
+    )
+
+    assert "# Zero-Shot Comparison Summary" in markdown
+    assert "| CLIP default | clip | test | 4 | 0.5000 | 0.5000 | 0.5000 |" in markdown
+    assert "| PLIP default | plip | test | 4 | 0.7500 | 0.8000 | 0.7000 |" in markdown
+    assert "HP=1, SSA=3" in markdown
+    assert "| CLIP default |" in markdown
+    assert "not clinical interpretation" in markdown
+
+
+def test_build_retrieval_comparison_summary(tmp_path: Path):
+    clip_report = tmp_path / "clip_retrieval"
+    plip_report = tmp_path / "plip_retrieval"
+    _write_retrieval_report(clip_report)
+    _write_retrieval_report(plip_report)
+
+    payload = json.loads((plip_report / "retrieval_metrics.json").read_text(encoding="utf-8"))
+    payload["metadata"]["model"] = "plip"
+    payload["metrics"]["recall_at_k"]["R@1"] = 1.0
+    payload["metrics"]["mean_recall"] = 1.0
+    (plip_report / "retrieval_metrics.json").write_text(
+        json.dumps(payload),
+        encoding="utf-8",
+    )
+
+    markdown = build_retrieval_comparison_summary([clip_report, plip_report])
+
+    assert "# Retrieval Comparison Summary" in markdown
+    assert "| Run | Model | Split | Images | Prompts | R@1 | R@2 | Mean recall | Note |" in markdown
+    assert "| clip_retrieval | clip | test | 4 | 2 | 0.5000 | 1.0000 | 0.7500 |  |" in markdown
+    assert "| plip_retrieval | plip | test | 4 | 2 | 1.0000 | 1.0000 | 1.0000 |  |" in markdown
+
+
+def test_build_prompt_sensitivity_comparison_summary(tmp_path: Path):
+    first_report = tmp_path / "prompt_a"
+    second_report = tmp_path / "prompt_b"
+    _write_prompt_sensitivity_report(first_report)
+    _write_prompt_sensitivity_report(second_report)
+
+    payload = json.loads(
+        (second_report / "prompt_sensitivity_metrics.json").read_text(encoding="utf-8")
+    )
+    payload["metadata"]["model"] = "plip"
+    payload["results"][0]["mean_topk_overlap"] = 0.25
+    payload["results"][1]["mean_topk_overlap"] = 0.75
+    (second_report / "prompt_sensitivity_metrics.json").write_text(
+        json.dumps(payload),
+        encoding="utf-8",
+    )
+
+    markdown = build_prompt_sensitivity_comparison_summary(
+        [first_report, second_report],
+        run_names=["prompt set A", "prompt set B"],
+    )
+
+    assert "# Prompt Sensitivity Comparison Summary" in markdown
+    assert "| prompt set A | clip | 4 | 2 | 0.7500 | 0.0200 | True |" in markdown
+    assert "| prompt set B | plip | 4 | 2 | 0.5000 | 0.0200 | True |" in markdown
+    assert "averaged across concepts" in markdown
+
+
+def test_build_experiment_comparison_summary_dispatches(tmp_path: Path):
+    report_dir = tmp_path / "zero_shot_report"
+    _write_zero_shot_report(report_dir)
+
+    markdown = build_experiment_comparison_summary("zero-shot", [report_dir])
+
+    assert "# Zero-Shot Comparison Summary" in markdown
+
+
+def test_build_experiment_comparison_summary_rejects_unknown_task(tmp_path: Path):
+    with pytest.raises(ValueError):
+        build_experiment_comparison_summary("unknown", [tmp_path])
+
+
+def test_build_comparison_summary_requires_report_dirs():
+    with pytest.raises(ValueError):
+        build_zero_shot_comparison_summary([])
+
+
+def test_build_comparison_summary_requires_matching_run_names(tmp_path: Path):
+    report_dir = tmp_path / "zero_shot_report"
+    _write_zero_shot_report(report_dir)
+
+    with pytest.raises(ValueError):
+        build_zero_shot_comparison_summary([report_dir], run_names=["a", "b"])
+
+
+def test_save_experiment_comparison_summary(tmp_path: Path):
+    first_report = tmp_path / "clip_zero_shot"
+    second_report = tmp_path / "plip_zero_shot"
+    _write_zero_shot_report(first_report)
+    _write_zero_shot_report(second_report)
+    output_path = tmp_path / "comparison" / "comparison_summary.md"
+
+    saved_path = save_experiment_comparison_summary(
+        task="zero-shot",
+        report_dirs=[first_report, second_report],
+        output_path=output_path,
+        run_names=["clip", "plip"],
+    )
+
+    assert saved_path == str(output_path)
+    assert output_path.exists()
+    assert "Zero-Shot Comparison Summary" in output_path.read_text(encoding="utf-8")
