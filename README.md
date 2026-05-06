@@ -789,6 +789,7 @@ Future milestones may add WSI-oriented demos or more packaged benchmark examples
 Related docs:
 
 - Current release: [v0.4.1 release notes](docs/release_notes_v0.4.1.md), [v0.4.1 checklist](docs/release_checklist_v0.4.1.md)
+- Next milestone: [v0.5.0 plan](docs/v0.5.0_plan.md)
 - Previous release: [v0.4.0 release notes](docs/release_notes_v0.4.0.md), [v0.4.0 checklist](docs/release_checklist_v0.4.0.md)
 - CONCH milestone: [v0.4.0 plan](docs/v0.4.0_plan.md), [CONCH feasibility checks](docs/conch_feasibility_check.md)
 - Earlier milestones: [v0.3.1 notes](docs/release_notes_v0.3.1.md), [v0.3.0 notes](docs/release_notes_v0.3.0.md), [v0.2.0 notes](docs/release_notes_v0.2.0.md)

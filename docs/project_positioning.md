@@ -137,10 +137,10 @@ The current version has several limitations:
 Possible future extensions include:
 
 - public pathology patch dataset demo
-- optional sampled WSI-level text-guided heatmap
 - packaged benchmark configuration examples for public datasets
 - larger prompt-grid comparisons on public pathology patch datasets
 - stronger model-behavior comparison reports across pathology VLMs and prompt sets
+- optional sampled WSI-level text-guided heatmap
 
 ## Summary
 
