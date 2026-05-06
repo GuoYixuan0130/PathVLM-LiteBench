@@ -40,6 +40,10 @@ def build_parser() -> argparse.ArgumentParser:
         "compare-reports",
         help="Generate a Markdown comparison from multiple saved report directories.",
     )
+    zero_shot_grid_parser = subparsers.add_parser(
+        "run-zero-shot-grid",
+        help="Run a zero-shot prompt grid from a JSON config file.",
+    )
     convert_manifest_parser.add_argument(
         "--input",
         required=True,
@@ -183,6 +187,16 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Output Markdown path for the comparison summary.",
     )
+    zero_shot_grid_parser.add_argument(
+        "--config",
+        required=True,
+        help="Path to a zero-shot prompt-grid JSON config file.",
+    )
+    zero_shot_grid_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print expanded runs without running model inference.",
+    )
 
     return parser
 
@@ -208,6 +222,7 @@ def _handle_demos() -> int:
     print("python examples/02_zero_shot_classification_demo.py --model clip")
     print("python examples/03_prompt_sensitivity_demo.py --model clip")
     print("python examples/04_retrieval_metrics_demo.py")
+    print("pathvlm-litebench run-zero-shot-grid --config configs/zero_shot_prompt_grid_mhist_sample.json --dry-run")
     return 0
 
 
@@ -311,6 +326,37 @@ def _handle_compare_reports(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_run_zero_shot_grid(args: argparse.Namespace) -> int:
+    from .evaluation.zero_shot_grid import (
+        load_zero_shot_grid_config,
+        run_zero_shot_grid,
+    )
+
+    try:
+        config = load_zero_shot_grid_config(args.config)
+        result = run_zero_shot_grid(config, dry_run=args.dry_run)
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        print(f"Error: {exc}")
+        return 1
+
+    runs = result["runs"]
+    print(f"Zero-shot grid runs: {len(runs)}")
+    for run in runs:
+        print(f"- {run.run_name}:")
+        print(f"  model: {run.model}")
+        print(f"  prompt_key: {run.prompt_key}")
+        print(f"  report_dir: {run.report_dir}")
+        if run.log_path is not None:
+            print(f"  log_path: {run.log_path}")
+
+    comparison_path = result.get("comparison_path")
+    if args.dry_run:
+        print("Dry run only. No model inference was run.")
+    elif comparison_path:
+        print(f"Saved comparison summary to: {comparison_path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -339,6 +385,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "compare-reports":
         return _handle_compare_reports(args)
+
+    if args.command == "run-zero-shot-grid":
+        return _handle_run_zero_shot_grid(args)
 
     parser.print_help()
     return 0

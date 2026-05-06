@@ -1,0 +1,44 @@
+{
+  "task": "zero_shot_grid",
+  "models": [
+    "clip",
+    "plip",
+    "conch"
+  ],
+  "device": "cuda",
+  "manifest": "dataset/MHIST/manifest_test_50_per_class.csv",
+  "image_root": "dataset/MHIST/images",
+  "split": "test",
+  "class_names": [
+    "HP",
+    "SSA"
+  ],
+  "prompt_pairs": [
+    {
+      "key": "default",
+      "class_prompts": [
+        "a histopathology image of hyperplastic polyp",
+        "a histopathology image of sessile serrated adenoma"
+      ]
+    },
+    {
+      "key": "diagnosis",
+      "class_prompts": [
+        "hyperplastic polyp tissue",
+        "sessile serrated adenoma tissue"
+      ]
+    },
+    {
+      "key": "patch",
+      "class_prompts": [
+        "a pathology patch showing hyperplastic polyp",
+        "a pathology patch showing sessile serrated adenoma"
+      ]
+    }
+  ],
+  "top_k": 2,
+  "output_root": "outputs/zero_shot_prompt_grid_mhist_sample",
+  "save_comparison": true,
+  "comparison_output": "outputs/zero_shot_prompt_grid_mhist_sample/comparison.md",
+  "write_logs": true
+}

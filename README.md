@@ -338,6 +338,7 @@ pathvlm-litebench version
 pathvlm-litebench models
 pathvlm-litebench demos
 pathvlm-litebench convert-manifest --help
+pathvlm-litebench run-zero-shot-grid --help
 ```
 
 The CLI does not download models by default. It only lists registry information and available demo commands.
@@ -521,6 +522,25 @@ pathvlm-litebench compare-reports \
 ```
 
 The same command supports `--task retrieval` and `--task prompt-sensitivity`. The comparison reads saved CSV/JSON artifacts only and writes a local Markdown file. Do not commit generated comparisons if they contain dataset-specific paths or metrics.
+
+## Zero-Shot Prompt Grids
+
+To run a small zero-shot prompt grid from JSON config:
+
+```bash
+pathvlm-litebench run-zero-shot-grid \
+  --config configs/zero_shot_prompt_grid_mhist_sample.json
+```
+
+Preview the expanded model/prompt runs without loading models:
+
+```bash
+pathvlm-litebench run-zero-shot-grid \
+  --config configs/zero_shot_prompt_grid_mhist_sample.json \
+  --dry-run
+```
+
+Each run writes a normal zero-shot report directory under the configured `output_root`. When `save_comparison` is enabled, the command also writes a zero-shot comparison Markdown file from saved artifacts. Generated reports stay under `outputs/` and are ignored by Git.
 
 ## Example Commands
 

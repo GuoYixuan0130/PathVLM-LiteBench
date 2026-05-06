@@ -32,6 +32,14 @@ def test_cli_demos(capsys):
     assert "examples/01_patch_text_retrieval_demo.py" in captured.out
 
 
+def test_cli_demos_lists_zero_shot_grid_command(capsys):
+    exit_code = main(["demos"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "run-zero-shot-grid" in captured.out
+
+
 def test_cli_no_subcommand_shows_help(capsys):
     exit_code = main([])
     captured = capsys.readouterr()
@@ -323,3 +331,37 @@ def test_cli_compare_reports_rejects_mismatched_run_names(tmp_path: Path, capsys
 
     assert exit_code == 1
     assert "run_names" in captured.out
+
+
+def test_cli_zero_shot_grid_dry_run(tmp_path: Path, capsys):
+    config_path = tmp_path / "grid.json"
+    config_path.write_text(
+        (
+            '{"task": "zero_shot_grid", '
+            '"models": ["clip"], '
+            '"manifest": "dataset/MHIST/manifest_test_50_per_class.csv", '
+            '"image_root": "dataset/MHIST/images", '
+            '"class_names": ["HP", "SSA"], '
+            '"prompt_pairs": ['
+            '{"key": "default", "class_prompts": ['
+            '"a histopathology image of hyperplastic polyp", '
+            '"a histopathology image of sessile serrated adenoma"]}'
+            '], '
+            '"output_root": "outputs/test_grid"}'
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            "run-zero-shot-grid",
+            "--config",
+            str(config_path),
+            "--dry-run",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Zero-shot grid runs: 1" in captured.out
+    assert "Dry run only" in captured.out

@@ -67,5 +67,5 @@ Useful follow-up checks:
 
 - run a larger prompt grid with more medically precise and lay wording variants
 - compare prompt-grid behavior on the full MHIST test split
-- add a compact helper for zero-shot prompt-grid batch runs so users do not need to launch each run manually
+- use `pathvlm-litebench run-zero-shot-grid` for reproducible batch runs
 - keep generated outputs local and avoid committing dataset-specific prediction files
