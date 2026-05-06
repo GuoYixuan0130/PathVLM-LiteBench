@@ -124,7 +124,7 @@ The project demonstrates several research engineering capabilities:
 The current version has several limitations:
 
 - It uses CLIP as the implemented baseline model.
-- CONCH is not yet implemented.
+- CONCH is not yet implemented. A local feasibility protocol is documented in `docs/conch_feasibility_check.md` because CONCH access and loading are gated and optional.
 - PLIP support depends on the Hugging Face `vinid/plip` checkpoint remaining accessible and CLIP-compatible.
 - Built-in demo images are smoke tests, not pathology data.
 - The toolkit does not include full WSI processing.
@@ -136,7 +136,7 @@ The current version has several limitations:
 Possible future extensions include:
 
 - CLIP vs PLIP baseline comparison on sampled pathology manifests
-- CONCH wrapper implementation
+- CONCH feasibility checks before any wrapper implementation
 - public pathology patch dataset demo
 - prompt template library for pathology concepts
 - richer classification metrics

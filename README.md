@@ -752,10 +752,12 @@ These features may be added in later milestones.
 - [x] Add zero-shot, retrieval, and prompt sensitivity experiment summary Markdown utilities
 - [x] Add multi-run comparison summaries for saved report artifacts
 - [x] Add v0.4.0 CONCH feasibility-first milestone plan
+- [x] Add CONCH local feasibility check protocol
 - [ ] Implement CONCH wrapper
 - [ ] Add optional WSI-level text-guided heatmap demo
 
 For the v0.4.0 CONCH milestone plan, see [docs/v0.4.0_plan.md](docs/v0.4.0_plan.md).
+For CONCH local feasibility checks, see [docs/conch_feasibility_check.md](docs/conch_feasibility_check.md).
 For the v0.3.0 reporting milestone plan, see [docs/v0.3.0_plan.md](docs/v0.3.0_plan.md).
 For the previous PLIP milestone plan, see [docs/v0.2.0_plan.md](docs/v0.2.0_plan.md).
 For PLIP local feasibility checks, see [docs/plip_feasibility_check.md](docs/plip_feasibility_check.md).
