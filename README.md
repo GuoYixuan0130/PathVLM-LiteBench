@@ -542,6 +542,8 @@ pathvlm-litebench run-zero-shot-grid \
 
 Each run writes a normal zero-shot report directory under the configured `output_root`. When `save_comparison` is enabled, the command also writes a zero-shot comparison Markdown file from saved artifacts. Generated reports stay under `outputs/` and are ignored by Git.
 
+For config fields, output layout, and interpretation guidance, see [docs/prompt_grid_workflow.md](docs/prompt_grid_workflow.md).
+
 ## Example Commands
 
 Patch-text retrieval with custom prompts:
