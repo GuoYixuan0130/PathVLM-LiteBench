@@ -1,8 +1,8 @@
 # CONCH Feasibility Check
 
-This document defines a local-only feasibility check for possible CONCH support in a future v0.4.0 milestone.
+This document defines the local-only feasibility checks used for optional CONCH support in v0.4.0.
 
-The goal is to verify access, license constraints, dependency compatibility, model loading, embedding APIs, and laptop GPU behavior before implementing `CONCHWrapper`.
+The goal is to verify access, license constraints, dependency compatibility, model loading, embedding APIs, and laptop GPU behavior without adding CONCH downloads to CI.
 
 Do not add these checks to CI. They may require Hugging Face authentication, gated model access, optional package installation, model weight downloads, and local CUDA hardware.
 
@@ -32,7 +32,7 @@ Primary references:
 - Hugging Face model card: <https://huggingface.co/MahmoodLab/CONCH>
 - CONCH GitHub repository: <https://github.com/mahmoodlab/CONCH>
 
-Record any changes to access, license, package, or loading behavior before implementing a wrapper.
+Record any future changes to access, license, package, or loading behavior before changing wrapper behavior.
 
 ## Local Result Summary
 
@@ -77,9 +77,9 @@ Local feasibility checks were run on May 6, 2026. The checks installed the offic
 
 Current conclusion: CONCH is feasible as a local optional wrapper. The wrapper depends on optional CONCH installation, uses `create_model_from_pretrained`, uses `get_tokenizer()`, avoids the package helper `tokenize()` under current `transformers`, and keeps CI fully offline with mocked objects.
 
-## Questions to Answer
+## Environment Questions
 
-Before implementing CONCH, confirm:
+When validating CONCH in a new environment, confirm:
 
 - Is `MahmoodLab/CONCH` still the intended model identifier?
 - Does the local Hugging Face account have access to the gated model?
@@ -143,7 +143,7 @@ Record:
 - license string
 - exact error message if access is denied
 
-If this step fails because access is not approved, stop. Keep `conch` as a placeholder and document the blocker.
+If this step fails because access is not approved, treat CONCH as unavailable in that environment and document the blocker.
 
 ## Dependency Check
 
@@ -270,9 +270,9 @@ Record:
 
 Do not benchmark large batches at this stage.
 
-## Wrapper Feasibility Criteria
+## Wrapper Availability Criteria
 
-CONCH is feasible for implementation if:
+CONCH is available in a local environment if:
 
 - model access is approved locally
 - license and terms are compatible with research-only use
@@ -285,9 +285,9 @@ CONCH is feasible for implementation if:
 - errors for missing authentication or dependencies can be made clear
 - CI can remain offline and lightweight
 
-## Failure Criteria
+## Unavailable Criteria
 
-Do not implement `CONCHWrapper` yet if:
+Treat CONCH as unavailable in a given environment if:
 
 - model access is unavailable
 - license or usage constraints are incompatible or unclear
@@ -296,7 +296,7 @@ Do not implement `CONCHWrapper` yet if:
 - the model lacks stable image/text embedding APIs
 - embeddings cannot be aligned through the current wrapper interface
 - CUDA memory use is too high even for tiny batches
-- the wrapper would require downloads in CI
+- usage would require downloads in CI
 
 If a check fails, record the exact command, error message, package versions, and whether the failure happened on CPU or CUDA.
 

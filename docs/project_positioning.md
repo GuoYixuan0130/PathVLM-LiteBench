@@ -118,7 +118,7 @@ The project demonstrates several research engineering capabilities:
    The project includes tests, CI, documentation, and deterministic toy examples.
 
 5. **Extensibility**
-   The model registry and modular structure support PLIP and allow future support for additional pathology-specific VLMs such as CONCH.
+   The model registry and modular structure support CLIP, PLIP, and optional CONCH without coupling core tests to model downloads.
 
 ## Limitations
 
@@ -136,14 +136,11 @@ The current version has several limitations:
 
 Possible future extensions include:
 
-- CLIP vs PLIP baseline comparison on sampled pathology manifests
-- CONCH wrapper validation on local pathology manifests
+- CLIP vs PLIP vs CONCH comparison on sampled pathology manifests
 - public pathology patch dataset demo
-- prompt template library for pathology concepts
-- richer classification metrics
-- retrieval benchmark configuration files
 - optional sampled WSI-level text-guided heatmap
-- comparison across different pathology VLMs
+- packaged benchmark configuration examples for public datasets
+- stronger model-behavior comparison reports across pathology VLMs
 
 ## Summary
 

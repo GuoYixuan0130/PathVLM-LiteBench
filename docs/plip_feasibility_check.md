@@ -1,8 +1,8 @@
 # PLIP Feasibility Check
 
-This document defines a local-only feasibility check for adding PLIP support in a future v0.2.0 milestone.
+This document records the local-only feasibility checks used to add PLIP support in v0.2.0.
 
-The goal is to verify model access, dependency compatibility, embedding APIs, and laptop GPU behavior before implementing `PLIPWrapper`.
+The goal is to verify model access, dependency compatibility, embedding APIs, and laptop GPU behavior without adding model downloads to CI.
 
 Do not add these checks to CI. They may download model weights and depend on local hardware, network access, and Hugging Face availability.
 
@@ -25,9 +25,9 @@ Local feasibility checks passed on the development laptop:
 
 The model returns `BaseModelOutputWithPooling` from `get_text_features` and `get_image_features` in this environment. The wrapper must use `.pooler_output` when the returned object is not already a tensor. This matches the compatibility logic already used by `CLIPWrapper`.
 
-## Questions to Answer
+## Environment Questions
 
-Before implementing PLIP, confirm:
+When validating PLIP in a new environment, confirm:
 
 - Is the intended Hugging Face model identifier correct?
 - Does the model require authentication?

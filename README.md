@@ -725,14 +725,14 @@ Current design choices:
 
 ## Current Limitations
 
-- The current implementation uses CLIP by default; PLIP is available as an optional pathology-specific model key.
+- CLIP remains the default baseline model. PLIP is available as a pathology-specific CLIP-compatible model key.
 - CONCH requires gated Hugging Face access and the optional `mahmoodlab/CONCH` package.
 - The built-in demo images are not pathology images.
 - WSI-level processing is not supported in the current version.
 - No large-scale benchmark dataset is included.
 - Prompt sensitivity analysis currently focuses on retrieval stability rather than clinical validity.
 
-These features may be added in later milestones.
+Future milestones may add WSI-oriented demos or more packaged benchmark examples, but the current release remains patch-level and local-first.
 
 ## Roadmap
 
@@ -763,21 +763,12 @@ These features may be added in later milestones.
 - [x] Implement optional CONCH wrapper
 - [ ] Add optional WSI-level text-guided heatmap demo
 
-For the v0.4.0 CONCH milestone plan, see [docs/v0.4.0_plan.md](docs/v0.4.0_plan.md).
-For CONCH local feasibility checks, see [docs/conch_feasibility_check.md](docs/conch_feasibility_check.md).
-For v0.4.0 release readiness notes, see [docs/release_checklist_v0.4.0.md](docs/release_checklist_v0.4.0.md).
-For v0.4.0 release notes, see [docs/release_notes_v0.4.0.md](docs/release_notes_v0.4.0.md).
-For the v0.3.0 reporting milestone plan, see [docs/v0.3.0_plan.md](docs/v0.3.0_plan.md).
-For the previous PLIP milestone plan, see [docs/v0.2.0_plan.md](docs/v0.2.0_plan.md).
-For PLIP local feasibility checks, see [docs/plip_feasibility_check.md](docs/plip_feasibility_check.md).
-For CLIP vs PLIP MHIST comparison, see [docs/clip_vs_plip_mhist_protocol.md](docs/clip_vs_plip_mhist_protocol.md).
-For preliminary CLIP vs PLIP MHIST observations, see [docs/clip_vs_plip_mhist_observation.md](docs/clip_vs_plip_mhist_observation.md).
-For v0.3.1 release readiness notes, see [docs/release_checklist_v0.3.1.md](docs/release_checklist_v0.3.1.md).
-For v0.3.1 release notes, see [docs/release_notes_v0.3.1.md](docs/release_notes_v0.3.1.md).
-For v0.3.0 release readiness notes, see [docs/release_checklist_v0.3.0.md](docs/release_checklist_v0.3.0.md).
-For v0.3.0 release notes, see [docs/release_notes_v0.3.0.md](docs/release_notes_v0.3.0.md).
-For v0.2.0 release readiness notes, see [docs/release_checklist_v0.2.0.md](docs/release_checklist_v0.2.0.md).
-For v0.2.0 release notes, see [docs/release_notes_v0.2.0.md](docs/release_notes_v0.2.0.md).
+Related docs:
+
+- Current release: [v0.4.0 release notes](docs/release_notes_v0.4.0.md), [v0.4.0 checklist](docs/release_checklist_v0.4.0.md)
+- CONCH milestone: [v0.4.0 plan](docs/v0.4.0_plan.md), [CONCH feasibility checks](docs/conch_feasibility_check.md)
+- Earlier milestones: [v0.3.1 notes](docs/release_notes_v0.3.1.md), [v0.3.0 notes](docs/release_notes_v0.3.0.md), [v0.2.0 notes](docs/release_notes_v0.2.0.md)
+- PLIP and MHIST references: [PLIP feasibility checks](docs/plip_feasibility_check.md), [CLIP vs PLIP protocol](docs/clip_vs_plip_mhist_protocol.md), [CLIP vs PLIP observations](docs/clip_vs_plip_mhist_observation.md)
 
 ## Research Positioning
 
