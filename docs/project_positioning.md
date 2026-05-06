@@ -136,11 +136,11 @@ The current version has several limitations:
 
 Possible future extensions include:
 
-- CLIP vs PLIP vs CONCH comparison on sampled pathology manifests
 - public pathology patch dataset demo
 - optional sampled WSI-level text-guided heatmap
 - packaged benchmark configuration examples for public datasets
-- stronger model-behavior comparison reports across pathology VLMs
+- prompt-grid comparisons across CLIP, PLIP, and CONCH
+- stronger model-behavior comparison reports across pathology VLMs and prompt sets
 
 ## Summary
 
