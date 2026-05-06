@@ -41,7 +41,7 @@ v0.4.1 positioning excludes:
 - [x] Bump runtime version from `0.4.0` to `0.4.1` in `pathvlm_litebench/__init__.py`
 - [x] Add `docs/release_notes_v0.4.1.md`
 - [x] Add this release checklist
-- [ ] Verify GitHub Actions CI passes on the release commit
+- [x] Verify GitHub Actions CI passes on the release commit
 - [ ] Decide whether to tag `v0.4.1` after the release notes are reviewed
 
 ## Validation Checklist
@@ -121,8 +121,8 @@ Tag `v0.4.1` when:
 - [x] Release blockers are resolved locally
 - [x] `python -m pytest tests` passes locally
 - [x] CLI smoke commands pass locally
-- [ ] CI passes on GitHub
+- [x] CI passes on GitHub
 - [x] README and docs are ready for GitHub-facing release documentation
 - [x] `.gitignore` excludes local data and generated outputs
-- [ ] The latest release commit is pushed to `main`
+- [x] The latest release commit is pushed to `main`
 - [x] `docs/release_notes_v0.4.1.md` is complete
