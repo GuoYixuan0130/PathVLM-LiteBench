@@ -783,11 +783,13 @@ Future milestones may add WSI-oriented demos or more packaged benchmark examples
 - [x] Add v0.4.0 CONCH feasibility-first milestone plan
 - [x] Add CONCH local feasibility check protocol
 - [x] Implement optional CONCH wrapper
+- [x] Add zero-shot prompt-grid runner
 - [ ] Add optional WSI-level text-guided heatmap demo
 
 Related docs:
 
-- Current release: [v0.4.0 release notes](docs/release_notes_v0.4.0.md), [v0.4.0 checklist](docs/release_checklist_v0.4.0.md)
+- Current release: [v0.4.1 release notes](docs/release_notes_v0.4.1.md), [v0.4.1 checklist](docs/release_checklist_v0.4.1.md)
+- Previous release: [v0.4.0 release notes](docs/release_notes_v0.4.0.md), [v0.4.0 checklist](docs/release_checklist_v0.4.0.md)
 - CONCH milestone: [v0.4.0 plan](docs/v0.4.0_plan.md), [CONCH feasibility checks](docs/conch_feasibility_check.md)
 - Earlier milestones: [v0.3.1 notes](docs/release_notes_v0.3.1.md), [v0.3.0 notes](docs/release_notes_v0.3.0.md), [v0.2.0 notes](docs/release_notes_v0.2.0.md)
 - PLIP and MHIST references: [PLIP feasibility checks](docs/plip_feasibility_check.md), [CLIP vs PLIP protocol](docs/clip_vs_plip_mhist_protocol.md), [CLIP vs PLIP observations](docs/clip_vs_plip_mhist_observation.md)
