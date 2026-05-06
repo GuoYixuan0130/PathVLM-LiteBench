@@ -36,7 +36,7 @@ Record any changes to access, license, package, or loading behavior before imple
 
 ## Local Result Summary
 
-Local feasibility checks were run on May 6, 2026. The checks installed the official CONCH package and verified import paths, but model loading stopped before weights were downloaded because this environment is not authenticated for the gated Hugging Face repository.
+Local feasibility checks were run on May 6, 2026. The checks installed the official CONCH package, verified gated Hugging Face access, loaded the model on CPU, produced text and image embeddings, and ran a CUDA image smoke test.
 
 - OS: Windows
 - Python: `3.13.2`
@@ -45,10 +45,11 @@ Local feasibility checks were run on May 6, 2026. The checks installed the offic
 - CUDA runtime: `12.6`
 - GPU: `NVIDIA GeForce RTX 4060 Laptop GPU`
 - `huggingface_hub`: `1.12.0`
-- Hugging Face token present in this environment: `False`
+- Hugging Face token present in this environment: `True`
 - `huggingface_hub.HfFolder`: unavailable in this installed version
-- `huggingface_hub.get_token()`: available and returned no token
+- `huggingface_hub.get_token()`: available and returned a token
 - `huggingface_hub.model_info("MahmoodLab/CONCH")`: succeeded without downloading weights
+- `huggingface_hub.hf_hub_download("MahmoodLab/CONCH", "meta.yaml")`: succeeded
 - model id: `MahmoodLab/CONCH`
 - `MahmoodLab/conch` also resolves to `MahmoodLab/CONCH`
 - private: `False`
@@ -64,13 +65,17 @@ Local feasibility checks were run on May 6, 2026. The checks installed the offic
 - `conch.open_clip_custom.tokenize` importable: `True`
 - import warning observed: `timm.models.layers` import path is deprecated
 - CPU model load command attempted with `checkpoint_path="hf_hub:MahmoodLab/CONCH"`
-- CPU model load result: failed before weight download with `huggingface_hub.errors.GatedRepoError`
-- access error: HTTP 401 for `https://huggingface.co/MahmoodLab/CONCH/resolve/main/meta.yaml`
-- text embedding smoke test: not run because model loading is blocked
-- image embedding smoke test: not run because model loading is blocked
-- CUDA smoke test: not run because model loading is blocked
+- CPU model load result: passed
+- model class: `conch.open_clip_custom.coca_model.CoCa`
+- preprocess: resize and center crop to `448 x 448`, then CLIP-style normalization
+- text embedding smoke test: passed, `torch.Size([2, 512])`, `torch.float32`, normalized norms `1.0000`
+- image embedding smoke test: passed, `torch.Size([2, 512])`, `torch.float32`, normalized norms `1.0000`
+- CPU similarity smoke test: passed, output matrix shape `2 x 2`, finite values
+- CUDA image smoke test: passed, `torch.Size([1, 512])`, `torch.float32`, device `cuda:0`, normalized norm `1.0000`
+- peak CUDA memory for batch size 1 image smoke test: about `1549 MB`
+- tokenizer compatibility note: `conch.open_clip_custom.custom_tokenizer.tokenize` expects `batch_encode_plus`, but the installed `transformers==5.6.2` tokenizer backend does not expose that method. Calling the tokenizer directly and padding `input_ids` to length 128 works.
 
-Current conclusion: package installation and import are feasible in the local `.venv`, but model loading is blocked by missing Hugging Face authentication or missing gated-model approval. Keep `conch` as a placeholder until authenticated model loading is verified locally.
+Current conclusion: CONCH is feasible for a local optional wrapper. The likely wrapper should depend on optional CONCH installation, use `create_model_from_pretrained`, use `get_tokenizer()`, avoid the package helper `tokenize()` under current `transformers`, and keep CI fully offline with mocked objects. Keep `conch` as a placeholder until the wrapper and offline tests are implemented.
 
 ## Questions to Answer
 
