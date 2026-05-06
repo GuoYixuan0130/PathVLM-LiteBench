@@ -51,6 +51,7 @@ This is a useful baseline observation rather than a clinical result: it shows wh
 See [docs/mhist_baseline_observation.md](docs/mhist_baseline_observation.md) for the setup, observed metrics, and interpretation.
 For the full-test CLIP vs PLIP comparison with prompt-sensitivity checks, see [docs/clip_vs_plip_mhist_observation.md](docs/clip_vs_plip_mhist_observation.md).
 For a post-v0.4.0 sampled CLIP vs PLIP vs CONCH comparison, see [docs/clip_plip_conch_mhist_sampled_observation.md](docs/clip_plip_conch_mhist_sampled_observation.md).
+For a sampled CLIP/PLIP/CONCH prompt-grid comparison, see [docs/clip_plip_conch_mhist_prompt_grid_observation.md](docs/clip_plip_conch_mhist_prompt_grid_observation.md).
 
 ## Model Registry
 
