@@ -111,23 +111,31 @@ For a first pass, 20-100 patches per class is usually enough to validate the wor
 
 ## 4. Run a Single-Model Zero-Shot Baseline
 
+Validate the committed CLIP baseline config:
+
+```bash
+pathvlm-litebench validate-config \
+  configs/zero_shot_mhist_clip_sample.json
+```
+
 Run CLIP on the sampled manifest:
 
 ```bash
 python examples/02_zero_shot_classification_demo.py \
-  --manifest dataset/MHIST/manifest_test_50_per_class.csv \
-  --image_root dataset/MHIST/images \
-  --model clip \
-  --device auto \
-  --split test \
-  --class_names HP SSA \
-  --class_prompts \
-    "a histopathology image of hyperplastic polyp" \
-    "a histopathology image of sessile serrated adenoma" \
-  --top_k 2 \
-  --save_report \
-  --report_dir outputs/zero_shot_clip_mhist_sample
+  --config configs/zero_shot_mhist_clip_sample.json
 ```
+
+Run PLIP with the same sampled manifest and prompt pair:
+
+```bash
+pathvlm-litebench validate-config \
+  configs/zero_shot_mhist_plip_sample.json
+
+python examples/02_zero_shot_classification_demo.py \
+  --config configs/zero_shot_mhist_plip_sample.json
+```
+
+The config-driven commands expand to the same manifest, class names, class prompts, report saving, and output paths used in the longer command-line form.
 
 Expected outputs:
 

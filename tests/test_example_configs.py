@@ -17,6 +17,8 @@ def test_standard_example_configs_load():
         "retrieval_demo_config.json",
         "zero_shot_demo_config.json",
         "prompt_sensitivity_demo_config.json",
+        "zero_shot_mhist_clip_sample.json",
+        "zero_shot_mhist_plip_sample.json",
     ]
 
     configs = [
@@ -28,9 +30,41 @@ def test_standard_example_configs_load():
         "retrieval",
         "zero_shot",
         "prompt_sensitivity",
+        "zero_shot",
+        "zero_shot",
     ]
-    assert all(config.model == "clip" for config in configs)
+    assert [config.model for config in configs] == [
+        "clip",
+        "clip",
+        "clip",
+        "clip",
+        "plip",
+    ]
     assert all(config.device == "auto" for config in configs)
+
+
+def test_mhist_zero_shot_baseline_configs_are_sampled_report_configs():
+    clip_config = load_benchmark_config(
+        CONFIG_DIR / "zero_shot_mhist_clip_sample.json"
+    )
+    plip_config = load_benchmark_config(
+        CONFIG_DIR / "zero_shot_mhist_plip_sample.json"
+    )
+
+    assert clip_config.task == "zero_shot"
+    assert plip_config.task == "zero_shot"
+    assert clip_config.model == "clip"
+    assert plip_config.model == "plip"
+    assert clip_config.manifest == plip_config.manifest
+    assert clip_config.manifest == "dataset/MHIST/manifest_test_50_per_class.csv"
+    assert clip_config.image_root == "dataset/MHIST/images"
+    assert clip_config.class_names == ["HP", "SSA"]
+    assert clip_config.class_prompts == plip_config.class_prompts
+    assert clip_config.top_k == 2
+    assert clip_config.save_report is True
+    assert plip_config.save_report is True
+    assert clip_config.report_dir == "outputs/zero_shot_clip_mhist_sample"
+    assert plip_config.report_dir == "outputs/zero_shot_plip_mhist_sample"
 
 
 def test_zero_shot_prompt_grid_example_config_expands_without_model_loading():
