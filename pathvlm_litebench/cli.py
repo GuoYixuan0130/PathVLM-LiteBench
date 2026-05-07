@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 
 from . import version
+from .config import load_benchmark_config
 from .data.manifest_converter import convert_manifest, convert_mhist_manifest
 from .data.manifest_sampler import sample_manifest, summarize_manifest
 from .models.registry import list_available_models
@@ -39,6 +41,10 @@ def build_parser() -> argparse.ArgumentParser:
     compare_reports_parser = subparsers.add_parser(
         "compare-reports",
         help="Generate a Markdown comparison from multiple saved report directories.",
+    )
+    validate_config_parser = subparsers.add_parser(
+        "validate-config",
+        help="Validate a benchmark JSON config without running model inference.",
     )
     zero_shot_grid_parser = subparsers.add_parser(
         "run-zero-shot-grid",
@@ -187,6 +193,10 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Output Markdown path for the comparison summary.",
     )
+    validate_config_parser.add_argument(
+        "config",
+        help="Path to a benchmark JSON config file.",
+    )
     zero_shot_grid_parser.add_argument(
         "--config",
         required=True,
@@ -222,6 +232,7 @@ def _handle_demos() -> int:
     print("python examples/02_zero_shot_classification_demo.py --model clip")
     print("python examples/03_prompt_sensitivity_demo.py --model clip")
     print("python examples/04_retrieval_metrics_demo.py")
+    print("pathvlm-litebench validate-config configs/zero_shot_prompt_grid_mhist_sample.json")
     print("pathvlm-litebench run-zero-shot-grid --config configs/zero_shot_prompt_grid_mhist_sample.json --dry-run")
     return 0
 
@@ -326,6 +337,51 @@ def _handle_compare_reports(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_validate_config(args: argparse.Namespace) -> int:
+    try:
+        with open(args.config, "r", encoding="utf-8") as config_file:
+            raw_config = json.load(config_file)
+        task = raw_config.get("task")
+        if task == "zero_shot_grid":
+            from .evaluation.zero_shot_grid import (
+                expand_zero_shot_grid_runs,
+                load_zero_shot_grid_config,
+            )
+
+            config = load_zero_shot_grid_config(args.config)
+            runs = expand_zero_shot_grid_runs(config)
+            prompt_keys = [prompt_pair.key for prompt_pair in config.prompt_pairs]
+            print("Config valid: zero_shot_grid")
+            print(f"Models: {', '.join(config.models)}")
+            print(f"Prompt pairs: {', '.join(prompt_keys)}")
+            print(f"Runs: {len(runs)}")
+            print(f"Device: {config.device}")
+            print(f"Output root: {config.output_root}")
+            return 0
+
+        config = load_benchmark_config(args.config)
+    except (FileNotFoundError, json.JSONDecodeError, ValueError) as exc:
+        print(f"Error: {exc}")
+        return 1
+
+    print(f"Config valid: {config.task}")
+    print(f"Model: {config.model}")
+    print(f"Device: {config.device}")
+    if config.task == "retrieval":
+        prompt_count = len(config.prompts) if config.prompts is not None else 0
+        print(f"Prompts: {prompt_count}")
+        print(f"Output dir: {config.output_dir}")
+    elif config.task == "zero_shot":
+        class_count = len(config.class_names) if config.class_names is not None else 0
+        print(f"Classes: {class_count}")
+        print(f"Report dir: {config.report_dir}")
+    elif config.task == "prompt_sensitivity":
+        concept_count = len(config.concepts) if config.concepts is not None else 0
+        print(f"Concepts: {concept_count}")
+        print(f"Report dir: {config.report_dir}")
+    return 0
+
+
 def _handle_run_zero_shot_grid(args: argparse.Namespace) -> int:
     from .evaluation.zero_shot_grid import (
         load_zero_shot_grid_config,
@@ -385,6 +441,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "compare-reports":
         return _handle_compare_reports(args)
+
+    if args.command == "validate-config":
+        return _handle_validate_config(args)
 
     if args.command == "run-zero-shot-grid":
         return _handle_run_zero_shot_grid(args)

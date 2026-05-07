@@ -150,6 +150,13 @@ Inspect `metrics.json` for:
 
 ## 5. Run a Zero-Shot Prompt Grid
 
+Validate the configured grid:
+
+```bash
+pathvlm-litebench validate-config \
+  configs/zero_shot_prompt_grid_mhist_sample.json
+```
+
 Preview the configured grid:
 
 ```bash

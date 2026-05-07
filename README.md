@@ -338,6 +338,7 @@ pathvlm-litebench version
 pathvlm-litebench models
 pathvlm-litebench demos
 pathvlm-litebench convert-manifest --help
+pathvlm-litebench validate-config --help
 pathvlm-litebench run-zero-shot-grid --help
 ```
 
@@ -527,6 +528,11 @@ The same command supports `--task retrieval` and `--task prompt-sensitivity`. Th
 ## Zero-Shot Prompt Grids
 
 To run a small zero-shot prompt grid from JSON config:
+
+```bash
+pathvlm-litebench validate-config \
+  configs/zero_shot_prompt_grid_mhist_sample.json
+```
 
 ```bash
 pathvlm-litebench run-zero-shot-grid \

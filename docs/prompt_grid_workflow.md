@@ -22,6 +22,11 @@ Do not treat one prompt pair as a final model benchmark. Prompt-grid results sho
 Preview a prompt grid without loading models:
 
 ```bash
+pathvlm-litebench validate-config \
+  configs/zero_shot_prompt_grid_mhist_sample.json
+```
+
+```bash
 pathvlm-litebench run-zero-shot-grid \
   --config configs/zero_shot_prompt_grid_mhist_sample.json \
   --dry-run

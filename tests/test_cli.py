@@ -38,6 +38,7 @@ def test_cli_demos_lists_zero_shot_grid_command(capsys):
 
     assert exit_code == 0
     assert "run-zero-shot-grid" in captured.out
+    assert "validate-config" in captured.out
 
 
 def test_cli_no_subcommand_shows_help(capsys):
@@ -67,6 +68,64 @@ def test_cli_import_does_not_load_model_dependencies():
     )
 
     assert result.stdout.splitlines() == ["False", "False"]
+
+
+def test_cli_validate_standard_config(tmp_path: Path, capsys):
+    config_path = tmp_path / "retrieval.json"
+    config_path.write_text(
+        (
+            '{"task": "retrieval", '
+            '"model": "clip", '
+            '"device": "auto", '
+            '"prompts": ["tumor", "normal"], '
+            '"top_k": 2}'
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(["validate-config", str(config_path)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Config valid: retrieval" in captured.out
+    assert "Prompts: 2" in captured.out
+
+
+def test_cli_validate_zero_shot_grid_config(tmp_path: Path, capsys):
+    config_path = tmp_path / "grid.json"
+    config_path.write_text(
+        (
+            '{"task": "zero_shot_grid", '
+            '"models": ["clip", "plip"], '
+            '"manifest": "dataset/MHIST/manifest_test_50_per_class.csv", '
+            '"class_names": ["HP", "SSA"], '
+            '"prompt_pairs": ['
+            '{"key": "default", "class_prompts": ['
+            '"a histopathology image of hyperplastic polyp", '
+            '"a histopathology image of sessile serrated adenoma"]}'
+            ']}'
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(["validate-config", str(config_path)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Config valid: zero_shot_grid" in captured.out
+    assert "Models: clip, plip" in captured.out
+    assert "Runs: 2" in captured.out
+
+
+def test_cli_validate_config_rejects_bad_task(tmp_path: Path, capsys):
+    config_path = tmp_path / "bad.json"
+    config_path.write_text('{"task": "bad"}', encoding="utf-8")
+
+    exit_code = main(["validate-config", str(config_path)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "Error:" in captured.out
 
 
 def test_cli_convert_manifest_mhist(tmp_path: Path, capsys):
