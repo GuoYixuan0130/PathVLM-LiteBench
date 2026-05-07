@@ -12,7 +12,7 @@ def test_cli_version(capsys):
 
     assert exit_code == 0
     assert "PathVLM-LiteBench" in captured.out
-    assert "0.5.0" in captured.out
+    assert "0.6.0" in captured.out
 
 
 def test_cli_models(capsys):

@@ -41,8 +41,8 @@ v0.6.0 positioning excludes:
 
 ## Current Release Blockers
 
-- [ ] Bump package version from `0.5.0` to `0.6.0` in `pyproject.toml`
-- [ ] Bump runtime version from `0.5.0` to `0.6.0` in `pathvlm_litebench/__init__.py`
+- [x] Bump package version from `0.5.0` to `0.6.0` in `pyproject.toml`
+- [x] Bump runtime version from `0.5.0` to `0.6.0` in `pathvlm_litebench/__init__.py`
 - [x] Add `docs/release_notes_v0.6.0.md`
 - [x] Add this release checklist
 - [ ] Verify GitHub Actions CI passes on the release commit
@@ -109,7 +109,7 @@ dist/
 
 ## Documentation Checklist
 
-- [ ] README links v0.6.0 release notes and checklist when the version is bumped
+- [x] README links v0.6.0 release notes and checklist when the version is bumped
 - [x] README links v0.6.0 plan and audit docs
 - [x] Public audit docs avoid internal follow-up sections
 - [x] Documentation states generated outputs should not be committed
@@ -134,8 +134,8 @@ The v0.6.0 release notes cover:
 Tag `v0.6.0` when:
 
 - [ ] Release blockers are resolved locally
-- [ ] `python -m pytest tests` passes locally
-- [ ] CLI smoke commands pass locally
+- [x] `python -m pytest tests` passes locally
+- [x] CLI smoke commands pass locally
 - [ ] CI passes on GitHub
 - [ ] README and docs are ready for GitHub-facing release documentation
 - [x] `.gitignore` excludes local data, generated outputs, and Python build metadata
