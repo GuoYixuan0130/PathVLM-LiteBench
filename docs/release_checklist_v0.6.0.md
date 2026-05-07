@@ -45,8 +45,8 @@ v0.6.0 positioning excludes:
 - [x] Bump runtime version from `0.5.0` to `0.6.0` in `pathvlm_litebench/__init__.py`
 - [x] Add `docs/release_notes_v0.6.0.md`
 - [x] Add this release checklist
-- [ ] Verify GitHub Actions CI passes on the release commit
-- [ ] Decide whether to tag `v0.6.0` after the release notes are reviewed
+- [x] Verify GitHub Actions CI passes on the release commit
+- [x] Decide whether to tag `v0.6.0` after the release notes are reviewed
 
 ## Validation Checklist
 
@@ -133,11 +133,11 @@ The v0.6.0 release notes cover:
 
 Tag `v0.6.0` when:
 
-- [ ] Release blockers are resolved locally
+- [x] Release blockers are resolved locally
 - [x] `python -m pytest tests` passes locally
 - [x] CLI smoke commands pass locally
-- [ ] CI passes on GitHub
-- [ ] README and docs are ready for GitHub-facing release documentation
+- [x] CI passes on GitHub
+- [x] README and docs are ready for GitHub-facing release documentation
 - [x] `.gitignore` excludes local data, generated outputs, and Python build metadata
-- [ ] The latest release commit is pushed to `main`
+- [x] The latest release commit is pushed to `main`
 - [x] `docs/release_notes_v0.6.0.md` is complete
