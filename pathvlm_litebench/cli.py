@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 import json
 
 from . import version
@@ -207,6 +208,16 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Print expanded runs without running model inference.",
     )
+    zero_shot_grid_parser.add_argument(
+        "--output-root",
+        default=None,
+        help="Optional output root override for all generated grid report directories.",
+    )
+    zero_shot_grid_parser.add_argument(
+        "--comparison-output",
+        default=None,
+        help="Optional comparison Markdown output override.",
+    )
 
     return parser
 
@@ -238,6 +249,7 @@ def _handle_demos() -> int:
     print("pathvlm-litebench validate-config configs/zero_shot_mhist_plip_sample.json")
     print("pathvlm-litebench validate-config configs/zero_shot_prompt_grid_mhist_sample.json")
     print("pathvlm-litebench run-zero-shot-grid --config configs/zero_shot_prompt_grid_mhist_sample.json --dry-run")
+    print("pathvlm-litebench run-zero-shot-grid --config configs/zero_shot_prompt_grid_mhist_sample.json --output-root outputs/zero_shot_prompt_grid_mhist_sample_run")
     return 0
 
 
@@ -341,6 +353,25 @@ def _handle_compare_reports(args: argparse.Namespace) -> int:
     return 0
 
 
+def _apply_zero_shot_grid_overrides(
+    config,
+    *,
+    output_root: str | None = None,
+    comparison_output: str | None = None,
+):
+    """
+    Apply runtime zero-shot grid path overrides without mutating the loaded config.
+    """
+    if output_root is None and comparison_output is None:
+        return config
+
+    return replace(
+        config,
+        output_root=output_root if output_root is not None else config.output_root,
+        comparison_output=comparison_output,
+    )
+
+
 def _handle_validate_config(args: argparse.Namespace) -> int:
     try:
         with open(args.config, "r", encoding="utf-8") as config_file:
@@ -394,6 +425,11 @@ def _handle_run_zero_shot_grid(args: argparse.Namespace) -> int:
 
     try:
         config = load_zero_shot_grid_config(args.config)
+        config = _apply_zero_shot_grid_overrides(
+            config,
+            output_root=args.output_root,
+            comparison_output=args.comparison_output,
+        )
         result = run_zero_shot_grid(config, dry_run=args.dry_run)
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         print(f"Error: {exc}")

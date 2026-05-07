@@ -2,7 +2,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from pathvlm_litebench.cli import main
+from pathvlm_litebench.cli import _apply_zero_shot_grid_overrides, main
+from pathvlm_litebench.evaluation.zero_shot_grid import PromptPair, ZeroShotGridConfig
 
 
 def test_cli_version(capsys):
@@ -424,3 +425,95 @@ def test_cli_zero_shot_grid_dry_run(tmp_path: Path, capsys):
     assert exit_code == 0
     assert "Zero-shot grid runs: 1" in captured.out
     assert "Dry run only" in captured.out
+
+
+def test_cli_zero_shot_grid_dry_run_allows_output_root_override(tmp_path: Path, capsys):
+    config_path = tmp_path / "grid.json"
+    override_root = tmp_path / "override_grid"
+    config_path.write_text(
+        (
+            '{"task": "zero_shot_grid", '
+            '"models": ["clip"], '
+            '"manifest": "dataset/MHIST/manifest_test_50_per_class.csv", '
+            '"image_root": "dataset/MHIST/images", '
+            '"class_names": ["HP", "SSA"], '
+            '"prompt_pairs": ['
+            '{"key": "default", "class_prompts": ['
+            '"a histopathology image of hyperplastic polyp", '
+            '"a histopathology image of sessile serrated adenoma"]}'
+            '], '
+            '"output_root": "outputs/original_grid", '
+            '"comparison_output": "outputs/original_grid/comparison.md"}'
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            "run-zero-shot-grid",
+            "--config",
+            str(config_path),
+            "--output-root",
+            str(override_root),
+            "--dry-run",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert str(override_root / "clip" / "default") in captured.out
+    assert "outputs/original_grid" not in captured.out
+
+
+def test_zero_shot_grid_output_root_override_resets_comparison_output():
+    config = ZeroShotGridConfig(
+        models=["clip"],
+        class_names=["HP", "SSA"],
+        prompt_pairs=[
+            PromptPair(
+                key="default",
+                class_prompts=[
+                    "a histopathology image of hyperplastic polyp",
+                    "a histopathology image of sessile serrated adenoma",
+                ],
+            )
+        ],
+        manifest="dataset/MHIST/manifest_test_50_per_class.csv",
+        output_root="outputs/original_grid",
+        comparison_output="outputs/original_grid/comparison.md",
+    )
+
+    updated = _apply_zero_shot_grid_overrides(
+        config,
+        output_root="outputs/new_grid",
+    )
+
+    assert updated.output_root == "outputs/new_grid"
+    assert updated.comparison_output is None
+
+
+def test_zero_shot_grid_comparison_output_override_keeps_config_output_root():
+    config = ZeroShotGridConfig(
+        models=["clip"],
+        class_names=["HP", "SSA"],
+        prompt_pairs=[
+            PromptPair(
+                key="default",
+                class_prompts=[
+                    "a histopathology image of hyperplastic polyp",
+                    "a histopathology image of sessile serrated adenoma",
+                ],
+            )
+        ],
+        manifest="dataset/MHIST/manifest_test_50_per_class.csv",
+        output_root="outputs/original_grid",
+        comparison_output="outputs/original_grid/comparison.md",
+    )
+
+    updated = _apply_zero_shot_grid_overrides(
+        config,
+        comparison_output="outputs/new_comparison.md",
+    )
+
+    assert updated.output_root == "outputs/original_grid"
+    assert updated.comparison_output == "outputs/new_comparison.md"

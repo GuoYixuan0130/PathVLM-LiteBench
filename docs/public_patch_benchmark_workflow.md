@@ -180,6 +180,14 @@ pathvlm-litebench run-zero-shot-grid \
   --config configs/zero_shot_prompt_grid_mhist_sample.json
 ```
 
+Use a runtime output override when you want a fresh run without touching a previous local output directory:
+
+```bash
+pathvlm-litebench run-zero-shot-grid \
+  --config configs/zero_shot_prompt_grid_mhist_sample.json \
+  --output-root outputs/zero_shot_prompt_grid_mhist_sample_run2
+```
+
 The example config runs:
 
 ```text

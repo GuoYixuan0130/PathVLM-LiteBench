@@ -39,6 +39,16 @@ pathvlm-litebench run-zero-shot-grid \
   --config configs/zero_shot_prompt_grid_mhist_sample.json
 ```
 
+To avoid overwriting a previous local run, override the output root at runtime:
+
+```bash
+pathvlm-litebench run-zero-shot-grid \
+  --config configs/zero_shot_prompt_grid_mhist_sample.json \
+  --output-root outputs/zero_shot_prompt_grid_mhist_sample_run2
+```
+
+When `--output-root` is provided without `--comparison-output`, the comparison Markdown is written under the overridden output root.
+
 The example config uses CLIP, PLIP, and optional CONCH. CONCH requires the optional CONCH package, approved Hugging Face access, and local authentication.
 
 ## Config Format
@@ -97,6 +107,13 @@ Fields:
 | `save_comparison` | no | Whether to write a Markdown comparison after all runs. Defaults to `true`. |
 | `comparison_output` | no | Custom Markdown comparison path. |
 | `write_logs` | no | Whether each run writes `run.log`. Defaults to `true`. |
+
+Runtime overrides:
+
+| CLI option | Effect |
+|---|---|
+| `--output-root` | Overrides the config `output_root` for generated run directories. |
+| `--comparison-output` | Overrides the config `comparison_output` Markdown path. |
 
 `prompt_pairs[*].class_prompts` must have the same length and order as `class_names`.
 
@@ -191,7 +208,8 @@ Example full run:
 
 ```bash
 pathvlm-litebench run-zero-shot-grid \
-  --config configs/zero_shot_prompt_grid_mhist_sample.json
+  --config configs/zero_shot_prompt_grid_mhist_sample.json \
+  --output-root outputs/zero_shot_prompt_grid_mhist_sample_run2
 ```
 
 ## Failure Modes
