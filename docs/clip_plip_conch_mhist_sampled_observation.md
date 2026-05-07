@@ -108,6 +108,5 @@ PLIP produced the highest balanced accuracy in this run, but the improvement is 
 ## Implications
 
 - v0.4.0 CONCH integration is usable for local saved-report comparisons.
-- Future model comparisons should include prompt variants, predicted-label distributions, confusion matrices, and balanced metrics rather than accuracy alone.
+- Model comparisons should include prompt variants, predicted-label distributions, confusion matrices, and balanced metrics rather than accuracy alone.
 - Any public claim should describe this as a local zero-shot behavior check, not a benchmark result.
-- The next useful experiment is a prompt-grid comparison across CLIP, PLIP, and CONCH on the same sampled manifest.

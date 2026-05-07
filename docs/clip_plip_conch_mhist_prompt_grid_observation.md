@@ -60,12 +60,3 @@ Balanced accuracy stayed close to chance for all runs. The best run in this grid
 The result suggests that prompt wording and model identity interact strongly in this MHIST zero-shot setup. A single prompt pair is not enough to characterize model behavior.
 
 This is useful for PathVLM-LiteBench because it validates the need for saved report comparison, prompt-sensitivity checks, predicted-label distributions, and conservative interpretation. It also shows that adding a pathology-specific model wrapper does not by itself remove class-bias failure modes.
-
-## Next Checks
-
-Useful follow-up checks:
-
-- run a larger prompt grid with more medically precise and lay wording variants
-- compare prompt-grid behavior on the full MHIST test split
-- use `pathvlm-litebench run-zero-shot-grid` for reproducible batch runs
-- keep generated outputs local and avoid committing dataset-specific prediction files
