@@ -37,21 +37,21 @@ Recommended mode:
 - consumer-grade laptop GPU
 - CUDA acceleration for image embedding extraction
 - cached image embeddings for repeated experiments
-- patch-level rather than full WSI-level workflows
+- patch-level rather than full whole-slide image workflows
 
 Not required:
 
 - A100 GPUs
 - multi-GPU training
 - large-scale VLM pretraining
-- full-resolution WSI inference
+- full-resolution whole-slide image inference
 - high-throughput deployment infrastructure
 
 This design makes the project accessible while still allowing practical acceleration on devices such as RTX laptop GPUs.
 
 ## Why Patch-Level First?
 
-Whole-slide images are extremely large and often require specialized storage, preprocessing, and memory management. Full WSI-level analysis can quickly become computationally expensive.
+Whole-slide images are extremely large and often require specialized storage, preprocessing, and memory management. Full whole-slide image analysis can quickly become computationally expensive.
 
 PathVLM-LiteBench starts from patch-level images because patch-level workflows are:
 
@@ -60,9 +60,9 @@ PathVLM-LiteBench starts from patch-level images because patch-level workflows a
 - compatible with limited hardware
 - suitable for embedding-based retrieval
 - useful for studying prompt and model behavior
-- extensible to sampled WSI-level analysis later
+- extensible to coordinate-aware patch analysis later
 
-WSI-level text-guided heatmap generation may be added as an optional future module, but it should not become a mandatory dependency of the core toolkit.
+Patch-coordinate text-guided heatmap generation may be added as an optional future module, but it should not become a mandatory dependency of the core toolkit.
 
 ## Why Vision-Language Evaluation?
 
@@ -128,7 +128,7 @@ The current version has several limitations:
 - CONCH support is optional and depends on gated Hugging Face access, local authentication, and the official CONCH package.
 - PLIP support depends on the Hugging Face `vinid/plip` checkpoint remaining accessible and CLIP-compatible.
 - Built-in demo images are smoke tests, not pathology data.
-- The toolkit does not include full WSI processing.
+- The toolkit does not include full whole-slide image processing.
 - Evaluation results depend heavily on prompt design and dataset quality.
 - It is not intended for clinical diagnosis.
 
@@ -140,7 +140,7 @@ Possible future extensions include:
 - packaged benchmark configuration examples for public datasets
 - larger prompt-grid comparisons on public pathology patch datasets
 - stronger model-behavior comparison reports across pathology VLMs and prompt sets
-- optional sampled WSI-level text-guided heatmap
+- optional patch-coordinate text-guided heatmap
 
 ## Summary
 

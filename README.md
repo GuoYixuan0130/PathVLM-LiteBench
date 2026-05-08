@@ -745,7 +745,7 @@ This project is designed for laptop-friendly experimentation.
 Current design choices:
 
 - Use frozen CLIP-style models instead of training large models
-- Start from patch-level images instead of full WSI processing
+- Start from patch-level images instead of full whole-slide image processing
 - Avoid heavy dependencies such as OpenSlide and TIAToolbox in the early stage
 - Cache image embeddings to reduce repeated computation
 - Keep demos simple, reproducible, and easy to inspect
@@ -759,11 +759,11 @@ Current design choices:
 - CLIP remains the default baseline model. PLIP is available as a pathology-specific CLIP-compatible model key.
 - CONCH requires gated Hugging Face access and the optional `mahmoodlab/CONCH` package.
 - The built-in demo images are not pathology images.
-- WSI-level processing is not supported in the current version.
+- Whole-slide image processing is not supported in the current version.
 - No large-scale benchmark dataset is included.
 - Prompt sensitivity analysis currently focuses on retrieval stability rather than clinical validity.
 
-Future milestones may add WSI-oriented demos or more packaged benchmark examples, but the current release remains patch-level and local-first.
+Future milestones may add more packaged patch-level benchmark examples, but the current release remains patch-level and local-first.
 
 ## Roadmap
 
@@ -795,13 +795,13 @@ Future milestones may add WSI-oriented demos or more packaged benchmark examples
 - [x] Add zero-shot prompt-grid runner
 - [x] Document public patch benchmark workflow
 - [x] Add benchmark config validation CLI
-- [ ] Add optional WSI-level text-guided heatmap demo
+- [ ] Add optional patch-coordinate text-guided heatmap demo
 
 Related docs:
 
 - Current release: [v0.6.0 release notes](docs/release_notes_v0.6.0.md), [v0.6.0 checklist](docs/release_checklist_v0.6.0.md)
 - Post-release audit: [v0.6.0 audit](docs/v0.6.0_post_release_audit.md), [v0.5.0 audit](docs/v0.5.0_post_release_audit.md)
-- Next milestone: [v0.7.0 plan](docs/v0.7.0_plan.md), [WSI-oriented patch heatmap workflow](docs/wsi_heatmap_workflow.md)
+- Next milestone: [v0.7.0 plan](docs/v0.7.0_plan.md), [patch coordinate heatmap workflow](docs/patch_coordinate_heatmap_workflow.md)
 - v0.6.0 milestone: [v0.6.0 plan](docs/v0.6.0_plan.md), [v0.6.0 MHIST reproducibility audit](docs/v0.6.0_mhist_reproducibility_audit.md), [v0.6.0 MHIST prompt-grid audit](docs/v0.6.0_mhist_prompt_grid_audit.md)
 - Previous release: [v0.5.0 release notes](docs/release_notes_v0.5.0.md), [v0.5.0 checklist](docs/release_checklist_v0.5.0.md)
 - Earlier releases: [v0.4.1 release notes](docs/release_notes_v0.4.1.md), [v0.4.1 checklist](docs/release_checklist_v0.4.1.md), [v0.4.0 release notes](docs/release_notes_v0.4.0.md), [v0.4.0 checklist](docs/release_checklist_v0.4.0.md)

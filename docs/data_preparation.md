@@ -152,7 +152,7 @@ patch image folder
 -> optionally save visualization and HTML report
 ```
 
-This design avoids full WSI processing in the early stage and keeps the workflow laptop-friendly.
+This design avoids full whole-slide image processing in the early stage and keeps the workflow laptop-friendly.
 
 ## Compute and Device Usage
 
@@ -245,7 +245,7 @@ When using real pathology data:
 
 - Make sure the data can be legally used for research.
 - Do not commit private or patient-level data to GitHub.
-- Do not commit large datasets, WSI files, model weights, or cached embeddings.
+- Do not commit large datasets, whole-slide image files, model weights, or cached embeddings.
 - Keep local datasets outside the repository when possible.
 - Use `outputs/` for generated reports and cache files, which are ignored by Git.
 
@@ -259,15 +259,15 @@ For CLIP-style models, common patch sizes include:
 
 The current CLIP baseline will internally preprocess images using its Hugging Face processor.
 
-## About WSI Processing
+## About Whole-Slide Image Processing
 
 Whole-slide image processing is intentionally not included in the current core workflow.
 
-Future versions may include optional WSI-level features, such as:
+Future versions may add patch-coordinate utilities that work with pre-extracted patches, such as:
 
-- tissue mask generation
-- patch sampling from WSI
-- text-guided WSI heatmap generation
+- coordinate-aware patch manifests
+- patch score aggregation
+- text-guided patch-coordinate heatmap generation
 
 These features should remain optional to preserve the low-compute design philosophy.
 
