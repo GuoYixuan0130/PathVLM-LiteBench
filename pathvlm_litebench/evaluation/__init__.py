@@ -14,6 +14,7 @@ from .classification_metrics import (
     compute_confusion_matrix,
     get_class_names_from_labels,
 )
+from .coordinate_heatmap import score_patch_images_for_prompt
 
 __all__ = [
     "zero_shot_predict",
@@ -27,4 +28,5 @@ __all__ = [
     "compute_classification_report",
     "compute_confusion_matrix",
     "get_class_names_from_labels",
+    "score_patch_images_for_prompt",
 ]

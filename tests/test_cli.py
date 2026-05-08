@@ -2,6 +2,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+from PIL import Image
+import torch
+
 from pathvlm_litebench.cli import _apply_zero_shot_grid_overrides, main
 from pathvlm_litebench.evaluation.zero_shot_grid import PromptPair, ZeroShotGridConfig
 
@@ -42,6 +45,7 @@ def test_cli_demos_lists_zero_shot_grid_command(capsys):
     assert "run-zero-shot-grid" in captured.out
     assert "validate-config" in captured.out
     assert "render-coordinate-heatmap" in captured.out
+    assert "score-coordinate-heatmap" in captured.out
 
 
 def test_cli_no_subcommand_shows_help(capsys):
@@ -731,3 +735,65 @@ def test_cli_render_coordinate_heatmap_config_allows_output_override(
     assert override_output.exists()
     assert not config_output.exists()
     assert str(override_output) in captured.out
+
+
+def test_cli_score_coordinate_heatmap_uses_fake_model(
+    tmp_path: Path,
+    capsys,
+    monkeypatch,
+):
+    patches_dir = tmp_path / "patches"
+    patches_dir.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (16, 16), color="red").save(patches_dir / "a.png")
+    Image.new("RGB", (16, 16), color="blue").save(patches_dir / "b.png")
+
+    manifest_path = tmp_path / "coordinate_manifest.csv"
+    manifest_path.write_text(
+        "image_path,x,y\n"
+        "patches/a.png,0,0\n"
+        "patches/b.png,224,0\n",
+        encoding="utf-8",
+    )
+
+    class FakeModel:
+        def encode_images(self, images):
+            assert len(images) == 2
+            return torch.tensor([[1.0, 0.0], [0.25, 0.75]])
+
+        def encode_text(self, texts):
+            assert texts == ["synthetic red score"]
+            return torch.tensor([[1.0, 0.0]])
+
+    def fake_create_model(model_key_or_name, device=None):
+        assert model_key_or_name == "clip"
+        assert device == "cpu"
+        return FakeModel()
+
+    import pathvlm_litebench.models
+
+    monkeypatch.setattr(pathvlm_litebench.models, "create_model", fake_create_model)
+
+    output_dir = tmp_path / "scored"
+    exit_code = main(
+        [
+            "score-coordinate-heatmap",
+            "--manifest",
+            str(manifest_path),
+            "--prompt",
+            "synthetic red score",
+            "--output-dir",
+            str(output_dir),
+            "--device",
+            "cpu",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert (output_dir / "scores.csv").exists()
+    assert (output_dir / "heatmap.png").exists()
+    scores_text = (output_dir / "scores.csv").read_text(encoding="utf-8")
+    assert "synthetic red score" in scores_text
+    assert "1.0" in scores_text
+    assert "0.25" in scores_text
+    assert "Saved patch-coordinate scores" in captured.out

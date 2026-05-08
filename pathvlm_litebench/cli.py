@@ -58,6 +58,10 @@ def build_parser() -> argparse.ArgumentParser:
         "render-coordinate-heatmap",
         help="Render a patch-coordinate heatmap from a manifest and existing score CSV.",
     )
+    score_heatmap_parser = subparsers.add_parser(
+        "score-coordinate-heatmap",
+        help="Score coordinate patches against a text prompt and render a heatmap.",
+    )
     convert_manifest_parser.add_argument(
         "--input",
         required=True,
@@ -302,6 +306,78 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Matplotlib colormap name.",
     )
+    score_heatmap_parser.add_argument(
+        "--manifest",
+        required=True,
+        help="Coordinate-aware patch manifest CSV path.",
+    )
+    score_heatmap_parser.add_argument(
+        "--prompt",
+        required=True,
+        help="Text prompt to score against each patch.",
+    )
+    score_heatmap_parser.add_argument(
+        "--output-dir",
+        default="outputs/patch_coordinate_heatmap_scored",
+        help="Directory for generated score CSV and heatmap PNG.",
+    )
+    score_heatmap_parser.add_argument(
+        "--score-csv",
+        default=None,
+        help="Optional score CSV output path. Defaults to output-dir/scores.csv.",
+    )
+    score_heatmap_parser.add_argument(
+        "--heatmap-output",
+        default=None,
+        help="Optional heatmap PNG output path. Defaults to output-dir/heatmap.png.",
+    )
+    score_heatmap_parser.add_argument(
+        "--model",
+        default="clip",
+        help="Model key or Hugging Face model name.",
+    )
+    score_heatmap_parser.add_argument(
+        "--device",
+        choices=["auto", "cpu", "cuda"],
+        default="auto",
+        help="Device for model inference.",
+    )
+    score_heatmap_parser.add_argument(
+        "--image-root",
+        default=None,
+        help="Optional image root for resolving relative manifest image paths.",
+    )
+    score_heatmap_parser.add_argument(
+        "--path-column",
+        default="image_path",
+        help="Manifest image path column name.",
+    )
+    score_heatmap_parser.add_argument(
+        "--x-column",
+        default="x",
+        help="Manifest x coordinate column name.",
+    )
+    score_heatmap_parser.add_argument(
+        "--y-column",
+        default="y",
+        help="Manifest y coordinate column name.",
+    )
+    score_heatmap_parser.add_argument(
+        "--max-images",
+        type=int,
+        default=None,
+        help="Optional maximum number of manifest records to score.",
+    )
+    score_heatmap_parser.add_argument(
+        "--title",
+        default=None,
+        help="Optional heatmap title.",
+    )
+    score_heatmap_parser.add_argument(
+        "--cmap",
+        default="viridis",
+        help="Matplotlib colormap name.",
+    )
 
     return parser
 
@@ -338,6 +414,7 @@ def _handle_demos() -> int:
     print("pathvlm-litebench validate-config configs/patch_coordinate_heatmap_demo_config.json")
     print("pathvlm-litebench render-coordinate-heatmap --config configs/patch_coordinate_heatmap_demo_config.json")
     print("pathvlm-litebench render-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --score-csv outputs/patch_coordinate_heatmap_demo/scores.csv --output outputs/patch_coordinate_heatmap_demo/heatmap.png")
+    print("pathvlm-litebench score-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --prompt \"a histopathology image of tumor tissue\" --output-dir outputs/patch_coordinate_heatmap_scored --model clip")
     return 0
 
 
@@ -740,6 +817,77 @@ def _handle_render_coordinate_heatmap(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_score_coordinate_heatmap(args: argparse.Namespace) -> int:
+    from .data import (
+        coordinate_records_to_image_paths,
+        load_coordinate_patch_manifest,
+        load_patch_images_from_paths,
+    )
+    from .evaluation import score_patch_images_for_prompt
+    from .models import create_model
+    from .visualization import (
+        aggregate_patch_scores_to_grid,
+        save_patch_scores_csv,
+        save_score_heatmap,
+    )
+
+    try:
+        if args.max_images is not None and args.max_images <= 0:
+            raise ValueError("--max-images must be a positive integer when provided.")
+
+        output_dir = Path(args.output_dir)
+        score_csv = Path(args.score_csv) if args.score_csv is not None else output_dir / "scores.csv"
+        heatmap_output = (
+            Path(args.heatmap_output)
+            if args.heatmap_output is not None
+            else output_dir / "heatmap.png"
+        )
+
+        records = load_coordinate_patch_manifest(
+            manifest_path=args.manifest,
+            image_root=args.image_root,
+            path_column=args.path_column,
+            x_column=args.x_column,
+            y_column=args.y_column,
+            require_exists=True,
+        )
+        if args.max_images is not None:
+            records = records[: args.max_images]
+
+        image_paths = coordinate_records_to_image_paths(records)
+        images, _ = load_patch_images_from_paths(image_paths)
+
+        model = create_model(args.model, device=args.device)
+        scores = score_patch_images_for_prompt(
+            images=images,
+            prompt=args.prompt,
+            model=model,
+        )
+        grid = aggregate_patch_scores_to_grid(records, scores)
+        saved_scores = save_patch_scores_csv(
+            records,
+            scores,
+            score_csv,
+            prompt=args.prompt,
+        )
+        saved_heatmap = save_score_heatmap(
+            grid,
+            heatmap_output,
+            title=args.title or args.prompt,
+            cmap=args.cmap,
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        print(f"Error: {exc}")
+        return 1
+
+    print(f"Saved patch-coordinate scores to: {saved_scores}")
+    print(f"Saved patch-coordinate heatmap to: {saved_heatmap}")
+    print(f"Patches: {len(records)}")
+    print(f"Prompt: {args.prompt}")
+    print(f"Model: {args.model}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -777,6 +925,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "render-coordinate-heatmap":
         return _handle_render_coordinate_heatmap(args)
+
+    if args.command == "score-coordinate-heatmap":
+        return _handle_score_coordinate_heatmap(args)
 
     parser.print_help()
     return 0

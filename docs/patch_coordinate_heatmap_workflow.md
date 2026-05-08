@@ -149,6 +149,30 @@ pathvlm-litebench render-coordinate-heatmap \
 
 Command-line arguments such as `--output`, `--score-column`, and `--align-by` can override config values at runtime.
 
+## Score Patches from a Text Prompt
+
+If you want PathVLM-LiteBench to compute the patch scores, use:
+
+```bash
+pathvlm-litebench score-coordinate-heatmap \
+  --manifest dataset/patch_coordinates/coordinate_manifest.csv \
+  --prompt "a histopathology image of tumor tissue" \
+  --output-dir outputs/patch_coordinate_heatmap_scored \
+  --model clip \
+  --device auto
+```
+
+This command:
+
+- loads patch images listed in the coordinate manifest
+- loads the selected CLIP-style model
+- encodes one text prompt
+- computes one image-text similarity score per patch
+- writes `scores.csv`
+- writes `heatmap.png`
+
+Unlike `render-coordinate-heatmap`, this command runs model inference and may download model weights if they are not already cached locally. It is not used by CI.
+
 ## Interpretation
 
 Use these heatmaps as patch-coordinate score visualizations only.
