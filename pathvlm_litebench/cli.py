@@ -8,6 +8,7 @@ from pathlib import Path
 
 from . import version
 from .config import load_benchmark_config
+from .config.heatmap_config import PatchCoordinateHeatmapConfig
 from .data.manifest_converter import convert_manifest, convert_mhist_manifest
 from .data.manifest_sampler import sample_manifest, summarize_manifest
 from .models.registry import list_available_models
@@ -225,34 +226,39 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional comparison Markdown output override.",
     )
     render_heatmap_parser.add_argument(
+        "--config",
+        default=None,
+        help="Optional patch-coordinate heatmap JSON config path.",
+    )
+    render_heatmap_parser.add_argument(
         "--manifest",
-        required=True,
+        default=None,
         help="Coordinate-aware patch manifest CSV path.",
     )
     render_heatmap_parser.add_argument(
         "--score-csv",
-        required=True,
+        default=None,
         help="CSV file containing one score per patch.",
     )
     render_heatmap_parser.add_argument(
         "--output",
-        required=True,
+        default=None,
         help="Output heatmap PNG path.",
     )
     render_heatmap_parser.add_argument(
         "--score-column",
-        default="score",
+        default=None,
         help="Score column name in --score-csv.",
     )
     render_heatmap_parser.add_argument(
         "--score-path-column",
-        default="image_path",
+        default=None,
         help="Image path column in --score-csv when --align-by image_path is used.",
     )
     render_heatmap_parser.add_argument(
         "--align-by",
         choices=["image_path", "order"],
-        default="image_path",
+        default=None,
         help="Align scores to manifest records by image_path or row order.",
     )
     render_heatmap_parser.add_argument(
@@ -267,22 +273,23 @@ def build_parser() -> argparse.ArgumentParser:
     )
     render_heatmap_parser.add_argument(
         "--path-column",
-        default="image_path",
+        default=None,
         help="Manifest image path column name.",
     )
     render_heatmap_parser.add_argument(
         "--x-column",
-        default="x",
+        default=None,
         help="Manifest x coordinate column name.",
     )
     render_heatmap_parser.add_argument(
         "--y-column",
-        default="y",
+        default=None,
         help="Manifest y coordinate column name.",
     )
     render_heatmap_parser.add_argument(
         "--require-exists",
         action="store_true",
+        default=None,
         help="Require manifest image paths to exist.",
     )
     render_heatmap_parser.add_argument(
@@ -292,7 +299,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     render_heatmap_parser.add_argument(
         "--cmap",
-        default="viridis",
+        default=None,
         help="Matplotlib colormap name.",
     )
 
@@ -327,6 +334,8 @@ def _handle_demos() -> int:
     print("pathvlm-litebench validate-config configs/zero_shot_prompt_grid_mhist_sample.json")
     print("pathvlm-litebench run-zero-shot-grid --config configs/zero_shot_prompt_grid_mhist_sample.json --dry-run")
     print("pathvlm-litebench run-zero-shot-grid --config configs/zero_shot_prompt_grid_mhist_sample.json --output-root outputs/zero_shot_prompt_grid_mhist_sample_run")
+    print("pathvlm-litebench validate-config configs/patch_coordinate_heatmap_demo_config.json")
+    print("pathvlm-litebench render-coordinate-heatmap --config configs/patch_coordinate_heatmap_demo_config.json")
     print("pathvlm-litebench render-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --score-csv outputs/patch_coordinate_heatmap_demo/scores.csv --output outputs/patch_coordinate_heatmap_demo/heatmap.png")
     return 0
 
@@ -470,6 +479,18 @@ def _handle_validate_config(args: argparse.Namespace) -> int:
             print(f"Runs: {len(runs)}")
             print(f"Device: {config.device}")
             print(f"Output root: {config.output_root}")
+            return 0
+
+        if task == "patch_coordinate_heatmap":
+            from .config import load_patch_coordinate_heatmap_config
+
+            config = load_patch_coordinate_heatmap_config(args.config)
+            print("Config valid: patch_coordinate_heatmap")
+            print(f"Manifest: {config.manifest}")
+            print(f"Score CSV: {config.score_csv}")
+            print(f"Output: {config.output}")
+            print(f"Align by: {config.align_by}")
+            print(f"Score column: {config.score_column}")
             return 0
 
         config = load_benchmark_config(args.config)
@@ -616,33 +637,97 @@ def _resolve_path_key(raw_path: str, root: Path) -> str:
     return str(path.resolve())
 
 
+def _load_render_heatmap_args_config(
+    args: argparse.Namespace,
+) -> PatchCoordinateHeatmapConfig:
+    from .config import load_patch_coordinate_heatmap_config
+
+    if args.config is None:
+        if args.manifest is None:
+            raise ValueError("--manifest is required when --config is not provided.")
+        if args.score_csv is None:
+            raise ValueError("--score-csv is required when --config is not provided.")
+        if args.output is None:
+            raise ValueError("--output is required when --config is not provided.")
+        return PatchCoordinateHeatmapConfig(
+            manifest=args.manifest,
+            score_csv=args.score_csv,
+            output=args.output,
+            score_column=args.score_column or "score",
+            score_path_column=args.score_path_column or "image_path",
+            align_by=args.align_by or "image_path",
+            image_root=args.image_root,
+            score_image_root=args.score_image_root,
+            path_column=args.path_column or "image_path",
+            x_column=args.x_column or "x",
+            y_column=args.y_column or "y",
+            require_exists=bool(args.require_exists),
+            title=args.title,
+            cmap=args.cmap or "viridis",
+        )
+
+    config = load_patch_coordinate_heatmap_config(args.config)
+    return replace(
+        config,
+        manifest=args.manifest if args.manifest is not None else config.manifest,
+        score_csv=args.score_csv if args.score_csv is not None else config.score_csv,
+        output=args.output if args.output is not None else config.output,
+        score_column=(
+            args.score_column if args.score_column is not None else config.score_column
+        ),
+        score_path_column=(
+            args.score_path_column
+            if args.score_path_column is not None
+            else config.score_path_column
+        ),
+        align_by=args.align_by if args.align_by is not None else config.align_by,
+        image_root=args.image_root if args.image_root is not None else config.image_root,
+        score_image_root=(
+            args.score_image_root
+            if args.score_image_root is not None
+            else config.score_image_root
+        ),
+        path_column=args.path_column if args.path_column is not None else config.path_column,
+        x_column=args.x_column if args.x_column is not None else config.x_column,
+        y_column=args.y_column if args.y_column is not None else config.y_column,
+        require_exists=(
+            args.require_exists
+            if args.require_exists is not None
+            else config.require_exists
+        ),
+        title=args.title if args.title is not None else config.title,
+        cmap=args.cmap if args.cmap is not None else config.cmap,
+    )
+
+
 def _handle_render_coordinate_heatmap(args: argparse.Namespace) -> int:
     from .data import load_coordinate_patch_manifest
     from .visualization import aggregate_patch_scores_to_grid, save_score_heatmap
 
     try:
+        config = _load_render_heatmap_args_config(args)
         records = load_coordinate_patch_manifest(
-            manifest_path=args.manifest,
-            image_root=args.image_root,
-            path_column=args.path_column,
-            x_column=args.x_column,
-            y_column=args.y_column,
-            require_exists=args.require_exists,
+            manifest_path=config.manifest,
+            image_root=config.image_root,
+            path_column=config.path_column,
+            x_column=config.x_column,
+            y_column=config.y_column,
+            require_exists=config.require_exists,
         )
         scores = _load_heatmap_scores(
             records=records,
-            score_csv=args.score_csv,
-            score_column=args.score_column,
-            score_path_column=args.score_path_column,
-            align_by=args.align_by,
-            score_image_root=args.score_image_root,
+            score_csv=config.score_csv,
+            score_column=config.score_column,
+            score_path_column=config.score_path_column,
+            align_by=config.align_by,
+            score_image_root=config.score_image_root,
         )
         grid = aggregate_patch_scores_to_grid(records, scores)
         saved_path = save_score_heatmap(
             grid,
-            output_path=args.output,
-            title=args.title,
-            cmap=args.cmap,
+            output_path=config.output,
+            title=config.title,
+            cmap=config.cmap,
         )
     except (FileNotFoundError, ValueError) as exc:
         print(f"Error: {exc}")

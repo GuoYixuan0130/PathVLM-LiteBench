@@ -1,0 +1,15 @@
+{
+  "task": "patch_coordinate_heatmap",
+  "manifest": "dataset/patch_coordinates/coordinate_manifest.csv",
+  "score_csv": "outputs/patch_coordinate_heatmap_demo/scores.csv",
+  "output": "outputs/patch_coordinate_heatmap_demo/heatmap.png",
+  "score_column": "score",
+  "score_path_column": "image_path",
+  "align_by": "image_path",
+  "path_column": "image_path",
+  "x_column": "x",
+  "y_column": "y",
+  "require_exists": false,
+  "title": "Patch coordinate score heatmap",
+  "cmap": "viridis"
+}

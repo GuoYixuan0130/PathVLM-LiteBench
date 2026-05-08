@@ -121,6 +121,18 @@ pathvlm-litebench render-coordinate-heatmap \
 
 This command reads saved artifacts only. It does not load a model, run inference, or download weights.
 
+You can also validate and use the example config:
+
+```bash
+pathvlm-litebench validate-config \
+  configs/patch_coordinate_heatmap_demo_config.json
+
+pathvlm-litebench render-coordinate-heatmap \
+  --config configs/patch_coordinate_heatmap_demo_config.json
+```
+
+Command-line arguments such as `--output`, `--score-column`, and `--align-by` can override config values at runtime.
+
 ## Interpretation
 
 Use these heatmaps as patch-coordinate score visualizations only.

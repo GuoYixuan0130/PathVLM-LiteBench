@@ -119,6 +119,26 @@ def test_cli_validate_zero_shot_grid_config(tmp_path: Path, capsys):
     assert "Runs: 2" in captured.out
 
 
+def test_cli_validate_patch_coordinate_heatmap_config(tmp_path: Path, capsys):
+    config_path = tmp_path / "heatmap.json"
+    config_path.write_text(
+        (
+            '{"task": "patch_coordinate_heatmap", '
+            '"manifest": "dataset/patch_coordinates/coordinate_manifest.csv", '
+            '"score_csv": "outputs/patch_coordinate_heatmap_demo/scores.csv", '
+            '"output": "outputs/patch_coordinate_heatmap_demo/heatmap.png"}'
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(["validate-config", str(config_path)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Config valid: patch_coordinate_heatmap" in captured.out
+    assert "Align by: image_path" in captured.out
+
+
 def test_cli_validate_config_rejects_bad_task(tmp_path: Path, capsys):
     config_path = tmp_path / "bad.json"
     config_path.write_text('{"task": "bad"}', encoding="utf-8")
@@ -625,3 +645,88 @@ def test_cli_render_coordinate_heatmap_rejects_missing_score_column(
 
     assert exit_code == 1
     assert "Score column 'score' not found" in captured.out
+
+
+def test_cli_render_coordinate_heatmap_requires_inputs_without_config(capsys):
+    exit_code = main(["render-coordinate-heatmap"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--manifest is required" in captured.out
+
+
+def test_cli_render_coordinate_heatmap_uses_config(tmp_path: Path, capsys):
+    manifest_path = tmp_path / "coordinate_manifest.csv"
+    manifest_path.write_text(
+        "image_path,x,y\n"
+        "patches/a.png,0,0\n",
+        encoding="utf-8",
+    )
+    score_csv = tmp_path / "scores.csv"
+    score_csv.write_text(
+        "score\n"
+        "0.4\n",
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "heatmap.png"
+    config_path = tmp_path / "heatmap_config.json"
+    config_path.write_text(
+        (
+            '{"task": "patch_coordinate_heatmap", '
+            f'"manifest": "{manifest_path.as_posix()}", '
+            f'"score_csv": "{score_csv.as_posix()}", '
+            f'"output": "{output_path.as_posix()}", '
+            '"align_by": "order"}'
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(["render-coordinate-heatmap", "--config", str(config_path)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert output_path.exists()
+    assert "Patches: 1" in captured.out
+
+
+def test_cli_render_coordinate_heatmap_config_allows_output_override(
+    tmp_path: Path,
+    capsys,
+):
+    manifest_path = tmp_path / "coordinate_manifest.csv"
+    manifest_path.write_text(
+        "image_path,x,y\n"
+        "patches/a.png,0,0\n",
+        encoding="utf-8",
+    )
+    score_csv = tmp_path / "scores.csv"
+    score_csv.write_text("score\n0.4\n", encoding="utf-8")
+    config_output = tmp_path / "config_heatmap.png"
+    override_output = tmp_path / "override_heatmap.png"
+    config_path = tmp_path / "heatmap_config.json"
+    config_path.write_text(
+        (
+            '{"task": "patch_coordinate_heatmap", '
+            f'"manifest": "{manifest_path.as_posix()}", '
+            f'"score_csv": "{score_csv.as_posix()}", '
+            f'"output": "{config_output.as_posix()}", '
+            '"align_by": "order"}'
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            "render-coordinate-heatmap",
+            "--config",
+            str(config_path),
+            "--output",
+            str(override_output),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert override_output.exists()
+    assert not config_output.exists()
+    assert str(override_output) in captured.out

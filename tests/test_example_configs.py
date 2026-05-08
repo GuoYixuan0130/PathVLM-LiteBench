@@ -1,6 +1,9 @@
 from pathlib import Path
 
-from pathvlm_litebench.config import load_benchmark_config
+from pathvlm_litebench.config import (
+    load_benchmark_config,
+    load_patch_coordinate_heatmap_config,
+)
 from pathvlm_litebench.evaluation.zero_shot_grid import (
     expand_zero_shot_grid_runs,
     load_zero_shot_grid_config,
@@ -103,3 +106,15 @@ def test_zero_shot_prompt_grid_example_dry_run_does_not_write_outputs():
 
     assert len(result["runs"]) == 9
     assert result["comparison_path"] is None
+
+
+def test_patch_coordinate_heatmap_example_config_loads_without_artifacts():
+    config = load_patch_coordinate_heatmap_config(
+        CONFIG_DIR / "patch_coordinate_heatmap_demo_config.json"
+    )
+
+    assert config.manifest == "dataset/patch_coordinates/coordinate_manifest.csv"
+    assert config.score_csv == "outputs/patch_coordinate_heatmap_demo/scores.csv"
+    assert config.output == "outputs/patch_coordinate_heatmap_demo/heatmap.png"
+    assert config.align_by == "image_path"
+    assert config.require_exists is False
