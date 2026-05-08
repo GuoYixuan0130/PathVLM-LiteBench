@@ -40,6 +40,7 @@ def test_cli_demos_lists_zero_shot_grid_command(capsys):
     assert exit_code == 0
     assert "run-zero-shot-grid" in captured.out
     assert "validate-config" in captured.out
+    assert "render-coordinate-heatmap" in captured.out
 
 
 def test_cli_no_subcommand_shows_help(capsys):
@@ -517,3 +518,110 @@ def test_zero_shot_grid_comparison_output_override_keeps_config_output_root():
 
     assert updated.output_root == "outputs/original_grid"
     assert updated.comparison_output == "outputs/new_comparison.md"
+
+
+def test_cli_render_coordinate_heatmap_aligns_by_image_path(tmp_path: Path, capsys):
+    manifest_path = tmp_path / "coordinate_manifest.csv"
+    manifest_path.write_text(
+        "image_path,x,y\n"
+        "patches/a.png,0,0\n"
+        "patches/b.png,224,0\n",
+        encoding="utf-8",
+    )
+
+    first_path = (tmp_path / "patches" / "a.png").resolve()
+    second_path = (tmp_path / "patches" / "b.png").resolve()
+    score_csv = tmp_path / "scores.csv"
+    score_csv.write_text(
+        "image_path,score\n"
+        f"{second_path},0.8\n"
+        f"{first_path},0.2\n",
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "heatmap.png"
+
+    exit_code = main(
+        [
+            "render-coordinate-heatmap",
+            "--manifest",
+            str(manifest_path),
+            "--score-csv",
+            str(score_csv),
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert output_path.exists()
+    assert "Saved patch-coordinate heatmap" in captured.out
+    assert "Patches: 2" in captured.out
+    assert "Grid shape: 1 rows x 2 columns" in captured.out
+
+
+def test_cli_render_coordinate_heatmap_aligns_by_order(tmp_path: Path, capsys):
+    manifest_path = tmp_path / "coordinate_manifest.csv"
+    manifest_path.write_text(
+        "image_path,x,y\n"
+        "patches/a.png,0,0\n"
+        "patches/b.png,0,224\n",
+        encoding="utf-8",
+    )
+    score_csv = tmp_path / "scores.csv"
+    score_csv.write_text(
+        "score\n"
+        "0.2\n"
+        "0.8\n",
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "heatmap.png"
+
+    exit_code = main(
+        [
+            "render-coordinate-heatmap",
+            "--manifest",
+            str(manifest_path),
+            "--score-csv",
+            str(score_csv),
+            "--output",
+            str(output_path),
+            "--align-by",
+            "order",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert output_path.exists()
+    assert "Grid shape: 2 rows x 1 columns" in captured.out
+
+
+def test_cli_render_coordinate_heatmap_rejects_missing_score_column(
+    tmp_path: Path,
+    capsys,
+):
+    manifest_path = tmp_path / "coordinate_manifest.csv"
+    manifest_path.write_text(
+        "image_path,x,y\n"
+        "patches/a.png,0,0\n",
+        encoding="utf-8",
+    )
+    score_csv = tmp_path / "scores.csv"
+    score_csv.write_text("image_path,value\npatches/a.png,0.2\n", encoding="utf-8")
+
+    exit_code = main(
+        [
+            "render-coordinate-heatmap",
+            "--manifest",
+            str(manifest_path),
+            "--score-csv",
+            str(score_csv),
+            "--output",
+            str(tmp_path / "heatmap.png"),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "Score column 'score' not found" in captured.out

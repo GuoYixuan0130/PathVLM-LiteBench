@@ -89,6 +89,38 @@ save_patch_scores_csv(
 
 Repeated coordinates are averaged. Missing coordinate cells are left blank in the heatmap grid.
 
+## Render a Heatmap from Existing Artifacts
+
+The CLI can render a patch-coordinate heatmap from a coordinate manifest and an existing score CSV:
+
+```bash
+pathvlm-litebench render-coordinate-heatmap \
+  --manifest dataset/patch_coordinates/coordinate_manifest.csv \
+  --score-csv outputs/patch_coordinate_heatmap_demo/tumor_prompt_scores.csv \
+  --output outputs/patch_coordinate_heatmap_demo/tumor_prompt_heatmap.png
+```
+
+By default, scores are aligned to manifest rows by `image_path`. The score CSV must include:
+
+```csv
+image_path,score
+patches/patch_001.png,0.12
+patches/patch_002.png,0.84
+patches/patch_003.png,0.43
+```
+
+If the score CSV has exactly the same row order as the manifest, use order-based alignment:
+
+```bash
+pathvlm-litebench render-coordinate-heatmap \
+  --manifest dataset/patch_coordinates/coordinate_manifest.csv \
+  --score-csv outputs/patch_coordinate_heatmap_demo/tumor_prompt_scores.csv \
+  --align-by order \
+  --output outputs/patch_coordinate_heatmap_demo/tumor_prompt_heatmap.png
+```
+
+This command reads saved artifacts only. It does not load a model, run inference, or download weights.
+
 ## Interpretation
 
 Use these heatmaps as patch-coordinate score visualizations only.
@@ -112,6 +144,7 @@ The current utilities provide:
 - score aggregation over patch coordinates
 - PNG heatmap export
 - coordinate score CSV export
+- artifact-only heatmap rendering from the CLI
 - offline tests without model inference
 
 Future v0.7.0 work may add a config-driven patch-coordinate demo, optional cached embeddings, and multi-prompt comparison utilities.

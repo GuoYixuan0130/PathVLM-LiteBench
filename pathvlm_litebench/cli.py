@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import csv
 from dataclasses import replace
 import json
+from pathlib import Path
 
 from . import version
 from .config import load_benchmark_config
@@ -50,6 +52,10 @@ def build_parser() -> argparse.ArgumentParser:
     zero_shot_grid_parser = subparsers.add_parser(
         "run-zero-shot-grid",
         help="Run a zero-shot prompt grid from a JSON config file.",
+    )
+    render_heatmap_parser = subparsers.add_parser(
+        "render-coordinate-heatmap",
+        help="Render a patch-coordinate heatmap from a manifest and existing score CSV.",
     )
     convert_manifest_parser.add_argument(
         "--input",
@@ -218,6 +224,77 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Optional comparison Markdown output override.",
     )
+    render_heatmap_parser.add_argument(
+        "--manifest",
+        required=True,
+        help="Coordinate-aware patch manifest CSV path.",
+    )
+    render_heatmap_parser.add_argument(
+        "--score-csv",
+        required=True,
+        help="CSV file containing one score per patch.",
+    )
+    render_heatmap_parser.add_argument(
+        "--output",
+        required=True,
+        help="Output heatmap PNG path.",
+    )
+    render_heatmap_parser.add_argument(
+        "--score-column",
+        default="score",
+        help="Score column name in --score-csv.",
+    )
+    render_heatmap_parser.add_argument(
+        "--score-path-column",
+        default="image_path",
+        help="Image path column in --score-csv when --align-by image_path is used.",
+    )
+    render_heatmap_parser.add_argument(
+        "--align-by",
+        choices=["image_path", "order"],
+        default="image_path",
+        help="Align scores to manifest records by image_path or row order.",
+    )
+    render_heatmap_parser.add_argument(
+        "--image-root",
+        default=None,
+        help="Optional image root for resolving relative manifest image paths.",
+    )
+    render_heatmap_parser.add_argument(
+        "--score-image-root",
+        default=None,
+        help="Optional root for resolving relative score CSV image paths.",
+    )
+    render_heatmap_parser.add_argument(
+        "--path-column",
+        default="image_path",
+        help="Manifest image path column name.",
+    )
+    render_heatmap_parser.add_argument(
+        "--x-column",
+        default="x",
+        help="Manifest x coordinate column name.",
+    )
+    render_heatmap_parser.add_argument(
+        "--y-column",
+        default="y",
+        help="Manifest y coordinate column name.",
+    )
+    render_heatmap_parser.add_argument(
+        "--require-exists",
+        action="store_true",
+        help="Require manifest image paths to exist.",
+    )
+    render_heatmap_parser.add_argument(
+        "--title",
+        default=None,
+        help="Optional heatmap title.",
+    )
+    render_heatmap_parser.add_argument(
+        "--cmap",
+        default="viridis",
+        help="Matplotlib colormap name.",
+    )
 
     return parser
 
@@ -250,6 +327,7 @@ def _handle_demos() -> int:
     print("pathvlm-litebench validate-config configs/zero_shot_prompt_grid_mhist_sample.json")
     print("pathvlm-litebench run-zero-shot-grid --config configs/zero_shot_prompt_grid_mhist_sample.json --dry-run")
     print("pathvlm-litebench run-zero-shot-grid --config configs/zero_shot_prompt_grid_mhist_sample.json --output-root outputs/zero_shot_prompt_grid_mhist_sample_run")
+    print("pathvlm-litebench render-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --score-csv outputs/patch_coordinate_heatmap_demo/scores.csv --output outputs/patch_coordinate_heatmap_demo/heatmap.png")
     return 0
 
 
@@ -453,6 +531,129 @@ def _handle_run_zero_shot_grid(args: argparse.Namespace) -> int:
     return 0
 
 
+def _load_heatmap_scores(
+    *,
+    records,
+    score_csv: str,
+    score_column: str,
+    score_path_column: str,
+    align_by: str,
+    score_image_root: str | None,
+) -> list[float]:
+    score_csv_path = Path(score_csv)
+    if not score_csv_path.exists():
+        raise FileNotFoundError(f"Score CSV file not found: {score_csv_path}")
+
+    with score_csv_path.open("r", encoding="utf-8", newline="") as csv_file:
+        reader = csv.DictReader(csv_file)
+        if reader.fieldnames is None:
+            raise ValueError(f"Score CSV is empty: {score_csv_path}")
+        fieldnames = list(reader.fieldnames)
+
+        if score_column not in fieldnames:
+            raise ValueError(
+                f"Score column '{score_column}' not found in score CSV. "
+                f"Available columns: {', '.join(fieldnames)}"
+            )
+
+        rows = list(reader)
+
+    if align_by == "order":
+        if len(rows) != len(records):
+            raise ValueError(
+                f"Score CSV row count must match manifest record count when "
+                f"aligning by order: {len(rows)} vs {len(records)}"
+            )
+        return [_parse_score(row, score_column, idx + 2) for idx, row in enumerate(rows)]
+
+    if score_path_column not in fieldnames:
+        raise ValueError(
+            f"Score path column '{score_path_column}' not found in score CSV. "
+            f"Available columns: {', '.join(fieldnames)}"
+        )
+
+    score_root = Path(score_image_root) if score_image_root is not None else score_csv_path.parent
+    scores_by_path: dict[str, float] = {}
+    for idx, row in enumerate(rows, start=2):
+        raw_path = row.get(score_path_column)
+        if raw_path is None or not raw_path.strip():
+            raise ValueError(
+                f"Empty score path column '{score_path_column}' at row {idx} "
+                f"in score CSV: {score_csv_path}"
+            )
+        path_key = _resolve_path_key(raw_path, score_root)
+        if path_key in scores_by_path:
+            raise ValueError(f"Duplicate score path at row {idx}: {raw_path}")
+        scores_by_path[path_key] = _parse_score(row, score_column, idx)
+
+    scores: list[float] = []
+    for record in records:
+        record_key = str(Path(record.image_path).resolve())
+        if record_key not in scores_by_path:
+            raise ValueError(f"No score found for manifest image path: {record.image_path}")
+        scores.append(scores_by_path[record_key])
+
+    return scores
+
+
+def _parse_score(row: dict[str, str], score_column: str, row_idx: int) -> float:
+    raw_score = row.get(score_column)
+    if raw_score is None or not raw_score.strip():
+        raise ValueError(f"Empty score column '{score_column}' at row {row_idx}")
+
+    try:
+        return float(raw_score)
+    except ValueError as exc:
+        raise ValueError(
+            f"Invalid numeric score at row {row_idx}: {raw_score!r}"
+        ) from exc
+
+
+def _resolve_path_key(raw_path: str, root: Path) -> str:
+    path = Path(raw_path.strip())
+    if not path.is_absolute():
+        path = root / path
+    return str(path.resolve())
+
+
+def _handle_render_coordinate_heatmap(args: argparse.Namespace) -> int:
+    from .data import load_coordinate_patch_manifest
+    from .visualization import aggregate_patch_scores_to_grid, save_score_heatmap
+
+    try:
+        records = load_coordinate_patch_manifest(
+            manifest_path=args.manifest,
+            image_root=args.image_root,
+            path_column=args.path_column,
+            x_column=args.x_column,
+            y_column=args.y_column,
+            require_exists=args.require_exists,
+        )
+        scores = _load_heatmap_scores(
+            records=records,
+            score_csv=args.score_csv,
+            score_column=args.score_column,
+            score_path_column=args.score_path_column,
+            align_by=args.align_by,
+            score_image_root=args.score_image_root,
+        )
+        grid = aggregate_patch_scores_to_grid(records, scores)
+        saved_path = save_score_heatmap(
+            grid,
+            output_path=args.output,
+            title=args.title,
+            cmap=args.cmap,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"Error: {exc}")
+        return 1
+
+    print(f"Saved patch-coordinate heatmap to: {saved_path}")
+    print(f"Patches: {len(records)}")
+    print(f"Grid shape: {len(grid.y_values)} rows x {len(grid.x_values)} columns")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -487,6 +688,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "run-zero-shot-grid":
         return _handle_run_zero_shot_grid(args)
+
+    if args.command == "render-coordinate-heatmap":
+        return _handle_render_coordinate_heatmap(args)
 
     parser.print_help()
     return 0
