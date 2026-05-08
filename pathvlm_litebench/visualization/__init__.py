@@ -26,6 +26,12 @@ from .report_summary import (
     save_retrieval_experiment_summary,
     save_zero_shot_experiment_summary,
 )
+from .heatmap import (
+    ScoreHeatmapGrid,
+    aggregate_patch_scores_to_grid,
+    save_patch_scores_csv,
+    save_score_heatmap,
+)
 
 __all__ = [
     "save_topk_image_grids",
@@ -48,4 +54,8 @@ __all__ = [
     "save_prompt_sensitivity_experiment_summary",
     "save_retrieval_experiment_summary",
     "save_zero_shot_experiment_summary",
+    "ScoreHeatmapGrid",
+    "aggregate_patch_scores_to_grid",
+    "save_patch_scores_csv",
+    "save_score_heatmap",
 ]

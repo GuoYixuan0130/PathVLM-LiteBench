@@ -801,7 +801,7 @@ Related docs:
 
 - Current release: [v0.6.0 release notes](docs/release_notes_v0.6.0.md), [v0.6.0 checklist](docs/release_checklist_v0.6.0.md)
 - Post-release audit: [v0.6.0 audit](docs/v0.6.0_post_release_audit.md), [v0.5.0 audit](docs/v0.5.0_post_release_audit.md)
-- Next milestone: [v0.7.0 plan](docs/v0.7.0_plan.md)
+- Next milestone: [v0.7.0 plan](docs/v0.7.0_plan.md), [WSI-oriented patch heatmap workflow](docs/wsi_heatmap_workflow.md)
 - v0.6.0 milestone: [v0.6.0 plan](docs/v0.6.0_plan.md), [v0.6.0 MHIST reproducibility audit](docs/v0.6.0_mhist_reproducibility_audit.md), [v0.6.0 MHIST prompt-grid audit](docs/v0.6.0_mhist_prompt_grid_audit.md)
 - Previous release: [v0.5.0 release notes](docs/release_notes_v0.5.0.md), [v0.5.0 checklist](docs/release_checklist_v0.5.0.md)
 - Earlier releases: [v0.4.1 release notes](docs/release_notes_v0.4.1.md), [v0.4.1 checklist](docs/release_checklist_v0.4.1.md), [v0.4.0 release notes](docs/release_notes_v0.4.0.md), [v0.4.0 checklist](docs/release_checklist_v0.4.0.md)
