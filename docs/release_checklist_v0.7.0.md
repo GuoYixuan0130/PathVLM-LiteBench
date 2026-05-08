@@ -48,7 +48,7 @@ v0.7.0 positioning excludes:
 - [x] Add `docs/release_notes_v0.7.0.md`
 - [x] Add this release checklist
 - [x] Verify GitHub Actions CI passes on the release commit
-- [ ] Decide whether to tag `v0.7.0` after release notes are reviewed
+- [x] Decide whether to tag `v0.7.0` after release notes are reviewed
 
 ## Validation Checklist
 
