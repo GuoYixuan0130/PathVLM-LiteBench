@@ -23,6 +23,22 @@ outputs/
 
 Do not commit real pathology images, patient-level metadata, generated heatmaps, score CSV files, model weights, or embedding caches.
 
+## Synthetic Demo
+
+To verify the artifact workflow without real pathology data or model inference:
+
+```bash
+python examples/05_patch_coordinate_heatmap_demo.py
+```
+
+This writes synthetic colored patches, a coordinate manifest, a score CSV, and a heatmap under:
+
+```text
+outputs/patch_coordinate_heatmap_demo_synthetic/
+```
+
+The generated patches are simple colored tiles for smoke testing only.
+
 ## Coordinate Manifest
 
 The coordinate-aware manifest requires `image_path`, `x`, and `y` columns:

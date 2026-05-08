@@ -327,6 +327,7 @@ def _handle_demos() -> int:
     print("python examples/02_zero_shot_classification_demo.py --model clip")
     print("python examples/03_prompt_sensitivity_demo.py --model clip")
     print("python examples/04_retrieval_metrics_demo.py")
+    print("python examples/05_patch_coordinate_heatmap_demo.py")
     print("python examples/02_zero_shot_classification_demo.py --config configs/zero_shot_mhist_clip_sample.json")
     print("python examples/02_zero_shot_classification_demo.py --config configs/zero_shot_mhist_plip_sample.json")
     print("pathvlm-litebench validate-config configs/zero_shot_mhist_clip_sample.json")

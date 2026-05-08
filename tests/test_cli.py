@@ -31,6 +31,7 @@ def test_cli_demos(capsys):
 
     assert exit_code == 0
     assert "examples/01_patch_text_retrieval_demo.py" in captured.out
+    assert "examples/05_patch_coordinate_heatmap_demo.py" in captured.out
 
 
 def test_cli_demos_lists_zero_shot_grid_command(capsys):
