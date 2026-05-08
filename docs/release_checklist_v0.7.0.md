@@ -47,7 +47,7 @@ v0.7.0 positioning excludes:
 - [x] Bump runtime version from `0.6.0` to `0.7.0` in `pathvlm_litebench/__init__.py`
 - [x] Add `docs/release_notes_v0.7.0.md`
 - [x] Add this release checklist
-- [ ] Verify GitHub Actions CI passes on the release commit
+- [x] Verify GitHub Actions CI passes on the release commit
 - [ ] Decide whether to tag `v0.7.0` after release notes are reviewed
 
 ## Validation Checklist
