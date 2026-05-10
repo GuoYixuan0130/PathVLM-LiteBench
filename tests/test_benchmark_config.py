@@ -5,15 +5,20 @@ import pytest
 from pathvlm_litebench.config import (
     BenchmarkConfig,
     PatchCoordinateHeatmapConfig,
+    PatchCoordinateHeatmapScoringConfig,
     benchmark_config_from_dict,
     benchmark_config_to_dict,
     create_default_retrieval_config,
     load_benchmark_config,
     load_patch_coordinate_heatmap_config,
+    load_patch_coordinate_heatmap_scoring_config,
     patch_coordinate_heatmap_config_from_dict,
     patch_coordinate_heatmap_config_to_dict,
+    patch_coordinate_heatmap_scoring_config_from_dict,
+    patch_coordinate_heatmap_scoring_config_to_dict,
     save_benchmark_config,
     save_patch_coordinate_heatmap_config,
+    save_patch_coordinate_heatmap_scoring_config,
 )
 
 
@@ -149,6 +154,50 @@ def test_patch_coordinate_heatmap_config_rejects_unknown_field():
                 "manifest": "manifest.csv",
                 "score_csv": "scores.csv",
                 "output": "heatmap.png",
+                "unexpected": True,
+            }
+        )
+
+
+def test_patch_coordinate_heatmap_scoring_config_roundtrip_json(tmp_path: Path):
+    config = PatchCoordinateHeatmapScoringConfig(
+        manifest="dataset/patch_coordinates/coordinate_manifest.csv",
+        prompt="a histopathology image of tumor tissue",
+        output_dir="outputs/patch_coordinate_heatmap_scored",
+        model="clip",
+        device="cpu",
+        max_images=8,
+        title="Tumor prompt score",
+    )
+
+    data = patch_coordinate_heatmap_scoring_config_to_dict(config)
+    assert data["task"] == "patch_coordinate_heatmap_scoring"
+
+    loaded_from_dict = patch_coordinate_heatmap_scoring_config_from_dict(data)
+    assert loaded_from_dict == config
+
+    path = tmp_path / "patch_coordinate_heatmap_scoring.json"
+    save_patch_coordinate_heatmap_scoring_config(config, path)
+    loaded = load_patch_coordinate_heatmap_scoring_config(path)
+    assert loaded == config
+
+
+def test_patch_coordinate_heatmap_scoring_config_rejects_bad_device():
+    with pytest.raises(ValueError, match="device"):
+        PatchCoordinateHeatmapScoringConfig(
+            manifest="manifest.csv",
+            prompt="tumor",
+            device="tpu",
+        )
+
+
+def test_patch_coordinate_heatmap_scoring_config_rejects_unknown_field():
+    with pytest.raises(ValueError, match="Unknown"):
+        patch_coordinate_heatmap_scoring_config_from_dict(
+            {
+                "task": "patch_coordinate_heatmap_scoring",
+                "manifest": "manifest.csv",
+                "prompt": "tumor",
                 "unexpected": True,
             }
         )

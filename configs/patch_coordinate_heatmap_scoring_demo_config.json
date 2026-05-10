@@ -1,0 +1,16 @@
+{
+  "task": "patch_coordinate_heatmap_scoring",
+  "manifest": "dataset/patch_coordinates/coordinate_manifest.csv",
+  "prompt": "a histopathology image of tumor tissue",
+  "output_dir": "outputs/patch_coordinate_heatmap_scored",
+  "score_csv": "outputs/patch_coordinate_heatmap_scored/scores.csv",
+  "heatmap_output": "outputs/patch_coordinate_heatmap_scored/heatmap.png",
+  "model": "clip",
+  "device": "auto",
+  "path_column": "image_path",
+  "x_column": "x",
+  "y_column": "y",
+  "max_images": 16,
+  "title": "Prompt-scored patch coordinate heatmap",
+  "cmap": "viridis"
+}

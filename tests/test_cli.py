@@ -144,6 +144,32 @@ def test_cli_validate_patch_coordinate_heatmap_config(tmp_path: Path, capsys):
     assert "Align by: image_path" in captured.out
 
 
+def test_cli_validate_patch_coordinate_heatmap_scoring_config(
+    tmp_path: Path,
+    capsys,
+):
+    config_path = tmp_path / "heatmap_scoring.json"
+    config_path.write_text(
+        (
+            '{"task": "patch_coordinate_heatmap_scoring", '
+            '"manifest": "dataset/patch_coordinates/coordinate_manifest.csv", '
+            '"prompt": "a histopathology image of tumor tissue", '
+            '"output_dir": "outputs/patch_coordinate_heatmap_scored", '
+            '"model": "clip", '
+            '"device": "cpu"}'
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(["validate-config", str(config_path)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Config valid: patch_coordinate_heatmap_scoring" in captured.out
+    assert "Model: clip" in captured.out
+    assert "Device: cpu" in captured.out
+
+
 def test_cli_validate_config_rejects_bad_task(tmp_path: Path, capsys):
     config_path = tmp_path / "bad.json"
     config_path.write_text('{"task": "bad"}', encoding="utf-8")
@@ -797,3 +823,77 @@ def test_cli_score_coordinate_heatmap_uses_fake_model(
     assert "1.0" in scores_text
     assert "0.25" in scores_text
     assert "Saved patch-coordinate scores" in captured.out
+
+
+def test_cli_score_coordinate_heatmap_uses_config_with_overrides(
+    tmp_path: Path,
+    capsys,
+    monkeypatch,
+):
+    patches_dir = tmp_path / "patches"
+    patches_dir.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (16, 16), color="red").save(patches_dir / "a.png")
+    Image.new("RGB", (16, 16), color="blue").save(patches_dir / "b.png")
+
+    manifest_path = tmp_path / "coordinate_manifest.csv"
+    manifest_path.write_text(
+        "image_path,x,y\n"
+        "patches/a.png,0,0\n"
+        "patches/b.png,224,0\n",
+        encoding="utf-8",
+    )
+    config_output_dir = tmp_path / "config_scored"
+    override_output_dir = tmp_path / "override_scored"
+    config_path = tmp_path / "heatmap_scoring_config.json"
+    config_path.write_text(
+        (
+            '{"task": "patch_coordinate_heatmap_scoring", '
+            f'"manifest": "{manifest_path.as_posix()}", '
+            '"prompt": "config prompt", '
+            f'"output_dir": "{config_output_dir.as_posix()}", '
+            '"model": "clip", '
+            '"device": "cpu", '
+            '"max_images": 1}'
+        ),
+        encoding="utf-8",
+    )
+
+    class FakeModel:
+        def encode_images(self, images):
+            assert len(images) == 1
+            return torch.tensor([[0.5, 0.5]])
+
+        def encode_text(self, texts):
+            assert texts == ["override prompt"]
+            return torch.tensor([[1.0, 0.0]])
+
+    def fake_create_model(model_key_or_name, device=None):
+        assert model_key_or_name == "clip"
+        assert device == "cpu"
+        return FakeModel()
+
+    import pathvlm_litebench.models
+
+    monkeypatch.setattr(pathvlm_litebench.models, "create_model", fake_create_model)
+
+    exit_code = main(
+        [
+            "score-coordinate-heatmap",
+            "--config",
+            str(config_path),
+            "--prompt",
+            "override prompt",
+            "--output-dir",
+            str(override_output_dir),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert (override_output_dir / "scores.csv").exists()
+    assert (override_output_dir / "heatmap.png").exists()
+    assert not config_output_dir.exists()
+    scores_text = (override_output_dir / "scores.csv").read_text(encoding="utf-8")
+    assert "override prompt" in scores_text
+    assert "config prompt" not in scores_text
+    assert "Patches: 1" in captured.out

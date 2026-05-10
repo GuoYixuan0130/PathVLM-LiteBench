@@ -162,6 +162,18 @@ pathvlm-litebench score-coordinate-heatmap \
   --device auto
 ```
 
+You can also validate and use the prompt-scored heatmap example config:
+
+```bash
+pathvlm-litebench validate-config \
+  configs/patch_coordinate_heatmap_scoring_demo_config.json
+
+pathvlm-litebench score-coordinate-heatmap \
+  --config configs/patch_coordinate_heatmap_scoring_demo_config.json
+```
+
+Command-line arguments such as `--prompt`, `--output-dir`, `--score-csv`, `--heatmap-output`, `--model`, `--device`, and `--max-images` can override config values at runtime.
+
 This command:
 
 - loads patch images listed in the coordinate manifest
@@ -171,7 +183,7 @@ This command:
 - writes `scores.csv`
 - writes `heatmap.png`
 
-Unlike `render-coordinate-heatmap`, this command runs model inference and may download model weights if they are not already cached locally. It is not used by CI.
+Unlike `render-coordinate-heatmap`, this command runs model inference and may download model weights if they are not already cached locally. CI covers this path with fake models and does not download weights.
 
 ## Interpretation
 
@@ -198,5 +210,5 @@ The current utilities provide:
 - coordinate score CSV export
 - artifact-only heatmap rendering from the CLI
 - offline tests without model inference
-
-Future v0.7.0 work may add a config-driven patch-coordinate demo, optional cached embeddings, and multi-prompt comparison utilities.
+- prompt-scored patch-coordinate heatmap rendering from the CLI
+- config validation for artifact-only and prompt-scored patch-coordinate heatmap workflows
