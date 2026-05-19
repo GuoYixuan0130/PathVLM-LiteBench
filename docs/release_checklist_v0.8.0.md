@@ -52,7 +52,8 @@ v0.8.0 positioning excludes:
 
 - [ ] Bump package version from `0.8.0.dev0` to `0.8.0` in `pyproject.toml`
 - [ ] Bump runtime version from `0.8.0.dev0` to `0.8.0` in `pathvlm_litebench/__init__.py`
-- [ ] Add `docs/release_notes_v0.8.0.md`
+- [x] Add `docs/release_notes_v0.8.0.md` draft
+- [ ] Finalize `docs/release_notes_v0.8.0.md` during release preparation
 - [ ] Update README current release links during release preparation
 - [ ] Verify GitHub Actions CI passes on the release commit
 - [ ] Decide whether to tag `v0.8.0` after release notes are reviewed
@@ -137,7 +138,8 @@ dist/
 - [x] Documentation avoids clinical claims
 - [x] Documentation avoids presenting the feature as whole-slide image processing
 - [ ] README current release links point to v0.8.0 release notes and checklist during release preparation
-- [ ] `docs/release_notes_v0.8.0.md` is complete before tagging
+- [x] `docs/release_notes_v0.8.0.md` draft exists
+- [ ] `docs/release_notes_v0.8.0.md` is final before tagging
 
 ## Release Notes Coverage
 
