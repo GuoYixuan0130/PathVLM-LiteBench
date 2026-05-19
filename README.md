@@ -39,6 +39,8 @@ The current version supports a minimal but complete patch-level workflow:
 - Caching image embeddings
 - Running zero-shot classification
 - Running prompt sensitivity analysis
+- Rendering patch-coordinate heatmaps from existing score artifacts
+- Scoring coordinate-aware patch manifests against one text prompt
 
 The current demos use simple RGB images for smoke testing. These demo images are not pathology images.
 
@@ -340,6 +342,8 @@ pathvlm-litebench demos
 pathvlm-litebench convert-manifest --help
 pathvlm-litebench validate-config --help
 pathvlm-litebench run-zero-shot-grid --help
+pathvlm-litebench render-coordinate-heatmap --help
+pathvlm-litebench score-coordinate-heatmap --help
 ```
 
 The CLI does not download models by default. It only lists registry information and available demo commands.
@@ -352,6 +356,8 @@ For the shortest MHIST-style workflow, see [docs/small_dataset_quickstart.md](do
 See [docs/data_preparation.md](docs/data_preparation.md) for details.
 For a step-by-step guide on running the toolkit with real pathology patch folders, see [docs/real_patch_workflow.md](docs/real_patch_workflow.md).
 For an end-to-end public patch benchmark recipe using conversion, sampling, zero-shot, prompt grids, and report comparison, see [docs/public_patch_benchmark_workflow.md](docs/public_patch_benchmark_workflow.md).
+For patch-coordinate heatmaps from existing scores, see [docs/patch_coordinate_heatmap_workflow.md](docs/patch_coordinate_heatmap_workflow.md).
+For prompt-scored patch-coordinate heatmaps on the development branch, see [docs/prompt_scored_coordinate_heatmap_workflow.md](docs/prompt_scored_coordinate_heatmap_workflow.md).
 
 ## Quick Start
 
@@ -796,9 +802,11 @@ Future milestones may add more packaged patch-level benchmark examples, but the 
 - [x] Document public patch benchmark workflow
 - [x] Add benchmark config validation CLI
 - [x] Add optional patch-coordinate text-guided heatmap demo
+- [x] Add prompt-scored patch-coordinate heatmap config workflow
 
 Related docs:
 
+- Development milestone: [v0.8.0 plan](docs/v0.8.0_plan.md), [prompt-scored coordinate heatmap workflow](docs/prompt_scored_coordinate_heatmap_workflow.md)
 - Current release: [v0.7.0 release notes](docs/release_notes_v0.7.0.md), [v0.7.0 checklist](docs/release_checklist_v0.7.0.md)
 - Post-release audit: [v0.6.0 audit](docs/v0.6.0_post_release_audit.md), [v0.5.0 audit](docs/v0.5.0_post_release_audit.md)
 - v0.7.0 milestone: [v0.7.0 plan](docs/v0.7.0_plan.md), [patch coordinate heatmap workflow](docs/patch_coordinate_heatmap_workflow.md)
