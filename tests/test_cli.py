@@ -15,7 +15,7 @@ def test_cli_version(capsys):
 
     assert exit_code == 0
     assert "PathVLM-LiteBench" in captured.out
-    assert captured.out.strip() == "PathVLM-LiteBench version 0.8.0"
+    assert captured.out.strip() == "PathVLM-LiteBench version 0.9.0.dev0"
 
 
 def test_cli_models(capsys):
