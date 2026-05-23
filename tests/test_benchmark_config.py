@@ -164,6 +164,7 @@ def test_patch_coordinate_heatmap_scoring_config_roundtrip_json(tmp_path: Path):
         manifest="dataset/patch_coordinates/coordinate_manifest.csv",
         prompt="a histopathology image of tumor tissue",
         output_dir="outputs/patch_coordinate_heatmap_scored",
+        metadata_output="outputs/patch_coordinate_heatmap_scored/metadata.json",
         model="clip",
         device="cpu",
         max_images=8,
@@ -172,6 +173,9 @@ def test_patch_coordinate_heatmap_scoring_config_roundtrip_json(tmp_path: Path):
 
     data = patch_coordinate_heatmap_scoring_config_to_dict(config)
     assert data["task"] == "patch_coordinate_heatmap_scoring"
+    assert data["metadata_output"] == (
+        "outputs/patch_coordinate_heatmap_scored/metadata.json"
+    )
 
     loaded_from_dict = patch_coordinate_heatmap_scoring_config_from_dict(data)
     assert loaded_from_dict == config

@@ -5,6 +5,7 @@
   "output_dir": "outputs/patch_coordinate_heatmap_scored",
   "score_csv": "outputs/patch_coordinate_heatmap_scored/scores.csv",
   "heatmap_output": "outputs/patch_coordinate_heatmap_scored/heatmap.png",
+  "metadata_output": "outputs/patch_coordinate_heatmap_scored/metadata.json",
   "model": "clip",
   "device": "auto",
   "path_column": "image_path",

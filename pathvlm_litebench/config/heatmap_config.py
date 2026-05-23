@@ -56,6 +56,7 @@ class PatchCoordinateHeatmapScoringConfig:
     output_dir: str = "outputs/patch_coordinate_heatmap_scored"
     score_csv: str | None = None
     heatmap_output: str | None = None
+    metadata_output: str | None = None
     model: str = "clip"
     device: str = "auto"
     image_root: str | None = None
@@ -75,6 +76,7 @@ class PatchCoordinateHeatmapScoringConfig:
         _require_non_empty_string(self.output_dir, "output_dir")
         _require_optional_non_empty_string(self.score_csv, "score_csv")
         _require_optional_non_empty_string(self.heatmap_output, "heatmap_output")
+        _require_optional_non_empty_string(self.metadata_output, "metadata_output")
         _require_non_empty_string(self.model, "model")
         _require_non_empty_string(self.device, "device")
         _require_optional_non_empty_string(self.image_root, "image_root")

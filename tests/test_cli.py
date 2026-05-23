@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -818,11 +819,75 @@ def test_cli_score_coordinate_heatmap_uses_fake_model(
     assert exit_code == 0
     assert (output_dir / "scores.csv").exists()
     assert (output_dir / "heatmap.png").exists()
+    assert (output_dir / "metadata.json").exists()
+    metadata = json.loads((output_dir / "metadata.json").read_text(encoding="utf-8"))
+    assert metadata["task"] == "patch_coordinate_heatmap_scoring"
+    assert metadata["prompt"] == "synthetic red score"
+    assert metadata["model"] == "clip"
+    assert metadata["device"] == "cpu"
+    assert metadata["patch_count"] == 2
+    assert metadata["score_csv"] == str(output_dir / "scores.csv")
+    assert metadata["heatmap_output"] == str(output_dir / "heatmap.png")
+    assert metadata["metadata_output"] == str(output_dir / "metadata.json")
+    assert metadata["version"] == "0.9.0.dev0"
+    assert "created_at_utc" in metadata
     scores_text = (output_dir / "scores.csv").read_text(encoding="utf-8")
     assert "synthetic red score" in scores_text
     assert "1.0" in scores_text
     assert "0.25" in scores_text
     assert "Saved patch-coordinate scores" in captured.out
+    assert "Saved patch-coordinate metadata" in captured.out
+
+
+def test_cli_score_coordinate_heatmap_dry_run_skips_model_and_outputs(
+    tmp_path: Path,
+    capsys,
+    monkeypatch,
+):
+    patches_dir = tmp_path / "patches"
+    patches_dir.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (16, 16), color="red").save(patches_dir / "a.png")
+    Image.new("RGB", (16, 16), color="blue").save(patches_dir / "b.png")
+
+    manifest_path = tmp_path / "coordinate_manifest.csv"
+    manifest_path.write_text(
+        "image_path,x,y\n"
+        "patches/a.png,0,0\n"
+        "patches/b.png,224,0\n",
+        encoding="utf-8",
+    )
+
+    def fail_create_model(model_key_or_name, device=None):
+        raise AssertionError("dry-run must not create a model")
+
+    import pathvlm_litebench.models
+
+    monkeypatch.setattr(pathvlm_litebench.models, "create_model", fail_create_model)
+
+    output_dir = tmp_path / "dry_run_scored"
+    exit_code = main(
+        [
+            "score-coordinate-heatmap",
+            "--manifest",
+            str(manifest_path),
+            "--prompt",
+            "synthetic dry run",
+            "--output-dir",
+            str(output_dir),
+            "--device",
+            "cpu",
+            "--dry-run",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert not output_dir.exists()
+    assert "Dry run only. No model inference was run." in captured.out
+    assert "Patches: 2" in captured.out
+    assert f"Score CSV: {output_dir / 'scores.csv'}" in captured.out
+    assert f"Heatmap output: {output_dir / 'heatmap.png'}" in captured.out
+    assert f"Metadata output: {output_dir / 'metadata.json'}" in captured.out
 
 
 def test_cli_score_coordinate_heatmap_uses_config_with_overrides(
@@ -892,7 +957,14 @@ def test_cli_score_coordinate_heatmap_uses_config_with_overrides(
     assert exit_code == 0
     assert (override_output_dir / "scores.csv").exists()
     assert (override_output_dir / "heatmap.png").exists()
+    assert (override_output_dir / "metadata.json").exists()
     assert not config_output_dir.exists()
+    metadata = json.loads(
+        (override_output_dir / "metadata.json").read_text(encoding="utf-8")
+    )
+    assert metadata["prompt"] == "override prompt"
+    assert metadata["patch_count"] == 1
+    assert metadata["score_csv"] == str(override_output_dir / "scores.csv")
     scores_text = (override_output_dir / "scores.csv").read_text(encoding="utf-8")
     assert "override prompt" in scores_text
     assert "config prompt" not in scores_text

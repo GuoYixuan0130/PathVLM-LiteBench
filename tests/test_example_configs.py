@@ -129,6 +129,9 @@ def test_patch_coordinate_heatmap_scoring_example_config_loads_without_artifacts
     assert config.manifest == "dataset/patch_coordinates/coordinate_manifest.csv"
     assert config.prompt == "a histopathology image of tumor tissue"
     assert config.output_dir == "outputs/patch_coordinate_heatmap_scored"
+    assert config.metadata_output == (
+        "outputs/patch_coordinate_heatmap_scored/metadata.json"
+    )
     assert config.model == "clip"
     assert config.device == "auto"
     assert config.max_images == 16

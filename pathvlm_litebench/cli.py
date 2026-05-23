@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 from dataclasses import replace
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 
@@ -327,7 +328,7 @@ def build_parser() -> argparse.ArgumentParser:
     score_heatmap_parser.add_argument(
         "--output-dir",
         default=None,
-        help="Directory for generated score CSV and heatmap PNG.",
+        help="Directory for generated score CSV, heatmap PNG, and metadata JSON.",
     )
     score_heatmap_parser.add_argument(
         "--score-csv",
@@ -338,6 +339,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--heatmap-output",
         default=None,
         help="Optional heatmap PNG output path. Defaults to output-dir/heatmap.png.",
+    )
+    score_heatmap_parser.add_argument(
+        "--metadata-output",
+        default=None,
+        help="Optional metadata JSON output path. Defaults to output-dir/metadata.json.",
     )
     score_heatmap_parser.add_argument(
         "--model",
@@ -386,6 +392,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Matplotlib colormap name.",
     )
+    score_heatmap_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate inputs and resolved output paths without loading a model.",
+    )
 
     return parser
 
@@ -422,6 +433,7 @@ def _handle_demos() -> int:
     print("pathvlm-litebench validate-config configs/patch_coordinate_heatmap_demo_config.json")
     print("pathvlm-litebench validate-config configs/patch_coordinate_heatmap_scoring_demo_config.json")
     print("pathvlm-litebench render-coordinate-heatmap --config configs/patch_coordinate_heatmap_demo_config.json")
+    print("pathvlm-litebench score-coordinate-heatmap --config configs/patch_coordinate_heatmap_scoring_demo_config.json --dry-run")
     print("pathvlm-litebench score-coordinate-heatmap --config configs/patch_coordinate_heatmap_scoring_demo_config.json")
     print("pathvlm-litebench render-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --score-csv outputs/patch_coordinate_heatmap_demo/scores.csv --output outputs/patch_coordinate_heatmap_demo/heatmap.png")
     print("pathvlm-litebench score-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --prompt \"a histopathology image of tumor tissue\" --output-dir outputs/patch_coordinate_heatmap_scored --model clip")
@@ -585,12 +597,18 @@ def _handle_validate_config(args: argparse.Namespace) -> int:
             from .config import load_patch_coordinate_heatmap_scoring_config
 
             config = load_patch_coordinate_heatmap_scoring_config(args.config)
+            _, score_csv, heatmap_output, metadata_output = (
+                _resolve_score_heatmap_output_paths(config)
+            )
             print("Config valid: patch_coordinate_heatmap_scoring")
             print(f"Manifest: {config.manifest}")
             print(f"Prompt: {config.prompt}")
             print(f"Model: {config.model}")
             print(f"Device: {config.device}")
             print(f"Output dir: {config.output_dir}")
+            print(f"Score CSV: {score_csv}")
+            print(f"Heatmap output: {heatmap_output}")
+            print(f"Metadata output: {metadata_output}")
             return 0
 
         config = load_benchmark_config(args.config)
@@ -855,6 +873,7 @@ def _load_score_heatmap_args_config(
             output_dir=args.output_dir or "outputs/patch_coordinate_heatmap_scored",
             score_csv=args.score_csv,
             heatmap_output=args.heatmap_output,
+            metadata_output=args.metadata_output,
             model=args.model or "clip",
             device=args.device or "auto",
             image_root=args.image_root,
@@ -878,6 +897,11 @@ def _load_score_heatmap_args_config(
             if args.heatmap_output is not None
             else config.heatmap_output
         ),
+        metadata_output=(
+            args.metadata_output
+            if args.metadata_output is not None
+            else config.metadata_output
+        ),
         model=args.model if args.model is not None else config.model,
         device=args.device if args.device is not None else config.device,
         image_root=args.image_root if args.image_root is not None else config.image_root,
@@ -890,33 +914,94 @@ def _load_score_heatmap_args_config(
     )
 
 
+def _resolve_score_heatmap_output_paths(
+    config: PatchCoordinateHeatmapScoringConfig,
+) -> tuple[Path, Path, Path, Path]:
+    output_dir = Path(config.output_dir)
+    score_csv = (
+        Path(config.score_csv)
+        if config.score_csv is not None
+        else output_dir / "scores.csv"
+    )
+    heatmap_output = (
+        Path(config.heatmap_output)
+        if config.heatmap_output is not None
+        else output_dir / "heatmap.png"
+    )
+    metadata_output = (
+        Path(config.metadata_output)
+        if config.metadata_output is not None
+        else output_dir / "metadata.json"
+    )
+    return output_dir, score_csv, heatmap_output, metadata_output
+
+
+def _build_score_heatmap_metadata(
+    *,
+    config: PatchCoordinateHeatmapScoringConfig,
+    patch_count: int,
+    score_csv: Path,
+    heatmap_output: Path,
+    metadata_output: Path,
+) -> dict[str, object]:
+    return {
+        "task": "patch_coordinate_heatmap_scoring",
+        "version": version,
+        "created_at_utc": datetime.now(timezone.utc)
+        .isoformat()
+        .replace("+00:00", "Z"),
+        "manifest": config.manifest,
+        "image_root": config.image_root,
+        "path_column": config.path_column,
+        "x_column": config.x_column,
+        "y_column": config.y_column,
+        "prompt": config.prompt,
+        "model": config.model,
+        "device": config.device,
+        "output_dir": config.output_dir,
+        "score_csv": str(score_csv),
+        "heatmap_output": str(heatmap_output),
+        "metadata_output": str(metadata_output),
+        "max_images": config.max_images,
+        "patch_count": patch_count,
+        "title": config.title,
+        "cmap": config.cmap,
+    }
+
+
+def _save_score_heatmap_metadata(
+    *,
+    config: PatchCoordinateHeatmapScoringConfig,
+    patch_count: int,
+    score_csv: Path,
+    heatmap_output: Path,
+    metadata_output: Path,
+) -> str:
+    metadata_output.parent.mkdir(parents=True, exist_ok=True)
+    metadata = _build_score_heatmap_metadata(
+        config=config,
+        patch_count=patch_count,
+        score_csv=score_csv,
+        heatmap_output=heatmap_output,
+        metadata_output=metadata_output,
+    )
+    metadata_output.write_text(
+        json.dumps(metadata, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    return str(metadata_output)
+
+
 def _handle_score_coordinate_heatmap(args: argparse.Namespace) -> int:
     from .data import (
         coordinate_records_to_image_paths,
         load_coordinate_patch_manifest,
-        load_patch_images_from_paths,
-    )
-    from .evaluation import score_patch_images_for_prompt
-    from .models import create_model
-    from .visualization import (
-        aggregate_patch_scores_to_grid,
-        save_patch_scores_csv,
-        save_score_heatmap,
     )
 
     try:
         config = _load_score_heatmap_args_config(args)
-
-        output_dir = Path(config.output_dir)
-        score_csv = (
-            Path(config.score_csv)
-            if config.score_csv is not None
-            else output_dir / "scores.csv"
-        )
-        heatmap_output = (
-            Path(config.heatmap_output)
-            if config.heatmap_output is not None
-            else output_dir / "heatmap.png"
+        _, score_csv, heatmap_output, metadata_output = (
+            _resolve_score_heatmap_output_paths(config)
         )
 
         records = load_coordinate_patch_manifest(
@@ -929,6 +1014,27 @@ def _handle_score_coordinate_heatmap(args: argparse.Namespace) -> int:
         )
         if config.max_images is not None:
             records = records[: config.max_images]
+
+        if args.dry_run:
+            print("Dry run only. No model inference was run.")
+            print(f"Manifest: {config.manifest}")
+            print(f"Patches: {len(records)}")
+            print(f"Score CSV: {score_csv}")
+            print(f"Heatmap output: {heatmap_output}")
+            print(f"Metadata output: {metadata_output}")
+            print(f"Prompt: {config.prompt}")
+            print(f"Model: {config.model}")
+            print(f"Device: {config.device}")
+            return 0
+
+        from .data import load_patch_images_from_paths
+        from .evaluation import score_patch_images_for_prompt
+        from .models import create_model
+        from .visualization import (
+            aggregate_patch_scores_to_grid,
+            save_patch_scores_csv,
+            save_score_heatmap,
+        )
 
         image_paths = coordinate_records_to_image_paths(records)
         images, _ = load_patch_images_from_paths(image_paths)
@@ -952,12 +1058,20 @@ def _handle_score_coordinate_heatmap(args: argparse.Namespace) -> int:
             title=config.title or config.prompt,
             cmap=config.cmap,
         )
+        saved_metadata = _save_score_heatmap_metadata(
+            config=config,
+            patch_count=len(records),
+            score_csv=score_csv,
+            heatmap_output=heatmap_output,
+            metadata_output=metadata_output,
+        )
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         print(f"Error: {exc}")
         return 1
 
     print(f"Saved patch-coordinate scores to: {saved_scores}")
     print(f"Saved patch-coordinate heatmap to: {saved_heatmap}")
+    print(f"Saved patch-coordinate metadata to: {saved_metadata}")
     print(f"Patches: {len(records)}")
     print(f"Prompt: {config.prompt}")
     print(f"Model: {config.model}")
