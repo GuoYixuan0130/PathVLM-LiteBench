@@ -55,9 +55,9 @@ v0.8.0 positioning excludes:
 - [x] Add `docs/release_notes_v0.8.0.md`
 - [x] Finalize `docs/release_notes_v0.8.0.md` during release preparation
 - [x] Update README current release links during release preparation
-- [ ] Verify GitHub Actions CI passes on the release commit
-- [ ] Decide whether to tag `v0.8.0` after release notes are reviewed
-- [ ] Create the GitHub Release only after the tag and release notes are final
+- [x] Verify GitHub Actions CI passes on the release commit
+- [x] Decide whether to tag `v0.8.0` after release notes are reviewed
+- [x] Create the GitHub Release only after the tag and release notes are final
 
 No v0.8.0 release should be cut while the package is still on a `.dev0` version.
 
@@ -162,12 +162,12 @@ The v0.8.0 release notes should cover:
 
 Tag `v0.8.0` when:
 
-- [ ] Release blockers are resolved locally
+- [x] Release blockers are resolved locally
 - [x] Package and runtime versions are `0.8.0`
 - [x] `docs/release_notes_v0.8.0.md` is complete
 - [x] README current release links point to v0.8.0 docs
 - [x] `.venv\Scripts\python.exe -m pytest tests` passes locally
 - [x] CLI smoke commands pass locally
-- [ ] CI passes on GitHub
+- [x] CI passes on GitHub
 - [x] `.gitignore` excludes local data, generated outputs, and Python build metadata
-- [ ] The latest release commit is pushed to `main`
+- [x] The latest release commit is pushed to `main`
