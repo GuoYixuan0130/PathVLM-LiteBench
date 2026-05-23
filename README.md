@@ -806,13 +806,14 @@ Future milestones may add more packaged patch-level benchmark examples, but the 
 
 Related docs:
 
-- Development milestone: [v0.8.0 plan](docs/v0.8.0_plan.md), [v0.8.0 checklist](docs/release_checklist_v0.8.0.md), [v0.8.0 release notes draft](docs/release_notes_v0.8.0.md), [v0.8.0 pre-release audit](docs/v0.8.0_pre_release_audit.md), [prompt-scored coordinate heatmap workflow](docs/prompt_scored_coordinate_heatmap_workflow.md)
-- Current release: [v0.7.0 release notes](docs/release_notes_v0.7.0.md), [v0.7.0 checklist](docs/release_checklist_v0.7.0.md)
-- Post-release audit: [v0.6.0 audit](docs/v0.6.0_post_release_audit.md), [v0.5.0 audit](docs/v0.5.0_post_release_audit.md)
+- Current release: [v0.8.0 release notes](docs/release_notes_v0.8.0.md), [v0.8.0 checklist](docs/release_checklist_v0.8.0.md)
+- v0.8.0 milestone: [v0.8.0 plan](docs/v0.8.0_plan.md), [v0.8.0 pre-release audit](docs/v0.8.0_pre_release_audit.md), [prompt-scored coordinate heatmap workflow](docs/prompt_scored_coordinate_heatmap_workflow.md)
+- Previous release: [v0.7.0 release notes](docs/release_notes_v0.7.0.md), [v0.7.0 checklist](docs/release_checklist_v0.7.0.md)
+- Post-release audit: [v0.7.0 audit](docs/v0.7.0_post_release_audit.md), [v0.6.0 audit](docs/v0.6.0_post_release_audit.md), [v0.5.0 audit](docs/v0.5.0_post_release_audit.md)
 - v0.7.0 milestone: [v0.7.0 plan](docs/v0.7.0_plan.md), [patch coordinate heatmap workflow](docs/patch_coordinate_heatmap_workflow.md)
-- Previous release: [v0.6.0 release notes](docs/release_notes_v0.6.0.md), [v0.6.0 checklist](docs/release_checklist_v0.6.0.md)
+- Older release: [v0.6.0 release notes](docs/release_notes_v0.6.0.md), [v0.6.0 checklist](docs/release_checklist_v0.6.0.md)
 - v0.6.0 milestone: [v0.6.0 plan](docs/v0.6.0_plan.md), [v0.6.0 MHIST reproducibility audit](docs/v0.6.0_mhist_reproducibility_audit.md), [v0.6.0 MHIST prompt-grid audit](docs/v0.6.0_mhist_prompt_grid_audit.md)
-- Older release: [v0.5.0 release notes](docs/release_notes_v0.5.0.md), [v0.5.0 checklist](docs/release_checklist_v0.5.0.md)
+- Earlier release: [v0.5.0 release notes](docs/release_notes_v0.5.0.md), [v0.5.0 checklist](docs/release_checklist_v0.5.0.md)
 - Earlier releases: [v0.4.1 release notes](docs/release_notes_v0.4.1.md), [v0.4.1 checklist](docs/release_checklist_v0.4.1.md), [v0.4.0 release notes](docs/release_notes_v0.4.0.md), [v0.4.0 checklist](docs/release_checklist_v0.4.0.md)
 - CONCH milestone: [v0.4.0 plan](docs/v0.4.0_plan.md), [CONCH feasibility checks](docs/conch_feasibility_check.md)
 - Earlier milestones: [v0.3.1 notes](docs/release_notes_v0.3.1.md), [v0.3.0 notes](docs/release_notes_v0.3.0.md), [v0.2.0 notes](docs/release_notes_v0.2.0.md)

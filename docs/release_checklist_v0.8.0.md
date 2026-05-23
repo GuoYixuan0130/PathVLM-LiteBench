@@ -50,11 +50,11 @@ v0.8.0 positioning excludes:
 
 ## Current Release Blockers
 
-- [ ] Bump package version from `0.8.0.dev0` to `0.8.0` in `pyproject.toml`
-- [ ] Bump runtime version from `0.8.0.dev0` to `0.8.0` in `pathvlm_litebench/__init__.py`
-- [x] Add `docs/release_notes_v0.8.0.md` draft
-- [ ] Finalize `docs/release_notes_v0.8.0.md` during release preparation
-- [ ] Update README current release links during release preparation
+- [x] Bump package version from `0.8.0.dev0` to `0.8.0` in `pyproject.toml`
+- [x] Bump runtime version from `0.8.0.dev0` to `0.8.0` in `pathvlm_litebench/__init__.py`
+- [x] Add `docs/release_notes_v0.8.0.md`
+- [x] Finalize `docs/release_notes_v0.8.0.md` during release preparation
+- [x] Update README current release links during release preparation
 - [ ] Verify GitHub Actions CI passes on the release commit
 - [ ] Decide whether to tag `v0.8.0` after release notes are reviewed
 - [ ] Create the GitHub Release only after the tag and release notes are final
@@ -130,16 +130,16 @@ dist/
 
 - [x] `docs/v0.8.0_plan.md` defines the milestone scope and non-goals
 - [x] `docs/prompt_scored_coordinate_heatmap_workflow.md` documents model-backed scoring
-- [x] README links the v0.8.0 development plan and prompt-scored workflow
+- [x] README links the v0.8.0 release notes, checklist, milestone plan, and prompt-scored workflow
 - [x] Documentation explains the difference between `render-coordinate-heatmap` and `score-coordinate-heatmap`
 - [x] Documentation states `score-coordinate-heatmap` loads a model and may download weights
 - [x] Documentation states CI uses fake models and does not download weights
 - [x] Documentation states generated outputs should not be committed
 - [x] Documentation avoids clinical claims
 - [x] Documentation avoids presenting the feature as whole-slide image processing
-- [ ] README current release links point to v0.8.0 release notes and checklist during release preparation
-- [x] `docs/release_notes_v0.8.0.md` draft exists
-- [ ] `docs/release_notes_v0.8.0.md` is final before tagging
+- [x] README current release links point to v0.8.0 release notes and checklist during release preparation
+- [x] `docs/release_notes_v0.8.0.md` exists
+- [x] `docs/release_notes_v0.8.0.md` is final before tagging
 
 ## Release Notes Coverage
 
@@ -163,11 +163,11 @@ The v0.8.0 release notes should cover:
 Tag `v0.8.0` when:
 
 - [ ] Release blockers are resolved locally
-- [ ] Package and runtime versions are `0.8.0`
-- [ ] `docs/release_notes_v0.8.0.md` is complete
-- [ ] README current release links point to v0.8.0 docs
-- [ ] `.venv\Scripts\python.exe -m pytest tests` passes locally
-- [ ] CLI smoke commands pass locally
+- [x] Package and runtime versions are `0.8.0`
+- [x] `docs/release_notes_v0.8.0.md` is complete
+- [x] README current release links point to v0.8.0 docs
+- [x] `.venv\Scripts\python.exe -m pytest tests` passes locally
+- [x] CLI smoke commands pass locally
 - [ ] CI passes on GitHub
-- [ ] `.gitignore` excludes local data, generated outputs, and Python build metadata
+- [x] `.gitignore` excludes local data, generated outputs, and Python build metadata
 - [ ] The latest release commit is pushed to `main`
