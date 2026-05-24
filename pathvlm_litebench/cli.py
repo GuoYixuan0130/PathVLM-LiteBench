@@ -66,6 +66,10 @@ def build_parser() -> argparse.ArgumentParser:
         "score-coordinate-heatmap",
         help="Score coordinate patches against a text prompt and render a heatmap.",
     )
+    compare_heatmap_scores_parser = subparsers.add_parser(
+        "compare-coordinate-heatmap-scores",
+        help="Compare saved patch-coordinate score CSV artifacts.",
+    )
     convert_manifest_parser.add_argument(
         "--input",
         required=True,
@@ -397,6 +401,47 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Validate inputs and resolved output paths without loading a model.",
     )
+    compare_heatmap_scores_parser.add_argument(
+        "--score-csvs",
+        nargs="+",
+        required=True,
+        help="Saved score CSV paths to compare.",
+    )
+    compare_heatmap_scores_parser.add_argument(
+        "--metadata-jsons",
+        nargs="*",
+        default=None,
+        help=(
+            "Optional metadata JSON paths. Provide one path per score CSV. "
+            "When omitted, sibling metadata.json files are loaded when present."
+        ),
+    )
+    compare_heatmap_scores_parser.add_argument(
+        "--run-names",
+        nargs="*",
+        default=None,
+        help="Optional run labels. Provide one label per score CSV.",
+    )
+    compare_heatmap_scores_parser.add_argument(
+        "--score-column",
+        default="score",
+        help="Score column name in each score CSV.",
+    )
+    compare_heatmap_scores_parser.add_argument(
+        "--output-csv",
+        required=True,
+        help="Output comparison CSV path.",
+    )
+    compare_heatmap_scores_parser.add_argument(
+        "--output-md",
+        default=None,
+        help="Optional output Markdown summary path.",
+    )
+    compare_heatmap_scores_parser.add_argument(
+        "--allow-row-count-mismatch",
+        action="store_true",
+        help="Allow score CSVs with different row counts.",
+    )
 
     return parser
 
@@ -435,6 +480,7 @@ def _handle_demos() -> int:
     print("pathvlm-litebench render-coordinate-heatmap --config configs/patch_coordinate_heatmap_demo_config.json")
     print("pathvlm-litebench score-coordinate-heatmap --config configs/patch_coordinate_heatmap_scoring_demo_config.json --dry-run")
     print("pathvlm-litebench score-coordinate-heatmap --config configs/patch_coordinate_heatmap_scoring_demo_config.json")
+    print("pathvlm-litebench compare-coordinate-heatmap-scores --score-csvs outputs/patch_coordinate_heatmap_scored_tumor/scores.csv outputs/patch_coordinate_heatmap_scored_lymphocyte/scores.csv --run-names tumor lymphocyte --output-csv outputs/patch_coordinate_heatmap_comparison/score_summary.csv --output-md outputs/patch_coordinate_heatmap_comparison/score_summary.md")
     print("pathvlm-litebench render-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --score-csv outputs/patch_coordinate_heatmap_demo/scores.csv --output outputs/patch_coordinate_heatmap_demo/heatmap.png")
     print("pathvlm-litebench score-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --prompt \"a histopathology image of tumor tissue\" --output-dir outputs/patch_coordinate_heatmap_scored --model clip")
     return 0
@@ -1078,6 +1124,44 @@ def _handle_score_coordinate_heatmap(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_compare_coordinate_heatmap_scores(args: argparse.Namespace) -> int:
+    from .visualization import (
+        compare_patch_score_csvs,
+        save_patch_score_comparison_csv,
+        save_patch_score_comparison_summary,
+    )
+
+    try:
+        summaries = compare_patch_score_csvs(
+            args.score_csvs,
+            score_column=args.score_column,
+            metadata_jsons=args.metadata_jsons,
+            run_names=args.run_names,
+            require_equal_row_count=not args.allow_row_count_mismatch,
+        )
+        saved_csv = save_patch_score_comparison_csv(summaries, args.output_csv)
+        saved_md = None
+        if args.output_md is not None:
+            saved_md = save_patch_score_comparison_summary(
+                summaries,
+                args.output_md,
+            )
+    except (FileNotFoundError, json.JSONDecodeError, ValueError) as exc:
+        print(f"Error: {exc}")
+        return 1
+
+    print(f"Saved patch-coordinate score comparison CSV to: {saved_csv}")
+    if saved_md is not None:
+        print(f"Saved patch-coordinate score comparison summary to: {saved_md}")
+    print(f"Runs: {len(summaries)}")
+    for summary in summaries:
+        print(
+            f"- {summary.run_name}: rows={summary.row_count}, "
+            f"mean={summary.score_mean:.6g}, std={summary.score_std:.6g}"
+        )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -1118,6 +1202,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "score-coordinate-heatmap":
         return _handle_score_coordinate_heatmap(args)
+
+    if args.command == "compare-coordinate-heatmap-scores":
+        return _handle_compare_coordinate_heatmap_scores(args)
 
     parser.print_help()
     return 0

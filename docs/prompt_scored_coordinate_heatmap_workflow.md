@@ -6,16 +6,19 @@ The workflow is patch-level and local-first. PathVLM-LiteBench does not read who
 
 ## Artifact Rendering vs Prompt Scoring
 
-PathVLM-LiteBench now has two related coordinate heatmap commands:
+PathVLM-LiteBench has three related coordinate heatmap commands:
 
 | Command | Input scores | Loads a model | Typical use |
 |---|---|---:|---|
 | `render-coordinate-heatmap` | Existing score CSV | No | Re-render a heatmap from saved artifacts |
 | `score-coordinate-heatmap` | Computed from patch images and one text prompt | Yes | Produce `scores.csv`, `heatmap.png`, and `metadata.json` from a coordinate manifest |
+| `compare-coordinate-heatmap-scores` | Existing score CSV artifacts | No | Compare score distributions across saved prompt runs |
 
 Use `render-coordinate-heatmap` when scores already exist. It reads only the coordinate manifest and score CSV, then writes a PNG heatmap.
 
 Use `score-coordinate-heatmap` when you want PathVLM-LiteBench to load a CLIP-style model, encode the listed patch images, score them against a prompt, save a score CSV, and render a heatmap.
+
+Use `compare-coordinate-heatmap-scores` when you already have saved score CSV artifacts from one or more prompt-scored runs and want a compact comparison table without rerunning inference.
 
 ## Local Data Layout
 
@@ -113,6 +116,33 @@ pathvlm-litebench score-coordinate-heatmap \
 `--max-images` truncates the manifest records before loading images and running model inference. It is useful for checking paths, prompt handling, output paths, and local model setup.
 
 For a model-free check, combine `--max-images` with `--dry-run`.
+
+## Compare Saved Prompt Runs
+
+Compare two or more saved prompt-scored runs from their existing score CSV artifacts:
+
+```bash
+pathvlm-litebench compare-coordinate-heatmap-scores \
+  --score-csvs \
+    outputs/patch_coordinate_heatmap_scored_tumor/scores.csv \
+    outputs/patch_coordinate_heatmap_scored_lymphocyte/scores.csv \
+  --run-names tumor lymphocyte \
+  --output-csv outputs/patch_coordinate_heatmap_comparison/score_summary.csv \
+  --output-md outputs/patch_coordinate_heatmap_comparison/score_summary.md
+```
+
+The comparison command is artifact-only. It reads saved `scores.csv` files and sibling `metadata.json` files when present. It does not load patch images, create a model, run inference, or download weights.
+
+The comparison CSV includes one row per run with:
+
+- run name
+- score CSV path
+- metadata JSON path, when available
+- prompt, model, device, manifest path, and heatmap output from metadata
+- score row count
+- score mean, standard deviation, minimum, and maximum
+
+By default, comparison requires all score CSVs to contain the same number of rows, which is the expected case when comparing prompts over the same coordinate manifest. Use `--allow-row-count-mismatch` only when you intentionally want to summarize runs with different patch counts, such as smoke runs versus full runs.
 
 ## Config-Driven Run
 

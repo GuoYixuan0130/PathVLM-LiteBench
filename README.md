@@ -41,6 +41,7 @@ The current version supports a minimal but complete patch-level workflow:
 - Running prompt sensitivity analysis
 - Rendering patch-coordinate heatmaps from existing score artifacts
 - Scoring coordinate-aware patch manifests against one text prompt
+- Comparing saved prompt-scored patch-coordinate score artifacts
 
 The current demos use simple RGB images for smoke testing. These demo images are not pathology images.
 
@@ -344,6 +345,7 @@ pathvlm-litebench validate-config --help
 pathvlm-litebench run-zero-shot-grid --help
 pathvlm-litebench render-coordinate-heatmap --help
 pathvlm-litebench score-coordinate-heatmap --help
+pathvlm-litebench compare-coordinate-heatmap-scores --help
 ```
 
 The CLI does not download models by default. It only lists registry information and available demo commands.
@@ -803,6 +805,7 @@ Future milestones may add more packaged patch-level benchmark examples, but the 
 - [x] Add benchmark config validation CLI
 - [x] Add optional patch-coordinate text-guided heatmap demo
 - [x] Add prompt-scored patch-coordinate heatmap config workflow
+- [x] Add artifact-only prompt-scored coordinate heatmap score comparison
 
 Related docs:
 

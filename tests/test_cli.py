@@ -47,6 +47,7 @@ def test_cli_demos_lists_zero_shot_grid_command(capsys):
     assert "validate-config" in captured.out
     assert "render-coordinate-heatmap" in captured.out
     assert "score-coordinate-heatmap" in captured.out
+    assert "compare-coordinate-heatmap-scores" in captured.out
 
 
 def test_cli_no_subcommand_shows_help(capsys):
@@ -444,6 +445,108 @@ def test_cli_compare_reports_rejects_mismatched_run_names(tmp_path: Path, capsys
 
     assert exit_code == 1
     assert "run_names" in captured.out
+
+
+def test_cli_compare_coordinate_heatmap_scores(tmp_path: Path, capsys):
+    first_dir = tmp_path / "tumor_run"
+    second_dir = tmp_path / "lymphocyte_run"
+    first_dir.mkdir(parents=True, exist_ok=True)
+    second_dir.mkdir(parents=True, exist_ok=True)
+    first_scores = first_dir / "scores.csv"
+    second_scores = second_dir / "scores.csv"
+    first_scores.write_text(
+        "image_path,x,y,score,prompt\n"
+        "a.png,0,0,0.2,tumor prompt\n"
+        "b.png,224,0,0.6,tumor prompt\n",
+        encoding="utf-8",
+    )
+    second_scores.write_text(
+        "image_path,x,y,score,prompt\n"
+        "a.png,0,0,0.4,lymphocyte prompt\n"
+        "b.png,224,0,0.8,lymphocyte prompt\n",
+        encoding="utf-8",
+    )
+    (first_dir / "metadata.json").write_text(
+        json.dumps(
+            {
+                "prompt": "tumor prompt",
+                "model": "clip",
+                "device": "cpu",
+                "manifest": "manifest.csv",
+                "patch_count": 2,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (second_dir / "metadata.json").write_text(
+        json.dumps(
+            {
+                "prompt": "lymphocyte prompt",
+                "model": "clip",
+                "device": "cpu",
+                "manifest": "manifest.csv",
+                "patch_count": 2,
+            }
+        ),
+        encoding="utf-8",
+    )
+    output_csv = tmp_path / "comparison" / "score_summary.csv"
+    output_md = tmp_path / "comparison" / "score_summary.md"
+
+    exit_code = main(
+        [
+            "compare-coordinate-heatmap-scores",
+            "--score-csvs",
+            str(first_scores),
+            str(second_scores),
+            "--run-names",
+            "tumor",
+            "lymphocyte",
+            "--output-csv",
+            str(output_csv),
+            "--output-md",
+            str(output_md),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert output_csv.exists()
+    assert output_md.exists()
+    assert "Saved patch-coordinate score comparison CSV" in captured.out
+    assert "Runs: 2" in captured.out
+    assert "tumor" in output_csv.read_text(encoding="utf-8")
+    assert "lymphocyte prompt" in output_md.read_text(encoding="utf-8")
+
+
+def test_cli_compare_coordinate_heatmap_scores_rejects_mismatched_rows(
+    tmp_path: Path,
+    capsys,
+):
+    first_scores = tmp_path / "first_scores.csv"
+    second_scores = tmp_path / "second_scores.csv"
+    first_scores.write_text(
+        "image_path,score\n"
+        "a.png,0.2\n"
+        "b.png,0.6\n",
+        encoding="utf-8",
+    )
+    second_scores.write_text("image_path,score\na.png,0.2\n", encoding="utf-8")
+
+    exit_code = main(
+        [
+            "compare-coordinate-heatmap-scores",
+            "--score-csvs",
+            str(first_scores),
+            str(second_scores),
+            "--output-csv",
+            str(tmp_path / "comparison.csv"),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "same row count" in captured.out
 
 
 def test_cli_zero_shot_grid_dry_run(tmp_path: Path, capsys):

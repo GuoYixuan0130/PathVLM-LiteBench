@@ -32,6 +32,14 @@ from .heatmap import (
     save_patch_scores_csv,
     save_score_heatmap,
 )
+from .heatmap_comparison import (
+    PatchScoreRunSummary,
+    build_patch_score_comparison_summary,
+    compare_patch_score_csvs,
+    save_patch_score_comparison_csv,
+    save_patch_score_comparison_summary,
+    summarize_patch_score_csv,
+)
 
 __all__ = [
     "save_topk_image_grids",
@@ -58,4 +66,10 @@ __all__ = [
     "aggregate_patch_scores_to_grid",
     "save_patch_scores_csv",
     "save_score_heatmap",
+    "PatchScoreRunSummary",
+    "build_patch_score_comparison_summary",
+    "compare_patch_score_csvs",
+    "save_patch_score_comparison_csv",
+    "save_patch_score_comparison_summary",
+    "summarize_patch_score_csv",
 ]
