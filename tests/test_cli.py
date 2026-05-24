@@ -48,6 +48,7 @@ def test_cli_demos_lists_zero_shot_grid_command(capsys):
     assert "render-coordinate-heatmap" in captured.out
     assert "score-coordinate-heatmap" in captured.out
     assert "compare-coordinate-heatmap-scores" in captured.out
+    assert "patch_coordinate_heatmap_prompt_set_demo_config.json" in captured.out
 
 
 def test_cli_no_subcommand_shows_help(capsys):
@@ -168,6 +169,37 @@ def test_cli_validate_patch_coordinate_heatmap_scoring_config(
 
     assert exit_code == 0
     assert "Config valid: patch_coordinate_heatmap_scoring" in captured.out
+    assert "Model: clip" in captured.out
+    assert "Device: cpu" in captured.out
+
+
+def test_cli_validate_patch_coordinate_heatmap_prompt_set_config(
+    tmp_path: Path,
+    capsys,
+):
+    config_path = tmp_path / "heatmap_prompt_set.json"
+    config_path.write_text(
+        (
+            '{"task": "patch_coordinate_heatmap_prompt_set", '
+            '"manifest": "dataset/patch_coordinates/coordinate_manifest.csv", '
+            '"output_root": "outputs/patch_coordinate_heatmap_prompt_set", '
+            '"model": "clip", '
+            '"device": "cpu", '
+            '"prompts": ['
+            '{"key": "tumor", "prompt": "a histopathology image of tumor tissue"}, '
+            '{"key": "lymphocyte", "prompt": "a histopathology image with lymphocyte-rich tissue"}'
+            ']}'
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(["validate-config", str(config_path)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Config valid: patch_coordinate_heatmap_prompt_set" in captured.out
+    assert "Prompts: 2" in captured.out
+    assert "Prompt keys: tumor, lymphocyte" in captured.out
     assert "Model: clip" in captured.out
     assert "Device: cpu" in captured.out
 

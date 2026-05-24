@@ -1,0 +1,24 @@
+{
+  "task": "patch_coordinate_heatmap_prompt_set",
+  "manifest": "dataset/patch_coordinates/coordinate_manifest.csv",
+  "output_root": "outputs/patch_coordinate_heatmap_prompt_set",
+  "model": "clip",
+  "device": "auto",
+  "path_column": "image_path",
+  "x_column": "x",
+  "y_column": "y",
+  "max_images": 16,
+  "cmap": "viridis",
+  "prompts": [
+    {
+      "key": "tumor",
+      "prompt": "a histopathology image of tumor tissue",
+      "title": "Tumor prompt score"
+    },
+    {
+      "key": "lymphocyte",
+      "prompt": "a histopathology image with lymphocyte-rich tissue",
+      "title": "Lymphocyte-rich prompt score"
+    }
+  ]
+}

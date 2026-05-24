@@ -5,19 +5,25 @@ import pytest
 from pathvlm_litebench.config import (
     BenchmarkConfig,
     PatchCoordinateHeatmapConfig,
+    PatchCoordinateHeatmapPrompt,
+    PatchCoordinateHeatmapPromptSetConfig,
     PatchCoordinateHeatmapScoringConfig,
     benchmark_config_from_dict,
     benchmark_config_to_dict,
     create_default_retrieval_config,
     load_benchmark_config,
     load_patch_coordinate_heatmap_config,
+    load_patch_coordinate_heatmap_prompt_set_config,
     load_patch_coordinate_heatmap_scoring_config,
     patch_coordinate_heatmap_config_from_dict,
     patch_coordinate_heatmap_config_to_dict,
+    patch_coordinate_heatmap_prompt_set_config_from_dict,
+    patch_coordinate_heatmap_prompt_set_config_to_dict,
     patch_coordinate_heatmap_scoring_config_from_dict,
     patch_coordinate_heatmap_scoring_config_to_dict,
     save_benchmark_config,
     save_patch_coordinate_heatmap_config,
+    save_patch_coordinate_heatmap_prompt_set_config,
     save_patch_coordinate_heatmap_scoring_config,
 )
 
@@ -203,5 +209,110 @@ def test_patch_coordinate_heatmap_scoring_config_rejects_unknown_field():
                 "manifest": "manifest.csv",
                 "prompt": "tumor",
                 "unexpected": True,
+            }
+        )
+
+
+def test_patch_coordinate_heatmap_prompt_set_config_roundtrip_json(
+    tmp_path: Path,
+):
+    config = PatchCoordinateHeatmapPromptSetConfig(
+        manifest="dataset/patch_coordinates/coordinate_manifest.csv",
+        output_root="outputs/patch_coordinate_heatmap_prompt_set",
+        model="clip",
+        device="cpu",
+        max_images=8,
+        prompts=[
+            PatchCoordinateHeatmapPrompt(
+                key="tumor",
+                prompt="a histopathology image of tumor tissue",
+                title="Tumor prompt score",
+            ),
+            PatchCoordinateHeatmapPrompt(
+                key="lymphocyte",
+                prompt="a histopathology image with lymphocyte-rich tissue",
+                output_dir="outputs/patch_coordinate_heatmap_prompt_set/lymphocyte",
+                cmap="magma",
+            ),
+        ],
+    )
+
+    data = patch_coordinate_heatmap_prompt_set_config_to_dict(config)
+    assert data["task"] == "patch_coordinate_heatmap_prompt_set"
+    assert [prompt["key"] for prompt in data["prompts"]] == [
+        "tumor",
+        "lymphocyte",
+    ]
+
+    loaded_from_dict = patch_coordinate_heatmap_prompt_set_config_from_dict(data)
+    assert loaded_from_dict == config
+
+    path = tmp_path / "patch_coordinate_heatmap_prompt_set.json"
+    save_patch_coordinate_heatmap_prompt_set_config(config, path)
+    loaded = load_patch_coordinate_heatmap_prompt_set_config(path)
+    assert loaded == config
+
+
+def test_patch_coordinate_heatmap_prompt_set_config_rejects_duplicate_keys():
+    with pytest.raises(ValueError, match="Duplicate prompt key"):
+        PatchCoordinateHeatmapPromptSetConfig(
+            manifest="manifest.csv",
+            prompts=[
+                PatchCoordinateHeatmapPrompt(key="tumor", prompt="tumor prompt"),
+                PatchCoordinateHeatmapPrompt(key="tumor", prompt="tumor prompt 2"),
+            ],
+        )
+
+
+def test_patch_coordinate_heatmap_prompt_set_config_rejects_bad_prompt_key():
+    with pytest.raises(ValueError, match="prompt key"):
+        PatchCoordinateHeatmapPrompt(
+            key="../tumor",
+            prompt="tumor prompt",
+        )
+
+
+def test_patch_coordinate_heatmap_prompt_set_config_rejects_empty_prompt():
+    with pytest.raises(ValueError, match="prompt"):
+        PatchCoordinateHeatmapPrompt(
+            key="tumor",
+            prompt="",
+        )
+
+
+def test_patch_coordinate_heatmap_prompt_set_config_rejects_bad_device():
+    with pytest.raises(ValueError, match="device"):
+        PatchCoordinateHeatmapPromptSetConfig(
+            manifest="manifest.csv",
+            device="tpu",
+            prompts=[PatchCoordinateHeatmapPrompt(key="tumor", prompt="tumor")],
+        )
+
+
+def test_patch_coordinate_heatmap_prompt_set_config_rejects_unknown_field():
+    with pytest.raises(ValueError, match="Unknown"):
+        patch_coordinate_heatmap_prompt_set_config_from_dict(
+            {
+                "task": "patch_coordinate_heatmap_prompt_set",
+                "manifest": "manifest.csv",
+                "prompts": [{"key": "tumor", "prompt": "tumor"}],
+                "unexpected": True,
+            }
+        )
+
+
+def test_patch_coordinate_heatmap_prompt_set_config_rejects_unknown_prompt_field():
+    with pytest.raises(ValueError, match="Unknown"):
+        patch_coordinate_heatmap_prompt_set_config_from_dict(
+            {
+                "task": "patch_coordinate_heatmap_prompt_set",
+                "manifest": "manifest.csv",
+                "prompts": [
+                    {
+                        "key": "tumor",
+                        "prompt": "tumor",
+                        "unexpected": True,
+                    }
+                ],
             }
         )

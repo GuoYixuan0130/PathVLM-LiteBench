@@ -477,6 +477,7 @@ def _handle_demos() -> int:
     print("pathvlm-litebench run-zero-shot-grid --config configs/zero_shot_prompt_grid_mhist_sample.json --output-root outputs/zero_shot_prompt_grid_mhist_sample_run")
     print("pathvlm-litebench validate-config configs/patch_coordinate_heatmap_demo_config.json")
     print("pathvlm-litebench validate-config configs/patch_coordinate_heatmap_scoring_demo_config.json")
+    print("pathvlm-litebench validate-config configs/patch_coordinate_heatmap_prompt_set_demo_config.json")
     print("pathvlm-litebench render-coordinate-heatmap --config configs/patch_coordinate_heatmap_demo_config.json")
     print("pathvlm-litebench score-coordinate-heatmap --config configs/patch_coordinate_heatmap_scoring_demo_config.json --dry-run")
     print("pathvlm-litebench score-coordinate-heatmap --config configs/patch_coordinate_heatmap_scoring_demo_config.json")
@@ -655,6 +656,21 @@ def _handle_validate_config(args: argparse.Namespace) -> int:
             print(f"Score CSV: {score_csv}")
             print(f"Heatmap output: {heatmap_output}")
             print(f"Metadata output: {metadata_output}")
+            return 0
+
+        if task == "patch_coordinate_heatmap_prompt_set":
+            from .config import load_patch_coordinate_heatmap_prompt_set_config
+
+            config = load_patch_coordinate_heatmap_prompt_set_config(args.config)
+            prompt_keys = [prompt.key for prompt in config.prompts]
+            print("Config valid: patch_coordinate_heatmap_prompt_set")
+            print(f"Manifest: {config.manifest}")
+            print(f"Output root: {config.output_root}")
+            print(f"Model: {config.model}")
+            print(f"Device: {config.device}")
+            print(f"Prompts: {len(config.prompts)}")
+            print(f"Prompt keys: {', '.join(prompt_keys)}")
+            print(f"Max images: {config.max_images}")
             return 0
 
         config = load_benchmark_config(args.config)

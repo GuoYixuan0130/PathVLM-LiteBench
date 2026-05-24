@@ -3,6 +3,7 @@ from pathlib import Path
 from pathvlm_litebench.config import (
     load_benchmark_config,
     load_patch_coordinate_heatmap_config,
+    load_patch_coordinate_heatmap_prompt_set_config,
     load_patch_coordinate_heatmap_scoring_config,
 )
 from pathvlm_litebench.evaluation.zero_shot_grid import (
@@ -135,3 +136,17 @@ def test_patch_coordinate_heatmap_scoring_example_config_loads_without_artifacts
     assert config.model == "clip"
     assert config.device == "auto"
     assert config.max_images == 16
+
+
+def test_patch_coordinate_heatmap_prompt_set_example_config_loads_without_artifacts():
+    config = load_patch_coordinate_heatmap_prompt_set_config(
+        CONFIG_DIR / "patch_coordinate_heatmap_prompt_set_demo_config.json"
+    )
+
+    assert config.manifest == "dataset/patch_coordinates/coordinate_manifest.csv"
+    assert config.output_root == "outputs/patch_coordinate_heatmap_prompt_set"
+    assert config.model == "clip"
+    assert config.device == "auto"
+    assert config.max_images == 16
+    assert [prompt.key for prompt in config.prompts] == ["tumor", "lymphocyte"]
+    assert config.prompts[0].prompt == "a histopathology image of tumor tissue"
