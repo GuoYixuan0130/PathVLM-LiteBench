@@ -11,6 +11,7 @@ from . import version
 from .config import load_benchmark_config
 from .config.heatmap_config import (
     PatchCoordinateHeatmapConfig,
+    PatchCoordinateHeatmapPromptSetConfig,
     PatchCoordinateHeatmapScoringConfig,
 )
 from .data.manifest_converter import convert_manifest, convert_mhist_manifest
@@ -65,6 +66,10 @@ def build_parser() -> argparse.ArgumentParser:
     score_heatmap_parser = subparsers.add_parser(
         "score-coordinate-heatmap",
         help="Score coordinate patches against a text prompt and render a heatmap.",
+    )
+    score_heatmap_prompt_set_parser = subparsers.add_parser(
+        "score-coordinate-heatmap-prompt-set",
+        help="Expand a prompt set for prompt-scored patch-coordinate heatmaps.",
     )
     compare_heatmap_scores_parser = subparsers.add_parser(
         "compare-coordinate-heatmap-scores",
@@ -401,6 +406,27 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Validate inputs and resolved output paths without loading a model.",
     )
+    score_heatmap_prompt_set_parser.add_argument(
+        "--config",
+        required=True,
+        help="Prompt-set patch-coordinate heatmap JSON config path.",
+    )
+    score_heatmap_prompt_set_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print expanded prompt runs and output paths without loading images or models.",
+    )
+    score_heatmap_prompt_set_parser.add_argument(
+        "--output-root",
+        default=None,
+        help="Optional output root override for prompt output directories.",
+    )
+    score_heatmap_prompt_set_parser.add_argument(
+        "--max-images",
+        type=int,
+        default=None,
+        help="Optional maximum number of manifest records to include per prompt.",
+    )
     compare_heatmap_scores_parser.add_argument(
         "--score-csvs",
         nargs="+",
@@ -481,6 +507,7 @@ def _handle_demos() -> int:
     print("pathvlm-litebench render-coordinate-heatmap --config configs/patch_coordinate_heatmap_demo_config.json")
     print("pathvlm-litebench score-coordinate-heatmap --config configs/patch_coordinate_heatmap_scoring_demo_config.json --dry-run")
     print("pathvlm-litebench score-coordinate-heatmap --config configs/patch_coordinate_heatmap_scoring_demo_config.json")
+    print("pathvlm-litebench score-coordinate-heatmap-prompt-set --config configs/patch_coordinate_heatmap_prompt_set_demo_config.json --dry-run")
     print("pathvlm-litebench compare-coordinate-heatmap-scores --score-csvs outputs/patch_coordinate_heatmap_scored_tumor/scores.csv outputs/patch_coordinate_heatmap_scored_lymphocyte/scores.csv --run-names tumor lymphocyte --output-csv outputs/patch_coordinate_heatmap_comparison/score_summary.csv --output-md outputs/patch_coordinate_heatmap_comparison/score_summary.md")
     print("pathvlm-litebench render-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --score-csv outputs/patch_coordinate_heatmap_demo/scores.csv --output outputs/patch_coordinate_heatmap_demo/heatmap.png")
     print("pathvlm-litebench score-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --prompt \"a histopathology image of tumor tissue\" --output-dir outputs/patch_coordinate_heatmap_scored --model clip")
@@ -998,6 +1025,50 @@ def _resolve_score_heatmap_output_paths(
     return output_dir, score_csv, heatmap_output, metadata_output
 
 
+def _apply_prompt_set_overrides(
+    config: PatchCoordinateHeatmapPromptSetConfig,
+    *,
+    output_root: str | None = None,
+    max_images: int | None = None,
+) -> PatchCoordinateHeatmapPromptSetConfig:
+    if output_root is None and max_images is None:
+        return config
+
+    return replace(
+        config,
+        output_root=output_root if output_root is not None else config.output_root,
+        max_images=max_images if max_images is not None else config.max_images,
+    )
+
+
+def _expand_prompt_set_scoring_configs(
+    config: PatchCoordinateHeatmapPromptSetConfig,
+) -> list[tuple[str, PatchCoordinateHeatmapScoringConfig]]:
+    runs: list[tuple[str, PatchCoordinateHeatmapScoringConfig]] = []
+    for prompt in config.prompts:
+        output_dir = (
+            Path(prompt.output_dir)
+            if prompt.output_dir is not None
+            else Path(config.output_root) / prompt.key
+        )
+        run_config = PatchCoordinateHeatmapScoringConfig(
+            manifest=config.manifest,
+            prompt=prompt.prompt,
+            output_dir=str(output_dir),
+            model=config.model,
+            device=config.device,
+            image_root=config.image_root,
+            path_column=config.path_column,
+            x_column=config.x_column,
+            y_column=config.y_column,
+            max_images=config.max_images,
+            title=prompt.title,
+            cmap=prompt.cmap or config.cmap,
+        )
+        runs.append((prompt.key, run_config))
+    return runs
+
+
 def _build_score_heatmap_metadata(
     *,
     config: PatchCoordinateHeatmapScoringConfig,
@@ -1140,6 +1211,62 @@ def _handle_score_coordinate_heatmap(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_score_coordinate_heatmap_prompt_set(args: argparse.Namespace) -> int:
+    from .config import load_patch_coordinate_heatmap_prompt_set_config
+    from .data import load_coordinate_patch_manifest
+
+    try:
+        config = load_patch_coordinate_heatmap_prompt_set_config(args.config)
+        config = _apply_prompt_set_overrides(
+            config,
+            output_root=args.output_root,
+            max_images=args.max_images,
+        )
+        runs = _expand_prompt_set_scoring_configs(config)
+
+        records = load_coordinate_patch_manifest(
+            manifest_path=config.manifest,
+            image_root=config.image_root,
+            path_column=config.path_column,
+            x_column=config.x_column,
+            y_column=config.y_column,
+            require_exists=False,
+        )
+        if config.max_images is not None:
+            records = records[: config.max_images]
+
+        if not args.dry_run:
+            print(
+                "Error: prompt-set execution is not implemented yet. "
+                "Use --dry-run to inspect expanded prompt runs."
+            )
+            return 1
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"Error: {exc}")
+        return 1
+
+    print("Dry run only. No model inference was run.")
+    print(f"Manifest: {config.manifest}")
+    print(f"Patches per prompt: {len(records)}")
+    print(f"Output root: {config.output_root}")
+    print(f"Model: {config.model}")
+    print(f"Device: {config.device}")
+    print(f"Prompt-set runs: {len(runs)}")
+    for prompt_key, run_config in runs:
+        output_dir, score_csv, heatmap_output, metadata_output = (
+            _resolve_score_heatmap_output_paths(run_config)
+        )
+        print(f"- {prompt_key}:")
+        print(f"  output_dir: {output_dir}")
+        print(f"  score_csv: {score_csv}")
+        print(f"  heatmap_output: {heatmap_output}")
+        print(f"  metadata_output: {metadata_output}")
+        print(f"  prompt: {run_config.prompt}")
+        print(f"  title: {run_config.title or run_config.prompt}")
+        print(f"  cmap: {run_config.cmap}")
+    return 0
+
+
 def _handle_compare_coordinate_heatmap_scores(args: argparse.Namespace) -> int:
     from .visualization import (
         compare_patch_score_csvs,
@@ -1218,6 +1345,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "score-coordinate-heatmap":
         return _handle_score_coordinate_heatmap(args)
+
+    if args.command == "score-coordinate-heatmap-prompt-set":
+        return _handle_score_coordinate_heatmap_prompt_set(args)
 
     if args.command == "compare-coordinate-heatmap-scores":
         return _handle_compare_coordinate_heatmap_scores(args)

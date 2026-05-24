@@ -47,6 +47,7 @@ def test_cli_demos_lists_zero_shot_grid_command(capsys):
     assert "validate-config" in captured.out
     assert "render-coordinate-heatmap" in captured.out
     assert "score-coordinate-heatmap" in captured.out
+    assert "score-coordinate-heatmap-prompt-set" in captured.out
     assert "compare-coordinate-heatmap-scores" in captured.out
     assert "patch_coordinate_heatmap_prompt_set_demo_config.json" in captured.out
 
@@ -1023,6 +1024,121 @@ def test_cli_score_coordinate_heatmap_dry_run_skips_model_and_outputs(
     assert f"Score CSV: {output_dir / 'scores.csv'}" in captured.out
     assert f"Heatmap output: {output_dir / 'heatmap.png'}" in captured.out
     assert f"Metadata output: {output_dir / 'metadata.json'}" in captured.out
+
+
+def test_cli_score_coordinate_heatmap_prompt_set_dry_run_expands_outputs(
+    tmp_path: Path,
+    capsys,
+    monkeypatch,
+):
+    manifest_path = tmp_path / "coordinate_manifest.csv"
+    manifest_path.write_text(
+        "image_path,x,y\n"
+        "patches/a.png,0,0\n"
+        "patches/b.png,224,0\n",
+        encoding="utf-8",
+    )
+
+    output_root = tmp_path / "prompt_set"
+    custom_output = tmp_path / "custom_lymphocyte"
+    config_path = tmp_path / "prompt_set.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "task": "patch_coordinate_heatmap_prompt_set",
+                "manifest": str(manifest_path),
+                "output_root": str(output_root),
+                "model": "clip",
+                "device": "cpu",
+                "prompts": [
+                    {
+                        "key": "tumor",
+                        "prompt": "tumor prompt",
+                        "title": "Tumor score",
+                    },
+                    {
+                        "key": "lymphocyte",
+                        "prompt": "lymphocyte prompt",
+                        "output_dir": str(custom_output),
+                        "cmap": "magma",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def fail_create_model(model_key_or_name, device=None):
+        raise AssertionError("prompt-set dry-run must not create a model")
+
+    import pathvlm_litebench.models
+
+    monkeypatch.setattr(pathvlm_litebench.models, "create_model", fail_create_model)
+
+    exit_code = main(
+        [
+            "score-coordinate-heatmap-prompt-set",
+            "--config",
+            str(config_path),
+            "--dry-run",
+            "--max-images",
+            "1",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert not output_root.exists()
+    assert not custom_output.exists()
+    assert "Dry run only. No model inference was run." in captured.out
+    assert "Prompt-set runs: 2" in captured.out
+    assert "Patches per prompt: 1" in captured.out
+    assert "- tumor:" in captured.out
+    assert f"score_csv: {output_root / 'tumor' / 'scores.csv'}" in captured.out
+    assert f"heatmap_output: {output_root / 'tumor' / 'heatmap.png'}" in captured.out
+    assert f"metadata_output: {output_root / 'tumor' / 'metadata.json'}" in captured.out
+    assert "title: Tumor score" in captured.out
+    assert "- lymphocyte:" in captured.out
+    assert f"output_dir: {custom_output}" in captured.out
+    assert f"score_csv: {custom_output / 'scores.csv'}" in captured.out
+    assert "cmap: magma" in captured.out
+
+
+def test_cli_score_coordinate_heatmap_prompt_set_requires_dry_run(
+    tmp_path: Path,
+    capsys,
+):
+    manifest_path = tmp_path / "coordinate_manifest.csv"
+    manifest_path.write_text("image_path,x,y\npatches/a.png,0,0\n", encoding="utf-8")
+
+    output_root = tmp_path / "prompt_set"
+    config_path = tmp_path / "prompt_set.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "task": "patch_coordinate_heatmap_prompt_set",
+                "manifest": str(manifest_path),
+                "output_root": str(output_root),
+                "model": "clip",
+                "device": "cpu",
+                "prompts": [{"key": "tumor", "prompt": "tumor prompt"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            "score-coordinate-heatmap-prompt-set",
+            "--config",
+            str(config_path),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert not output_root.exists()
+    assert "prompt-set execution is not implemented yet" in captured.out
 
 
 def test_cli_score_coordinate_heatmap_uses_config_with_overrides(
