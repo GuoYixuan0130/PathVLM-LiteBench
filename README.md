@@ -809,11 +809,12 @@ Future milestones may add more packaged patch-level benchmark examples, but the 
 
 Related docs:
 
+- Development milestone: [v0.10.0 plan](docs/v0.10.0_plan.md)
 - Current release: [v0.9.0 release notes](docs/release_notes_v0.9.0.md), [v0.9.0 checklist](docs/release_checklist_v0.9.0.md)
 - v0.9.0 milestone: [v0.9.0 plan](docs/v0.9.0_plan.md), [v0.9.0 pre-release audit](docs/v0.9.0_pre_release_audit.md), [prompt-scored coordinate heatmap workflow](docs/prompt_scored_coordinate_heatmap_workflow.md)
 - Previous release: [v0.8.0 release notes](docs/release_notes_v0.8.0.md), [v0.8.0 checklist](docs/release_checklist_v0.8.0.md)
 - v0.8.0 milestone: [v0.8.0 plan](docs/v0.8.0_plan.md), [v0.8.0 pre-release audit](docs/v0.8.0_pre_release_audit.md)
-- Post-release audit: [v0.8.0 audit](docs/v0.8.0_post_release_audit.md), [v0.7.0 audit](docs/v0.7.0_post_release_audit.md), [v0.6.0 audit](docs/v0.6.0_post_release_audit.md), [v0.5.0 audit](docs/v0.5.0_post_release_audit.md)
+- Post-release audit: [v0.9.0 audit](docs/v0.9.0_post_release_audit.md), [v0.8.0 audit](docs/v0.8.0_post_release_audit.md), [v0.7.0 audit](docs/v0.7.0_post_release_audit.md), [v0.6.0 audit](docs/v0.6.0_post_release_audit.md), [v0.5.0 audit](docs/v0.5.0_post_release_audit.md)
 - v0.7.0 milestone: [v0.7.0 plan](docs/v0.7.0_plan.md), [patch coordinate heatmap workflow](docs/patch_coordinate_heatmap_workflow.md)
 - Older release: [v0.6.0 release notes](docs/release_notes_v0.6.0.md), [v0.6.0 checklist](docs/release_checklist_v0.6.0.md)
 - v0.6.0 milestone: [v0.6.0 plan](docs/v0.6.0_plan.md), [v0.6.0 MHIST reproducibility audit](docs/v0.6.0_mhist_reproducibility_audit.md), [v0.6.0 MHIST prompt-grid audit](docs/v0.6.0_mhist_prompt_grid_audit.md)
