@@ -1104,14 +1104,26 @@ def test_cli_score_coordinate_heatmap_prompt_set_dry_run_expands_outputs(
     assert "cmap: magma" in captured.out
 
 
-def test_cli_score_coordinate_heatmap_prompt_set_requires_dry_run(
+def test_cli_score_coordinate_heatmap_prompt_set_uses_fake_model(
     tmp_path: Path,
     capsys,
+    monkeypatch,
 ):
+    patches_dir = tmp_path / "patches"
+    patches_dir.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (16, 16), color="red").save(patches_dir / "a.png")
+    Image.new("RGB", (16, 16), color="blue").save(patches_dir / "b.png")
+
     manifest_path = tmp_path / "coordinate_manifest.csv"
-    manifest_path.write_text("image_path,x,y\npatches/a.png,0,0\n", encoding="utf-8")
+    manifest_path.write_text(
+        "image_path,x,y\n"
+        "patches/a.png,0,0\n"
+        "patches/b.png,224,0\n",
+        encoding="utf-8",
+    )
 
     output_root = tmp_path / "prompt_set"
+    custom_output = tmp_path / "custom_lymphocyte"
     config_path = tmp_path / "prompt_set.json"
     config_path.write_text(
         json.dumps(
@@ -1121,11 +1133,52 @@ def test_cli_score_coordinate_heatmap_prompt_set_requires_dry_run(
                 "output_root": str(output_root),
                 "model": "clip",
                 "device": "cpu",
-                "prompts": [{"key": "tumor", "prompt": "tumor prompt"}],
+                "prompts": [
+                    {
+                        "key": "tumor",
+                        "prompt": "tumor prompt",
+                        "title": "Tumor score",
+                    },
+                    {
+                        "key": "lymphocyte",
+                        "prompt": "lymphocyte prompt",
+                        "output_dir": str(custom_output),
+                        "cmap": "magma",
+                    },
+                ],
             }
         ),
         encoding="utf-8",
     )
+
+    created_models = []
+
+    class FakeModel:
+        def __init__(self):
+            self.seen_texts = []
+
+        def encode_images(self, images):
+            assert len(images) == 2
+            return torch.tensor([[1.0, 0.0], [0.0, 1.0]])
+
+        def encode_text(self, texts):
+            self.seen_texts.extend(texts)
+            if texts == ["tumor prompt"]:
+                return torch.tensor([[1.0, 0.0]])
+            if texts == ["lymphocyte prompt"]:
+                return torch.tensor([[0.0, 1.0]])
+            raise AssertionError(f"unexpected prompt: {texts}")
+
+    def fake_create_model(model_key_or_name, device=None):
+        assert model_key_or_name == "clip"
+        assert device == "cpu"
+        model = FakeModel()
+        created_models.append(model)
+        return model
+
+    import pathvlm_litebench.models
+
+    monkeypatch.setattr(pathvlm_litebench.models, "create_model", fake_create_model)
 
     exit_code = main(
         [
@@ -1136,9 +1189,44 @@ def test_cli_score_coordinate_heatmap_prompt_set_requires_dry_run(
     )
     captured = capsys.readouterr()
 
-    assert exit_code == 1
-    assert not output_root.exists()
-    assert "prompt-set execution is not implemented yet" in captured.out
+    tumor_output = output_root / "tumor"
+    assert exit_code == 0
+    assert len(created_models) == 1
+    assert created_models[0].seen_texts == ["tumor prompt", "lymphocyte prompt"]
+    assert (tumor_output / "scores.csv").exists()
+    assert (tumor_output / "heatmap.png").exists()
+    assert (tumor_output / "metadata.json").exists()
+    assert (custom_output / "scores.csv").exists()
+    assert (custom_output / "heatmap.png").exists()
+    assert (custom_output / "metadata.json").exists()
+
+    tumor_metadata = json.loads(
+        (tumor_output / "metadata.json").read_text(encoding="utf-8")
+    )
+    lymphocyte_metadata = json.loads(
+        (custom_output / "metadata.json").read_text(encoding="utf-8")
+    )
+    assert tumor_metadata["task"] == "patch_coordinate_heatmap_scoring"
+    assert tumor_metadata["prompt_key"] == "tumor"
+    assert tumor_metadata["prompt"] == "tumor prompt"
+    assert tumor_metadata["title"] == "Tumor score"
+    assert tumor_metadata["patch_count"] == 2
+    assert tumor_metadata["score_csv"] == str(tumor_output / "scores.csv")
+    assert tumor_metadata["heatmap_output"] == str(tumor_output / "heatmap.png")
+    assert tumor_metadata["metadata_output"] == str(tumor_output / "metadata.json")
+    assert lymphocyte_metadata["prompt_key"] == "lymphocyte"
+    assert lymphocyte_metadata["prompt"] == "lymphocyte prompt"
+    assert lymphocyte_metadata["cmap"] == "magma"
+    assert lymphocyte_metadata["score_csv"] == str(custom_output / "scores.csv")
+
+    tumor_scores = (tumor_output / "scores.csv").read_text(encoding="utf-8")
+    lymphocyte_scores = (custom_output / "scores.csv").read_text(encoding="utf-8")
+    assert "tumor prompt" in tumor_scores
+    assert "lymphocyte prompt" in lymphocyte_scores
+    assert "Saved prompt-set patch-coordinate heatmap outputs." in captured.out
+    assert "Prompt-set runs: 2" in captured.out
+    assert "- tumor:" in captured.out
+    assert "- lymphocyte:" in captured.out
 
 
 def test_cli_score_coordinate_heatmap_uses_config_with_overrides(

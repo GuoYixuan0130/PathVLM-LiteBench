@@ -1076,8 +1076,9 @@ def _build_score_heatmap_metadata(
     score_csv: Path,
     heatmap_output: Path,
     metadata_output: Path,
+    prompt_key: str | None = None,
 ) -> dict[str, object]:
-    return {
+    metadata: dict[str, object] = {
         "task": "patch_coordinate_heatmap_scoring",
         "version": version,
         "created_at_utc": datetime.now(timezone.utc)
@@ -1100,6 +1101,9 @@ def _build_score_heatmap_metadata(
         "title": config.title,
         "cmap": config.cmap,
     }
+    if prompt_key is not None:
+        metadata["prompt_key"] = prompt_key
+    return metadata
 
 
 def _save_score_heatmap_metadata(
@@ -1109,6 +1113,7 @@ def _save_score_heatmap_metadata(
     score_csv: Path,
     heatmap_output: Path,
     metadata_output: Path,
+    prompt_key: str | None = None,
 ) -> str:
     metadata_output.parent.mkdir(parents=True, exist_ok=True)
     metadata = _build_score_heatmap_metadata(
@@ -1117,12 +1122,61 @@ def _save_score_heatmap_metadata(
         score_csv=score_csv,
         heatmap_output=heatmap_output,
         metadata_output=metadata_output,
+        prompt_key=prompt_key,
     )
     metadata_output.write_text(
         json.dumps(metadata, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
     return str(metadata_output)
+
+
+def _score_coordinate_heatmap_run(
+    *,
+    config: PatchCoordinateHeatmapScoringConfig,
+    records,
+    images,
+    model,
+    prompt_key: str | None = None,
+) -> tuple[str, str, str]:
+    from .evaluation import score_patch_images_for_prompt
+    from .visualization import (
+        aggregate_patch_scores_to_grid,
+        save_patch_scores_csv,
+        save_score_heatmap,
+    )
+
+    _, score_csv, heatmap_output, metadata_output = (
+        _resolve_score_heatmap_output_paths(config)
+    )
+
+    scores = score_patch_images_for_prompt(
+        images=images,
+        prompt=config.prompt,
+        model=model,
+    )
+    grid = aggregate_patch_scores_to_grid(records, scores)
+    saved_scores = save_patch_scores_csv(
+        records,
+        scores,
+        score_csv,
+        prompt=config.prompt,
+    )
+    saved_heatmap = save_score_heatmap(
+        grid,
+        heatmap_output,
+        title=config.title or config.prompt,
+        cmap=config.cmap,
+    )
+    saved_metadata = _save_score_heatmap_metadata(
+        config=config,
+        patch_count=len(records),
+        score_csv=score_csv,
+        heatmap_output=heatmap_output,
+        metadata_output=metadata_output,
+        prompt_key=prompt_key,
+    )
+    return saved_scores, saved_heatmap, saved_metadata
 
 
 def _handle_score_coordinate_heatmap(args: argparse.Namespace) -> int:
@@ -1161,42 +1215,17 @@ def _handle_score_coordinate_heatmap(args: argparse.Namespace) -> int:
             return 0
 
         from .data import load_patch_images_from_paths
-        from .evaluation import score_patch_images_for_prompt
         from .models import create_model
-        from .visualization import (
-            aggregate_patch_scores_to_grid,
-            save_patch_scores_csv,
-            save_score_heatmap,
-        )
 
         image_paths = coordinate_records_to_image_paths(records)
         images, _ = load_patch_images_from_paths(image_paths)
 
         model = create_model(config.model, device=config.device)
-        scores = score_patch_images_for_prompt(
-            images=images,
-            prompt=config.prompt,
-            model=model,
-        )
-        grid = aggregate_patch_scores_to_grid(records, scores)
-        saved_scores = save_patch_scores_csv(
-            records,
-            scores,
-            score_csv,
-            prompt=config.prompt,
-        )
-        saved_heatmap = save_score_heatmap(
-            grid,
-            heatmap_output,
-            title=config.title or config.prompt,
-            cmap=config.cmap,
-        )
-        saved_metadata = _save_score_heatmap_metadata(
+        saved_scores, saved_heatmap, saved_metadata = _score_coordinate_heatmap_run(
             config=config,
-            patch_count=len(records),
-            score_csv=score_csv,
-            heatmap_output=heatmap_output,
-            metadata_output=metadata_output,
+            records=records,
+            images=images,
+            model=model,
         )
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         print(f"Error: {exc}")
@@ -1230,40 +1259,86 @@ def _handle_score_coordinate_heatmap_prompt_set(args: argparse.Namespace) -> int
             path_column=config.path_column,
             x_column=config.x_column,
             y_column=config.y_column,
-            require_exists=False,
+            require_exists=not args.dry_run,
         )
         if config.max_images is not None:
             records = records[: config.max_images]
 
-        if not args.dry_run:
-            print(
-                "Error: prompt-set execution is not implemented yet. "
-                "Use --dry-run to inspect expanded prompt runs."
+        if args.dry_run:
+            print("Dry run only. No model inference was run.")
+            print(f"Manifest: {config.manifest}")
+            print(f"Patches per prompt: {len(records)}")
+            print(f"Output root: {config.output_root}")
+            print(f"Model: {config.model}")
+            print(f"Device: {config.device}")
+            print(f"Prompt-set runs: {len(runs)}")
+            for prompt_key, run_config in runs:
+                output_dir, score_csv, heatmap_output, metadata_output = (
+                    _resolve_score_heatmap_output_paths(run_config)
+                )
+                print(f"- {prompt_key}:")
+                print(f"  output_dir: {output_dir}")
+                print(f"  score_csv: {score_csv}")
+                print(f"  heatmap_output: {heatmap_output}")
+                print(f"  metadata_output: {metadata_output}")
+                print(f"  prompt: {run_config.prompt}")
+                print(f"  title: {run_config.title or run_config.prompt}")
+                print(f"  cmap: {run_config.cmap}")
+            return 0
+
+        from .data import (
+            coordinate_records_to_image_paths,
+            load_patch_images_from_paths,
+        )
+        from .models import create_model
+
+        image_paths = coordinate_records_to_image_paths(records)
+        images, _ = load_patch_images_from_paths(image_paths)
+        model = create_model(config.model, device=config.device)
+
+        saved_runs: list[
+            tuple[str, PatchCoordinateHeatmapScoringConfig, str, str, str]
+        ] = []
+        for prompt_key, run_config in runs:
+            saved_scores, saved_heatmap, saved_metadata = _score_coordinate_heatmap_run(
+                config=run_config,
+                records=records,
+                images=images,
+                model=model,
+                prompt_key=prompt_key,
             )
-            return 1
-    except (FileNotFoundError, ValueError) as exc:
+            saved_runs.append(
+                (
+                    prompt_key,
+                    run_config,
+                    saved_scores,
+                    saved_heatmap,
+                    saved_metadata,
+                )
+            )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
         print(f"Error: {exc}")
         return 1
 
-    print("Dry run only. No model inference was run.")
+    print("Saved prompt-set patch-coordinate heatmap outputs.")
     print(f"Manifest: {config.manifest}")
     print(f"Patches per prompt: {len(records)}")
     print(f"Output root: {config.output_root}")
     print(f"Model: {config.model}")
     print(f"Device: {config.device}")
-    print(f"Prompt-set runs: {len(runs)}")
-    for prompt_key, run_config in runs:
-        output_dir, score_csv, heatmap_output, metadata_output = (
-            _resolve_score_heatmap_output_paths(run_config)
-        )
+    print(f"Prompt-set runs: {len(saved_runs)}")
+    for (
+        prompt_key,
+        run_config,
+        saved_scores,
+        saved_heatmap,
+        saved_metadata,
+    ) in saved_runs:
         print(f"- {prompt_key}:")
-        print(f"  output_dir: {output_dir}")
-        print(f"  score_csv: {score_csv}")
-        print(f"  heatmap_output: {heatmap_output}")
-        print(f"  metadata_output: {metadata_output}")
+        print(f"  score_csv: {saved_scores}")
+        print(f"  heatmap_output: {saved_heatmap}")
+        print(f"  metadata_output: {saved_metadata}")
         print(f"  prompt: {run_config.prompt}")
-        print(f"  title: {run_config.title or run_config.prompt}")
-        print(f"  cmap: {run_config.cmap}")
     return 0
 
 
