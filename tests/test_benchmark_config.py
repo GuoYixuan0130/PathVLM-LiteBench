@@ -219,6 +219,12 @@ def test_patch_coordinate_heatmap_prompt_set_config_roundtrip_json(
     config = PatchCoordinateHeatmapPromptSetConfig(
         manifest="dataset/patch_coordinates/coordinate_manifest.csv",
         output_root="outputs/patch_coordinate_heatmap_prompt_set",
+        comparison_output_csv=(
+            "outputs/patch_coordinate_heatmap_prompt_set/score_summary.csv"
+        ),
+        comparison_output_md=(
+            "outputs/patch_coordinate_heatmap_prompt_set/score_summary.md"
+        ),
         model="clip",
         device="cpu",
         max_images=8,
@@ -239,6 +245,12 @@ def test_patch_coordinate_heatmap_prompt_set_config_roundtrip_json(
 
     data = patch_coordinate_heatmap_prompt_set_config_to_dict(config)
     assert data["task"] == "patch_coordinate_heatmap_prompt_set"
+    assert data["comparison_output_csv"] == (
+        "outputs/patch_coordinate_heatmap_prompt_set/score_summary.csv"
+    )
+    assert data["comparison_output_md"] == (
+        "outputs/patch_coordinate_heatmap_prompt_set/score_summary.md"
+    )
     assert [prompt["key"] for prompt in data["prompts"]] == [
         "tumor",
         "lymphocyte",
@@ -285,6 +297,15 @@ def test_patch_coordinate_heatmap_prompt_set_config_rejects_bad_device():
         PatchCoordinateHeatmapPromptSetConfig(
             manifest="manifest.csv",
             device="tpu",
+            prompts=[PatchCoordinateHeatmapPrompt(key="tumor", prompt="tumor")],
+        )
+
+
+def test_patch_coordinate_heatmap_prompt_set_config_rejects_empty_comparison_path():
+    with pytest.raises(ValueError, match="comparison_output_csv"):
+        PatchCoordinateHeatmapPromptSetConfig(
+            manifest="manifest.csv",
+            comparison_output_csv="",
             prompts=[PatchCoordinateHeatmapPrompt(key="tumor", prompt="tumor")],
         )
 

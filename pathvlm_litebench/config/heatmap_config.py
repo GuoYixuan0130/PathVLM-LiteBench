@@ -129,6 +129,8 @@ class PatchCoordinateHeatmapPromptSetConfig:
     manifest: str
     prompts: list[PatchCoordinateHeatmapPrompt]
     output_root: str = "outputs/patch_coordinate_heatmap_prompt_set"
+    comparison_output_csv: str | None = None
+    comparison_output_md: str | None = None
     model: str = "clip"
     device: str = "auto"
     image_root: str | None = None
@@ -144,6 +146,14 @@ class PatchCoordinateHeatmapPromptSetConfig:
     def _validate(self) -> None:
         _require_non_empty_string(self.manifest, "manifest")
         _require_non_empty_string(self.output_root, "output_root")
+        _require_optional_non_empty_string(
+            self.comparison_output_csv,
+            "comparison_output_csv",
+        )
+        _require_optional_non_empty_string(
+            self.comparison_output_md,
+            "comparison_output_md",
+        )
         _require_non_empty_string(self.model, "model")
         _require_non_empty_string(self.device, "device")
         _require_optional_non_empty_string(self.image_root, "image_root")

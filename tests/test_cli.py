@@ -1,3 +1,4 @@
+import csv
 import json
 import subprocess
 import sys
@@ -201,6 +202,8 @@ def test_cli_validate_patch_coordinate_heatmap_prompt_set_config(
     assert "Config valid: patch_coordinate_heatmap_prompt_set" in captured.out
     assert "Prompts: 2" in captured.out
     assert "Prompt keys: tumor, lymphocyte" in captured.out
+    assert "Comparison CSV: outputs" in captured.out
+    assert "Comparison Markdown: outputs" in captured.out
     assert "Model: clip" in captured.out
     assert "Device: cpu" in captured.out
 
@@ -1041,6 +1044,8 @@ def test_cli_score_coordinate_heatmap_prompt_set_dry_run_expands_outputs(
 
     output_root = tmp_path / "prompt_set"
     custom_output = tmp_path / "custom_lymphocyte"
+    comparison_csv = tmp_path / "comparison" / "custom_summary.csv"
+    comparison_md = tmp_path / "comparison" / "custom_summary.md"
     config_path = tmp_path / "prompt_set.json"
     config_path.write_text(
         json.dumps(
@@ -1083,6 +1088,10 @@ def test_cli_score_coordinate_heatmap_prompt_set_dry_run_expands_outputs(
             "--dry-run",
             "--max-images",
             "1",
+            "--comparison-output-csv",
+            str(comparison_csv),
+            "--comparison-output-md",
+            str(comparison_md),
         ]
     )
     captured = capsys.readouterr()
@@ -1090,9 +1099,13 @@ def test_cli_score_coordinate_heatmap_prompt_set_dry_run_expands_outputs(
     assert exit_code == 0
     assert not output_root.exists()
     assert not custom_output.exists()
+    assert not comparison_csv.exists()
+    assert not comparison_md.exists()
     assert "Dry run only. No model inference was run." in captured.out
     assert "Prompt-set runs: 2" in captured.out
     assert "Patches per prompt: 1" in captured.out
+    assert f"Comparison CSV: {comparison_csv}" in captured.out
+    assert f"Comparison Markdown: {comparison_md}" in captured.out
     assert "- tumor:" in captured.out
     assert f"score_csv: {output_root / 'tumor' / 'scores.csv'}" in captured.out
     assert f"heatmap_output: {output_root / 'tumor' / 'heatmap.png'}" in captured.out
@@ -1199,6 +1212,8 @@ def test_cli_score_coordinate_heatmap_prompt_set_uses_fake_model(
     assert (custom_output / "scores.csv").exists()
     assert (custom_output / "heatmap.png").exists()
     assert (custom_output / "metadata.json").exists()
+    assert (output_root / "score_summary.csv").exists()
+    assert (output_root / "score_summary.md").exists()
 
     tumor_metadata = json.loads(
         (tumor_output / "metadata.json").read_text(encoding="utf-8")
@@ -1221,9 +1236,25 @@ def test_cli_score_coordinate_heatmap_prompt_set_uses_fake_model(
 
     tumor_scores = (tumor_output / "scores.csv").read_text(encoding="utf-8")
     lymphocyte_scores = (custom_output / "scores.csv").read_text(encoding="utf-8")
+    with (output_root / "score_summary.csv").open(
+        "r",
+        encoding="utf-8",
+        newline="",
+    ) as csv_file:
+        summary_rows = list(csv.DictReader(csv_file))
+    summary_md = (output_root / "score_summary.md").read_text(encoding="utf-8")
+
     assert "tumor prompt" in tumor_scores
     assert "lymphocyte prompt" in lymphocyte_scores
+    assert [row["run_name"] for row in summary_rows] == ["tumor", "lymphocyte"]
+    assert summary_rows[0]["score_csv"] == str(tumor_output / "scores.csv")
+    assert summary_rows[1]["score_csv"] == str(custom_output / "scores.csv")
+    assert "artifact-only" in summary_md
     assert "Saved prompt-set patch-coordinate heatmap outputs." in captured.out
+    assert (
+        f"Saved comparison CSV to: {output_root / 'score_summary.csv'}"
+        in captured.out
+    )
     assert "Prompt-set runs: 2" in captured.out
     assert "- tumor:" in captured.out
     assert "- lymphocyte:" in captured.out

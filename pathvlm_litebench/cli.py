@@ -422,6 +422,22 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional output root override for prompt output directories.",
     )
     score_heatmap_prompt_set_parser.add_argument(
+        "--comparison-output-csv",
+        default=None,
+        help=(
+            "Optional prompt-set comparison CSV path. "
+            "Defaults to output-root/score_summary.csv."
+        ),
+    )
+    score_heatmap_prompt_set_parser.add_argument(
+        "--comparison-output-md",
+        default=None,
+        help=(
+            "Optional prompt-set comparison Markdown path. "
+            "Defaults to output-root/score_summary.md."
+        ),
+    )
+    score_heatmap_prompt_set_parser.add_argument(
         "--max-images",
         type=int,
         default=None,
@@ -508,6 +524,7 @@ def _handle_demos() -> int:
     print("pathvlm-litebench score-coordinate-heatmap --config configs/patch_coordinate_heatmap_scoring_demo_config.json --dry-run")
     print("pathvlm-litebench score-coordinate-heatmap --config configs/patch_coordinate_heatmap_scoring_demo_config.json")
     print("pathvlm-litebench score-coordinate-heatmap-prompt-set --config configs/patch_coordinate_heatmap_prompt_set_demo_config.json --dry-run")
+    print("pathvlm-litebench score-coordinate-heatmap-prompt-set --config configs/patch_coordinate_heatmap_prompt_set_demo_config.json")
     print("pathvlm-litebench compare-coordinate-heatmap-scores --score-csvs outputs/patch_coordinate_heatmap_scored_tumor/scores.csv outputs/patch_coordinate_heatmap_scored_lymphocyte/scores.csv --run-names tumor lymphocyte --output-csv outputs/patch_coordinate_heatmap_comparison/score_summary.csv --output-md outputs/patch_coordinate_heatmap_comparison/score_summary.md")
     print("pathvlm-litebench render-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --score-csv outputs/patch_coordinate_heatmap_demo/scores.csv --output outputs/patch_coordinate_heatmap_demo/heatmap.png")
     print("pathvlm-litebench score-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --prompt \"a histopathology image of tumor tissue\" --output-dir outputs/patch_coordinate_heatmap_scored --model clip")
@@ -690,9 +707,14 @@ def _handle_validate_config(args: argparse.Namespace) -> int:
 
             config = load_patch_coordinate_heatmap_prompt_set_config(args.config)
             prompt_keys = [prompt.key for prompt in config.prompts]
+            comparison_csv, comparison_md = (
+                _resolve_prompt_set_comparison_output_paths(config)
+            )
             print("Config valid: patch_coordinate_heatmap_prompt_set")
             print(f"Manifest: {config.manifest}")
             print(f"Output root: {config.output_root}")
+            print(f"Comparison CSV: {comparison_csv}")
+            print(f"Comparison Markdown: {comparison_md}")
             print(f"Model: {config.model}")
             print(f"Device: {config.device}")
             print(f"Prompts: {len(config.prompts)}")
@@ -1029,16 +1051,50 @@ def _apply_prompt_set_overrides(
     config: PatchCoordinateHeatmapPromptSetConfig,
     *,
     output_root: str | None = None,
+    comparison_output_csv: str | None = None,
+    comparison_output_md: str | None = None,
     max_images: int | None = None,
 ) -> PatchCoordinateHeatmapPromptSetConfig:
-    if output_root is None and max_images is None:
+    if (
+        output_root is None
+        and comparison_output_csv is None
+        and comparison_output_md is None
+        and max_images is None
+    ):
         return config
 
     return replace(
         config,
         output_root=output_root if output_root is not None else config.output_root,
+        comparison_output_csv=(
+            comparison_output_csv
+            if comparison_output_csv is not None
+            else config.comparison_output_csv
+        ),
+        comparison_output_md=(
+            comparison_output_md
+            if comparison_output_md is not None
+            else config.comparison_output_md
+        ),
         max_images=max_images if max_images is not None else config.max_images,
     )
+
+
+def _resolve_prompt_set_comparison_output_paths(
+    config: PatchCoordinateHeatmapPromptSetConfig,
+) -> tuple[Path, Path]:
+    output_root = Path(config.output_root)
+    output_csv = (
+        Path(config.comparison_output_csv)
+        if config.comparison_output_csv is not None
+        else output_root / "score_summary.csv"
+    )
+    output_md = (
+        Path(config.comparison_output_md)
+        if config.comparison_output_md is not None
+        else output_root / "score_summary.md"
+    )
+    return output_csv, output_md
 
 
 def _expand_prompt_set_scoring_configs(
@@ -1179,6 +1235,32 @@ def _score_coordinate_heatmap_run(
     return saved_scores, saved_heatmap, saved_metadata
 
 
+def _save_prompt_set_comparison(
+    *,
+    saved_runs: list[tuple[str, PatchCoordinateHeatmapScoringConfig, str, str, str]],
+    output_csv: Path,
+    output_md: Path,
+) -> tuple[str, str]:
+    from .visualization import (
+        compare_patch_score_csvs,
+        save_patch_score_comparison_csv,
+        save_patch_score_comparison_summary,
+    )
+
+    score_csvs = [saved_scores for _, _, saved_scores, _, _ in saved_runs]
+    metadata_jsons = [saved_metadata for _, _, _, _, saved_metadata in saved_runs]
+    run_names = [prompt_key for prompt_key, _, _, _, _ in saved_runs]
+
+    summaries = compare_patch_score_csvs(
+        score_csvs,
+        metadata_jsons=metadata_jsons,
+        run_names=run_names,
+    )
+    saved_csv = save_patch_score_comparison_csv(summaries, output_csv)
+    saved_md = save_patch_score_comparison_summary(summaries, output_md)
+    return saved_csv, saved_md
+
+
 def _handle_score_coordinate_heatmap(args: argparse.Namespace) -> int:
     from .data import (
         coordinate_records_to_image_paths,
@@ -1249,9 +1331,14 @@ def _handle_score_coordinate_heatmap_prompt_set(args: argparse.Namespace) -> int
         config = _apply_prompt_set_overrides(
             config,
             output_root=args.output_root,
+            comparison_output_csv=args.comparison_output_csv,
+            comparison_output_md=args.comparison_output_md,
             max_images=args.max_images,
         )
         runs = _expand_prompt_set_scoring_configs(config)
+        comparison_csv, comparison_md = _resolve_prompt_set_comparison_output_paths(
+            config
+        )
 
         records = load_coordinate_patch_manifest(
             manifest_path=config.manifest,
@@ -1269,6 +1356,8 @@ def _handle_score_coordinate_heatmap_prompt_set(args: argparse.Namespace) -> int
             print(f"Manifest: {config.manifest}")
             print(f"Patches per prompt: {len(records)}")
             print(f"Output root: {config.output_root}")
+            print(f"Comparison CSV: {comparison_csv}")
+            print(f"Comparison Markdown: {comparison_md}")
             print(f"Model: {config.model}")
             print(f"Device: {config.device}")
             print(f"Prompt-set runs: {len(runs)}")
@@ -1316,6 +1405,11 @@ def _handle_score_coordinate_heatmap_prompt_set(args: argparse.Namespace) -> int
                     saved_metadata,
                 )
             )
+        saved_comparison_csv, saved_comparison_md = _save_prompt_set_comparison(
+            saved_runs=saved_runs,
+            output_csv=comparison_csv,
+            output_md=comparison_md,
+        )
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         print(f"Error: {exc}")
         return 1
@@ -1324,6 +1418,8 @@ def _handle_score_coordinate_heatmap_prompt_set(args: argparse.Namespace) -> int
     print(f"Manifest: {config.manifest}")
     print(f"Patches per prompt: {len(records)}")
     print(f"Output root: {config.output_root}")
+    print(f"Saved comparison CSV to: {saved_comparison_csv}")
+    print(f"Saved comparison Markdown to: {saved_comparison_md}")
     print(f"Model: {config.model}")
     print(f"Device: {config.device}")
     print(f"Prompt-set runs: {len(saved_runs)}")
