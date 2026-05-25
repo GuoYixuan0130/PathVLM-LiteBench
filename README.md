@@ -806,10 +806,11 @@ Future milestones may add more packaged patch-level benchmark examples, but the 
 - [x] Add optional patch-coordinate text-guided heatmap demo
 - [x] Add prompt-scored patch-coordinate heatmap config workflow
 - [x] Add artifact-only prompt-scored coordinate heatmap score comparison
+- [x] Add prompt-set patch-coordinate heatmap workflow
 
 Related docs:
 
-- Development milestone: [v0.10.0 plan](docs/v0.10.0_plan.md)
+- Development milestone: [v0.10.0 plan](docs/v0.10.0_plan.md), [prompt-set coordinate heatmap workflow](docs/prompt_set_coordinate_heatmap_workflow.md)
 - Current release: [v0.9.0 release notes](docs/release_notes_v0.9.0.md), [v0.9.0 checklist](docs/release_checklist_v0.9.0.md)
 - v0.9.0 milestone: [v0.9.0 plan](docs/v0.9.0_plan.md), [v0.9.0 pre-release audit](docs/v0.9.0_pre_release_audit.md), [prompt-scored coordinate heatmap workflow](docs/prompt_scored_coordinate_heatmap_workflow.md)
 - Previous release: [v0.8.0 release notes](docs/release_notes_v0.8.0.md), [v0.8.0 checklist](docs/release_checklist_v0.8.0.md)
