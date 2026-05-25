@@ -45,17 +45,6 @@ The current version supports a minimal but complete patch-level workflow:
 
 The current demos use simple RGB images for smoke testing. These demo images are not pathology images.
 
-## Example Observation on MHIST
-
-A local full-test MHIST zero-shot comparison showed opposite class-bias patterns: CLIP favored `HP`, while PLIP favored `SSA`. CLIP had higher raw accuracy because it predicted the majority `HP` class for most samples, while PLIP improved balanced accuracy and `SSA` recall but still showed strong class bias.
-
-This is a useful baseline observation rather than a clinical result: it shows why accuracy alone can be misleading for fine-grained pathology tasks and why balanced accuracy, macro-F1, confusion matrices, predicted-label distributions, error reports, and prompt-sensitivity checks are included.
-
-See [docs/mhist_baseline_observation.md](docs/mhist_baseline_observation.md) for the setup, observed metrics, and interpretation.
-For the full-test CLIP vs PLIP comparison with prompt-sensitivity checks, see [docs/clip_vs_plip_mhist_observation.md](docs/clip_vs_plip_mhist_observation.md).
-For a post-v0.4.0 sampled CLIP vs PLIP vs CONCH comparison, see [docs/clip_plip_conch_mhist_sampled_observation.md](docs/clip_plip_conch_mhist_sampled_observation.md).
-For a sampled CLIP/PLIP/CONCH prompt-grid comparison, see [docs/clip_plip_conch_mhist_prompt_grid_observation.md](docs/clip_plip_conch_mhist_prompt_grid_observation.md).
-
 ## Model Registry
 
 PathVLM-LiteBench uses a lightweight model registry so that demos can accept either a short model key or a Hugging Face model name.
@@ -359,7 +348,8 @@ See [docs/data_preparation.md](docs/data_preparation.md) for details.
 For a step-by-step guide on running the toolkit with real pathology patch folders, see [docs/real_patch_workflow.md](docs/real_patch_workflow.md).
 For an end-to-end public patch benchmark recipe using conversion, sampling, zero-shot, prompt grids, and report comparison, see [docs/public_patch_benchmark_workflow.md](docs/public_patch_benchmark_workflow.md).
 For patch-coordinate heatmaps from existing scores, see [docs/patch_coordinate_heatmap_workflow.md](docs/patch_coordinate_heatmap_workflow.md).
-For prompt-scored patch-coordinate heatmaps on the development branch, see [docs/prompt_scored_coordinate_heatmap_workflow.md](docs/prompt_scored_coordinate_heatmap_workflow.md).
+For single-prompt patch-coordinate heatmap scoring, see [docs/prompt_scored_coordinate_heatmap_workflow.md](docs/prompt_scored_coordinate_heatmap_workflow.md).
+For prompt-set patch-coordinate heatmap scoring and comparison, see [docs/prompt_set_coordinate_heatmap_workflow.md](docs/prompt_set_coordinate_heatmap_workflow.md).
 
 ## Quick Start
 
@@ -810,21 +800,10 @@ Future milestones may add more packaged patch-level benchmark examples, but the 
 
 Related docs:
 
-- Current release: [v0.10.0 release notes](docs/release_notes_v0.10.0.md), [v0.10.0 checklist](docs/release_checklist_v0.10.0.md)
-- v0.10.0 milestone: [v0.10.0 plan](docs/v0.10.0_plan.md), [v0.10.0 pre-release audit](docs/v0.10.0_pre_release_audit.md), [prompt-set coordinate heatmap workflow](docs/prompt_set_coordinate_heatmap_workflow.md)
-- Previous release: [v0.9.0 release notes](docs/release_notes_v0.9.0.md), [v0.9.0 checklist](docs/release_checklist_v0.9.0.md)
-- v0.9.0 milestone: [v0.9.0 plan](docs/v0.9.0_plan.md), [v0.9.0 pre-release audit](docs/v0.9.0_pre_release_audit.md), [prompt-scored coordinate heatmap workflow](docs/prompt_scored_coordinate_heatmap_workflow.md)
-- Older release: [v0.8.0 release notes](docs/release_notes_v0.8.0.md), [v0.8.0 checklist](docs/release_checklist_v0.8.0.md)
-- v0.8.0 milestone: [v0.8.0 plan](docs/v0.8.0_plan.md), [v0.8.0 pre-release audit](docs/v0.8.0_pre_release_audit.md)
-- Post-release audit: [v0.10.0 audit](docs/v0.10.0_post_release_audit.md), [v0.9.0 audit](docs/v0.9.0_post_release_audit.md), [v0.8.0 audit](docs/v0.8.0_post_release_audit.md), [v0.7.0 audit](docs/v0.7.0_post_release_audit.md), [v0.6.0 audit](docs/v0.6.0_post_release_audit.md), [v0.5.0 audit](docs/v0.5.0_post_release_audit.md)
-- v0.7.0 milestone: [v0.7.0 plan](docs/v0.7.0_plan.md), [patch coordinate heatmap workflow](docs/patch_coordinate_heatmap_workflow.md)
-- Older release: [v0.6.0 release notes](docs/release_notes_v0.6.0.md), [v0.6.0 checklist](docs/release_checklist_v0.6.0.md)
-- v0.6.0 milestone: [v0.6.0 plan](docs/v0.6.0_plan.md), [v0.6.0 MHIST reproducibility audit](docs/v0.6.0_mhist_reproducibility_audit.md), [v0.6.0 MHIST prompt-grid audit](docs/v0.6.0_mhist_prompt_grid_audit.md)
-- Earlier release: [v0.5.0 release notes](docs/release_notes_v0.5.0.md), [v0.5.0 checklist](docs/release_checklist_v0.5.0.md)
-- Earlier releases: [v0.4.1 release notes](docs/release_notes_v0.4.1.md), [v0.4.1 checklist](docs/release_checklist_v0.4.1.md), [v0.4.0 release notes](docs/release_notes_v0.4.0.md), [v0.4.0 checklist](docs/release_checklist_v0.4.0.md)
-- CONCH milestone: [v0.4.0 plan](docs/v0.4.0_plan.md), [CONCH feasibility checks](docs/conch_feasibility_check.md)
-- Earlier milestones: [v0.3.1 notes](docs/release_notes_v0.3.1.md), [v0.3.0 notes](docs/release_notes_v0.3.0.md), [v0.2.0 notes](docs/release_notes_v0.2.0.md)
-- PLIP and MHIST references: [PLIP feasibility checks](docs/plip_feasibility_check.md), [CLIP vs PLIP protocol](docs/clip_vs_plip_mhist_protocol.md), [CLIP vs PLIP observations](docs/clip_vs_plip_mhist_observation.md)
+- Getting started: [small dataset quickstart](docs/small_dataset_quickstart.md), [real patch workflow](docs/real_patch_workflow.md), [data preparation](docs/data_preparation.md)
+- Benchmark workflows: [public patch benchmark workflow](docs/public_patch_benchmark_workflow.md), [prompt-grid workflow](docs/prompt_grid_workflow.md)
+- Coordinate heatmaps: [artifact-only heatmap workflow](docs/patch_coordinate_heatmap_workflow.md), [single-prompt scoring workflow](docs/prompt_scored_coordinate_heatmap_workflow.md), [prompt-set workflow](docs/prompt_set_coordinate_heatmap_workflow.md)
+- Project and release: [project positioning](docs/project_positioning.md), [v0.10.0 release notes](docs/release_notes_v0.10.0.md)
 
 ## Research Positioning
 

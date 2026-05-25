@@ -294,5 +294,6 @@ outputs/   ignored
 - [small_dataset_quickstart.md](small_dataset_quickstart.md)
 - [real_patch_workflow.md](real_patch_workflow.md)
 - [prompt_grid_workflow.md](prompt_grid_workflow.md)
-- [clip_plip_conch_mhist_sampled_observation.md](clip_plip_conch_mhist_sampled_observation.md)
-- [clip_plip_conch_mhist_prompt_grid_observation.md](clip_plip_conch_mhist_prompt_grid_observation.md)
+- [patch_coordinate_heatmap_workflow.md](patch_coordinate_heatmap_workflow.md)
+- [prompt_scored_coordinate_heatmap_workflow.md](prompt_scored_coordinate_heatmap_workflow.md)
+- [prompt_set_coordinate_heatmap_workflow.md](prompt_set_coordinate_heatmap_workflow.md)

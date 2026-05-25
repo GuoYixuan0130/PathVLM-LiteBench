@@ -60,11 +60,9 @@ Prompt-set comparison summaries:
 
 Documentation:
 
-- added `docs/v0.10.0_plan.md`
 - added `docs/prompt_set_coordinate_heatmap_workflow.md`
-- added `docs/release_checklist_v0.10.0.md`
-- added `docs/release_notes_v0.10.0.md`
-- updated README development milestone links
+- published v0.10.0 release notes
+- updated README user workflow links
 - documented prompt-set config fields, dry-run behavior, output layout, model-loading behavior, comparison summaries, and artifact hygiene
 - documented that generated score CSVs, heatmaps, metadata files, comparison outputs, datasets, caches, and weights should remain uncommitted
 

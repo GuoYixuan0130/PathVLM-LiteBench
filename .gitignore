@@ -23,6 +23,17 @@ env/
 /outputs/
 /results/
 
+# Local release and research notes kept outside the public GitHub tree
+/docs/release_checklist_v*.md
+/docs/release_notes_v0.[0-9].*.md
+/docs/v*_plan.md
+/docs/v*_pre_release_audit.md
+/docs/v*_post_release_audit.md
+/docs/v*_mhist_*_audit.md
+/docs/*_observation.md
+/docs/*_protocol.md
+/docs/*_feasibility_check.md
+
 # Auto-generated demo images
 /examples/demo_patches/
 
