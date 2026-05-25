@@ -41,6 +41,7 @@ The current version supports a minimal but complete patch-level workflow:
 - Running prompt sensitivity analysis
 - Rendering patch-coordinate heatmaps from existing score artifacts
 - Scoring coordinate-aware patch manifests against one text prompt
+- Scoring coordinate-aware patch manifests against prompt sets
 - Comparing saved prompt-scored patch-coordinate score artifacts
 
 The current demos use simple RGB images for smoke testing. These demo images are not pathology images.
@@ -269,18 +270,20 @@ This is useful for laptop-friendly testing and balanced class evaluation. `datas
 ```text
 PathVLM-LiteBench/
 |-- pathvlm_litebench/
+|   |-- config/
 |   |-- data/
-|   |-- models/
-|   |-- retrieval/
 |   |-- evaluation/
+|   |-- models/
 |   |-- prompts/
+|   |-- retrieval/
 |   `-- visualization/
 |-- examples/
 |   |-- 01_quick_start.ipynb
 |   |-- 01_patch_text_retrieval_demo.py
 |   |-- 02_zero_shot_classification_demo.py
 |   |-- 03_prompt_sensitivity_demo.py
-|   `-- 04_retrieval_metrics_demo.py
+|   |-- 04_retrieval_metrics_demo.py
+|   `-- 05_patch_coordinate_heatmap_demo.py
 |-- configs/
 |-- docs/
 |-- tests/
@@ -330,14 +333,18 @@ pathvlm-litebench version
 pathvlm-litebench models
 pathvlm-litebench demos
 pathvlm-litebench convert-manifest --help
+pathvlm-litebench sample-manifest --help
+pathvlm-litebench summarize-report --help
+pathvlm-litebench compare-reports --help
 pathvlm-litebench validate-config --help
 pathvlm-litebench run-zero-shot-grid --help
 pathvlm-litebench render-coordinate-heatmap --help
 pathvlm-litebench score-coordinate-heatmap --help
+pathvlm-litebench score-coordinate-heatmap-prompt-set --help
 pathvlm-litebench compare-coordinate-heatmap-scores --help
 ```
 
-The CLI does not download models by default. It only lists registry information and available demo commands.
+The inspection and help commands above do not download models. Model-based evaluation or scoring commands load model weights only when those runs are executed.
 
 ## Data Preparation
 
@@ -782,21 +789,18 @@ Future milestones may add more packaged patch-level benchmark examples, but the 
 - [x] Add retrieval metrics such as Recall@K
 - [x] Add classification metrics beyond accuracy
 - [x] Add config-driven retrieval, zero-shot, and prompt sensitivity demos
-- [x] Document MHIST CLIP baseline observation
 - [x] Add pathology-specific PLIP wrapper
-- [x] Document preliminary CLIP vs PLIP MHIST observation
 - [x] Add zero-shot, retrieval, and prompt sensitivity experiment summary Markdown utilities
 - [x] Add multi-run comparison summaries for saved report artifacts
-- [x] Add v0.4.0 CONCH feasibility-first milestone plan
-- [x] Add CONCH local feasibility check protocol
 - [x] Implement optional CONCH wrapper
 - [x] Add zero-shot prompt-grid runner
 - [x] Document public patch benchmark workflow
 - [x] Add benchmark config validation CLI
-- [x] Add optional patch-coordinate text-guided heatmap demo
-- [x] Add prompt-scored patch-coordinate heatmap config workflow
-- [x] Add artifact-only prompt-scored coordinate heatmap score comparison
-- [x] Add prompt-set patch-coordinate heatmap workflow
+- [x] Add patch-coordinate heatmap rendering from existing score artifacts
+- [x] Add single-prompt patch-coordinate heatmap scoring and config workflow
+- [x] Add artifact-only score comparison for prompt-scored coordinate heatmaps
+- [x] Add prompt-set patch-coordinate heatmap scoring workflow
+- [x] Keep public documentation focused on user workflows
 
 Related docs:
 
