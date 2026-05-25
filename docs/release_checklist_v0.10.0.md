@@ -56,15 +56,15 @@ v0.10.0 positioning excludes:
 
 ## Current Release Blockers
 
-- [ ] Bump package version from `0.10.0.dev0` to `0.10.0` in `pyproject.toml`
-- [ ] Bump runtime version from `0.10.0.dev0` to `0.10.0` in `pathvlm_litebench/__init__.py`
-- [ ] Update version assertions in tests
+- [x] Bump package version from `0.10.0.dev0` to `0.10.0` in `pyproject.toml`
+- [x] Bump runtime version from `0.10.0.dev0` to `0.10.0` in `pathvlm_litebench/__init__.py`
+- [x] Update version assertions in tests
 - [x] Add `docs/release_notes_v0.10.0.md`
 - [x] Add `docs/release_checklist_v0.10.0.md`
-- [ ] Add `docs/v0.10.0_pre_release_audit.md`
-- [ ] Update README current release links during release preparation
-- [ ] Verify local tests pass on the release preparation commit
-- [ ] Verify GitHub Actions CI passes on the release preparation commit
+- [x] Add `docs/v0.10.0_pre_release_audit.md`
+- [x] Update README current release links during release preparation
+- [x] Verify local tests pass on the release preparation commit
+- [x] Verify GitHub Actions CI passes on the release preparation commit
 - [ ] Tag `v0.10.0` after release notes are reviewed
 - [ ] Create the GitHub Release only after the tag and release notes are final
 
@@ -163,9 +163,9 @@ dist/
 - [x] Documentation avoids clinical claims
 - [x] Documentation avoids presenting the feature as whole-slide image processing
 - [x] `docs/release_notes_v0.10.0.md` exists
-- [ ] README current release links point to v0.10.0 docs during release preparation
-- [ ] `docs/v0.10.0_pre_release_audit.md` records release-readiness checks
-- [ ] `docs/release_notes_v0.10.0.md` is final before tagging
+- [x] README current release links point to v0.10.0 docs during release preparation
+- [x] `docs/v0.10.0_pre_release_audit.md` records release-readiness checks
+- [x] `docs/release_notes_v0.10.0.md` is final before tagging
 
 ## Release Notes Coverage
 
@@ -189,12 +189,12 @@ The v0.10.0 release notes should cover:
 
 Tag `v0.10.0` when:
 
-- [ ] Release blockers are resolved locally
-- [ ] Package and runtime versions are `0.10.0`
-- [ ] `docs/release_notes_v0.10.0.md` is complete
-- [ ] README current release links point to v0.10.0 docs
-- [ ] `.venv\Scripts\python.exe -m pytest tests` passes locally
-- [ ] CLI smoke commands pass locally
-- [ ] CI passes on GitHub for the release preparation commit
-- [ ] `.gitignore` excludes local data, generated outputs, and Python build metadata
-- [ ] The latest release preparation commit is pushed to `main`
+- [x] Release blockers are resolved locally
+- [x] Package and runtime versions are `0.10.0`
+- [x] `docs/release_notes_v0.10.0.md` is complete
+- [x] README current release links point to v0.10.0 docs
+- [x] `.venv\Scripts\python.exe -m pytest tests` passes locally
+- [x] CLI smoke commands pass locally
+- [x] CI passes on GitHub for the release preparation commit
+- [x] `.gitignore` excludes local data, generated outputs, and Python build metadata
+- [x] The latest release preparation commit is pushed to `main`
