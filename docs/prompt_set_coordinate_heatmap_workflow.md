@@ -127,6 +127,15 @@ Prompt entry fields:
 
 Prompt keys must start with an ASCII letter or digit and may contain ASCII letters, digits, `.`, `_`, or `-`.
 
+For the example config:
+
+```text
+prompt key: tumor      -> output directory: outputs/patch_coordinate_heatmap_prompt_set/tumor/
+prompt key: lymphocyte -> output directory: outputs/patch_coordinate_heatmap_prompt_set/lymphocyte/
+```
+
+Each prompt entry is one independent scoring run over the same coordinate manifest. The `prompt` text is encoded by the selected model, `title` is used on the heatmap, and `key` is used to keep outputs stable and easy to compare.
+
 ## Dry Run
 
 Use `--dry-run` before a real run:
@@ -148,6 +157,8 @@ Dry-run mode:
 - does not create a model
 - does not run inference
 - does not write `scores.csv`, `heatmap.png`, `metadata.json`, `score_summary.csv`, or `score_summary.md`
+
+Use dry-run to confirm the prompt keys, output directories, comparison paths, manifest row count, and `--max-images` behavior before loading model weights.
 
 Use `--max-images` for a small local smoke check:
 
@@ -186,6 +197,8 @@ outputs/patch_coordinate_heatmap_prompt_set/
 |-- score_summary.csv
 `-- score_summary.md
 ```
+
+Each per-prompt `scores.csv` contains the patch coordinates and the similarity score for that prompt. Each per-prompt `heatmap.png` visualizes those scores over the patch-coordinate grid. `score_summary.csv` and `score_summary.md` compare the saved prompt runs without running inference again.
 
 Each per-prompt `scores.csv` includes one row per scored patch with coordinate metadata, the numeric score, and the prompt used for scoring.
 

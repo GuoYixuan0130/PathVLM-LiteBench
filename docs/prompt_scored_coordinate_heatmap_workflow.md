@@ -58,6 +58,13 @@ Required columns:
 
 Supported optional columns include `width`, `height`, `label`, `split`, `case_id`, and `slide_id`. Additional non-empty columns are preserved as metadata when the manifest is loaded.
 
+Column meanings:
+
+- `image_path` is the path to an already extracted patch image.
+- `x` and `y` place that patch in a coordinate grid for visualization.
+- `width` and `height` describe patch size if available.
+- `label`, `split`, `case_id`, and `slide_id` are metadata fields; they do not make this a whole-slide pipeline.
+
 ## CLI Run
 
 Run prompt-scored patch-coordinate heatmap generation with explicit arguments:
@@ -81,6 +88,12 @@ The command writes:
 
 The score CSV includes one row per scored patch with coordinate metadata, the numeric score, and the prompt used for scoring.
 
+Conceptually, each output row means:
+
+```text
+this patch image at coordinate (x, y) received this similarity score for this text prompt
+```
+
 The metadata JSON records the run context needed for lightweight auditing, including the prompt, model, device, manifest path, column names, output paths, patch count, toolkit version, colormap, title, and creation time.
 
 ## Dry Run Without Model Loading
@@ -98,6 +111,8 @@ pathvlm-litebench score-coordinate-heatmap \
 ```
 
 Dry-run mode requires the manifest and referenced patch paths to exist, but it does not load patch images, create a model, run inference, or write `scores.csv`, `heatmap.png`, or `metadata.json`.
+
+Use dry-run when you want to catch missing columns, bad paths, invalid output paths, or unintended `--max-images` settings before a model is loaded.
 
 ## Smoke Run With max-images
 

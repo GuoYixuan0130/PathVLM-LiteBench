@@ -50,6 +50,13 @@ The current demos use simple RGB images for smoke testing. These demo images are
 
 PathVLM-LiteBench uses a lightweight model registry so that demos can accept either a short model key or a Hugging Face model name.
 
+In CLI commands, `--model` can be either:
+
+- a registered model key, such as `clip`, `plip`, or `conch`
+- a full Hugging Face model name, such as `openai/clip-vit-base-patch32`
+
+The model key is the short name users type in PathVLM-LiteBench commands. The resolved model name is the actual model identifier used by the loader. For example, both `clip` and `clip-vit-base-patch32` resolve to `openai/clip-vit-base-patch32`.
+
 Currently supported model keys:
 
 | Model key | Resolved model name | Status | Notes |
@@ -111,6 +118,27 @@ tumor_prompts = get_prompt_variants("tumor")
 class_prompts = build_class_prompts(["tumor", "normal", "necrosis"])
 ```
 
+The example above produces:
+
+```python
+tumor_prompts == [
+    "a histopathology image of tumor tissue",
+    "a pathology patch showing malignant tissue",
+    "a microscopic image of cancerous tissue",
+    "a H&E stained tissue patch with tumor region",
+]
+
+class_prompts == [
+    "a histopathology image of tumor",
+    "a histopathology image of normal",
+    "a histopathology image of necrosis",
+]
+```
+
+`get_prompt_variants("tumor")` returns several alternative text prompts for the same concept. This is useful when you want to test whether retrieval results change when the wording changes.
+
+`build_class_prompts(["tumor", "normal", "necrosis"])` returns one default prompt per class. This is useful for zero-shot classification, where each patch image is compared against one text prompt for each candidate class.
+
 The prompt library is not a clinical ontology. It is a lightweight research utility for reproducible prompt experiments.
 
 Zero-shot with built-in class prompt generation:
@@ -119,11 +147,15 @@ Zero-shot with built-in class prompt generation:
 python examples/02_zero_shot_classification_demo.py --model clip --device auto --class_names tumor normal necrosis --top_k 2
 ```
 
+Here, `--class_names tumor normal necrosis` defines the candidate labels. Because no `--class_prompts` are provided, the demo automatically builds one prompt per class with the default template `a histopathology image of {class_name}`. `--top_k 2` prints the two highest-scoring class predictions per patch.
+
 Prompt sensitivity with pathology prompt templates:
 
 ```bash
 python examples/03_prompt_sensitivity_demo.py --model clip --device auto --use_pathology_prompts --concepts tumor normal necrosis --top_k 2
 ```
+
+Here, `--use_pathology_prompts` tells the demo to use the built-in prompt variants instead of a single custom prompt list. `--concepts tumor normal necrosis` selects which built-in concept groups to test. For each concept, the demo retrieves the top-k patches for several prompt variants, then compares whether those variants return similar patches.
 
 If no real pathology patch folder is passed, the demos still use generated RGB images as smoke tests. For meaningful CPath experiments, provide `--image_dir path/to/your_patch_folder`.
 
@@ -176,6 +208,25 @@ Example config:
 The `dataset/` folder is local and ignored by Git. The config file is a template and does not include data.
 
 Manifest-specific retrieval evaluation options such as `--manifest`, `--image_root`, `--split`, `--label_prompts`, and `--recall_k` are currently passed via CLI.
+
+Common option meanings:
+
+| Option | Meaning |
+|---|---|
+| `--image_dir` | Folder of patch images for unlabeled runs. |
+| `--manifest` | CSV file listing patch paths and optional labels/metadata. |
+| `--image_root` | Root folder used to resolve relative `image_path` values in a manifest. |
+| `--split` | Optional manifest subset to run, such as `test`. |
+| `--prompts` | Text queries for retrieval. |
+| `--label_prompts` | One target label per retrieval prompt, used to compute Recall@K. |
+| `--class_names` | Candidate zero-shot class labels. |
+| `--class_prompts` | One text prompt per class name. If omitted, default class prompts are generated. |
+| `--top_k` | Number of top retrieval results or class predictions to show/save. |
+| `--recall_k` | Retrieval metric cutoffs, such as Recall@1, Recall@5, and Recall@10. |
+| `--use_pathology_prompts` | Use built-in prompt variants for prompt sensitivity. |
+| `--concepts` | Built-in prompt concept groups to evaluate, such as `tumor normal necrosis`. |
+| `--dry-run` | Validate and preview a planned run without model inference when supported. |
+| `--max-images` | Limit the number of manifest records for a quick smoke run. |
 
 ## Patch Manifest Support
 

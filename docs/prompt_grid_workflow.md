@@ -117,6 +117,17 @@ Runtime overrides:
 
 `prompt_pairs[*].class_prompts` must have the same length and order as `class_names`.
 
+For the example config, `class_names` is `["HP", "SSA"]`. Every prompt pair therefore needs exactly two prompts:
+
+```text
+class_names[0] = HP  -> class_prompts[0] = "a histopathology image of hyperplastic polyp"
+class_names[1] = SSA -> class_prompts[1] = "a histopathology image of sessile serrated adenoma"
+```
+
+The `key` field names the prompt style in output folders and comparison tables. For example, `default` and `patch` become separate run directories under each model.
+
+`--dry-run` validates the config and prints the planned model/prompt runs without loading model weights. Use it before a real grid, especially when the config includes optional gated models such as CONCH.
+
 ## Output Layout
 
 For this config:

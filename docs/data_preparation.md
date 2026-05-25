@@ -123,6 +123,16 @@ python examples/01_patch_text_retrieval_demo.py \
 
 `label_prompts` should align one-to-one with `prompts`, mapping each text prompt to its target manifest label.
 
+For example, if the manifest labels are `tumor`, `normal`, and `necrosis`, then:
+
+```text
+Prompt 1: "a histopathology image of tumor tissue"       -> label_prompts[0]: tumor
+Prompt 2: "a histopathology image of normal tissue"      -> label_prompts[1]: normal
+Prompt 3: "a histopathology image showing necrosis"      -> label_prompts[2]: necrosis
+```
+
+`--top_k 5` controls how many retrieved patches are returned per prompt. `--recall_k 1 5 10` controls which retrieval metrics are reported from the labeled manifest.
+
 ## Sampling a Small Manifest
 
 For large datasets, you can first sample a smaller balanced subset for quick testing:
@@ -225,6 +235,8 @@ python examples/02_zero_shot_classification_demo.py \
 
 This compares each patch image embedding against class text prompt embeddings.
 
+`--class_names` defines the labels that can be predicted. `--class_prompts` provides one text description for each label in the same order. In the example above, the first class name `tumor` is paired with the first prompt, the second class name `normal` is paired with the second prompt, and so on.
+
 ## Running Prompt Sensitivity Analysis
 
 The current prompt sensitivity demo uses built-in prompt groups. It can still run on your own patch folder:
@@ -238,6 +250,8 @@ python examples/03_prompt_sensitivity_demo.py \
 ```
 
 This evaluates whether multiple prompt variants for the same concept retrieve similar top-k patches.
+
+When `--use_pathology_prompts` is used, concepts such as `tumor`, `normal`, and `necrosis` expand to built-in prompt variants. For example, `tumor` expands to prompts such as `a histopathology image of tumor tissue` and `a pathology patch showing malignant tissue`. `--top_k 5` means each prompt variant retrieves five patches before overlap metrics are computed.
 
 ## Notes on Pathology Data
 

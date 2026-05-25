@@ -101,6 +101,13 @@ Expected outputs include:
 
 The HTML report copies images into `retrieval_report_assets/` so the report does not depend on absolute local image paths.
 
+Parameter notes:
+
+- `--prompts` defines the text queries used for retrieval.
+- `--label_prompts HP SSA` maps the first prompt to label `HP` and the second prompt to label `SSA`. The order must match `--prompts`.
+- `--recall_k 1 5 10` asks the demo to compute Recall@1, Recall@5, and Recall@10.
+- `--top_k 5` saves the five highest-scoring retrieved patches for each prompt.
+
 ## 4. Run Zero-Shot Classification
 
 Run the same sampled manifest through the zero-shot classification demo:
@@ -129,6 +136,12 @@ Expected outputs include:
 
 For fine-grained pathology tasks, do not rely on accuracy alone. Check balanced accuracy, macro-F1, per-class recall, the confusion matrix, and prediction distribution.
 
+Parameter notes:
+
+- `--class_names HP SSA` defines the candidate labels.
+- `--class_prompts` provides one text description per class. The order must match `--class_names`.
+- `--top_k 2` saves the two highest-scoring class predictions per patch.
+
 ## 5. Run Prompt Sensitivity Analysis
 
 Prompt sensitivity currently works from an image folder rather than a manifest:
@@ -150,6 +163,12 @@ Expected outputs include:
 - `outputs/prompt_sensitivity_demo/prompt_sensitivity_summary.csv`
 - `outputs/prompt_sensitivity_demo/prompt_sensitivity_details.csv`
 - `outputs/prompt_sensitivity_demo/prompt_sensitivity_metrics.json`
+
+Parameter notes:
+
+- `--use_pathology_prompts` uses the built-in prompt variants instead of requiring you to type every prompt manually.
+- `--concepts tumor normal necrosis` selects the built-in prompt groups to evaluate.
+- `--top_k 5` retrieves five patches for each prompt variant before computing overlap and score-stability metrics.
 
 ## 6. Scale Up Carefully
 

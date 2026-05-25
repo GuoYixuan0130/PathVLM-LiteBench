@@ -61,6 +61,13 @@ Supported optional columns include:
 
 Additional non-empty columns are preserved as metadata.
 
+Coordinate column meanings:
+
+- `image_path` points to a pre-extracted patch image, not a whole-slide image.
+- `x` and `y` are the patch's coordinate location in the source patch grid or slide-derived coordinate system.
+- `width` and `height` describe the patch size when available.
+- `label`, `split`, `case_id`, and `slide_id` are optional metadata used for filtering or later review.
+
 ## Load Coordinate Records
 
 ```python
@@ -137,6 +144,8 @@ pathvlm-litebench render-coordinate-heatmap \
 
 This command reads saved artifacts only. It does not load a model, run inference, or download weights.
 
+Use `render-coordinate-heatmap` when you already have a `score` value for each patch. It is an artifact-only command: coordinate manifest in, score CSV in, heatmap PNG out.
+
 You can also validate and use the example config:
 
 ```bash
@@ -184,6 +193,8 @@ This command:
 - writes `heatmap.png`
 
 Unlike `render-coordinate-heatmap`, this command runs model inference and may download model weights if they are not already cached locally. CI covers this path with fake models and does not download weights.
+
+Use `score-coordinate-heatmap` when you do not already have scores. It computes one similarity score per patch for the given prompt, then writes both the numeric `scores.csv` and the visual `heatmap.png`.
 
 ## Interpretation
 

@@ -98,6 +98,19 @@ from pathvlm_litebench.prompts import get_prompt_variants
 tumor_prompts = get_prompt_variants("tumor")
 ```
 
+This returns four prompt variants for the same concept:
+
+```python
+[
+    "a histopathology image of tumor tissue",
+    "a pathology patch showing malignant tissue",
+    "a microscopic image of cancerous tissue",
+    "a H&E stained tissue patch with tumor region",
+]
+```
+
+Use these variants when you want to test whether different wording changes the retrieved patches.
+
 ## 3. Run Patch-Text Retrieval
 
 Example command:
@@ -141,6 +154,10 @@ python examples/01_patch_text_retrieval_demo.py \
 ```
 
 `label_prompts` maps each text prompt to a manifest label. When labels are available, the retrieval demo computes text-to-image Recall@K automatically.
+
+In the example above, the first prompt maps to manifest label `tumor`, the second prompt maps to `normal`, and the third prompt maps to `necrosis`. The three `--label_prompts` values must stay in the same order as the three `--prompts` values.
+
+`--top_k 5` controls how many retrieved patches are shown or saved for each prompt. `--recall_k 1 5 10` controls which Recall@K metrics are computed from the labeled manifest.
 
 When both manifest labels and `label_prompts` are available, the HTML retrieval report also shows each retrieved patch's label, target label, and match status (`yes`/`no`). This makes it easier to inspect not only ranking quality but also class-consistent retrieval behavior.
 
@@ -257,6 +274,8 @@ For example, the concept `tumor` includes multiple prompts such as:
 
 The prompt sensitivity module compares whether these variants retrieve similar top-k patches.
 
+`--use_pathology_prompts` selects the built-in concept groups. `--concepts tumor normal necrosis` chooses which groups to evaluate. `--top_k 5` means each prompt variant retrieves its top five patches before overlap and score-stability metrics are computed.
+
 Use `--save_report` to save structured prompt sensitivity outputs:
 
 ```bash
@@ -305,6 +324,16 @@ python examples/02_zero_shot_classification_demo.py \
 ```
 
 If no custom `--class_prompts` are provided, the demo builds simple pathology-style prompts automatically.
+
+For `--class_names tumor normal necrosis`, the generated prompts are:
+
+```text
+a histopathology image of tumor
+a histopathology image of normal
+a histopathology image of necrosis
+```
+
+If you want more precise wording, pass `--class_prompts` explicitly. The number and order of `--class_prompts` must match `--class_names`.
 
 Manifest-based zero-shot evaluation:
 

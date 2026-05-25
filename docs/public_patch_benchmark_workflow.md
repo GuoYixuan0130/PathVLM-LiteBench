@@ -173,6 +173,8 @@ pathvlm-litebench run-zero-shot-grid \
   --dry-run
 ```
 
+`--dry-run` validates the config and prints the planned model/prompt combinations and output paths without loading models or writing report files.
+
 Run the grid:
 
 ```bash
