@@ -1,6 +1,7 @@
 # PathVLM-LiteBench
 
 [![CI](https://github.com/GuoYixuan0130/PathVLM-LiteBench/actions/workflows/ci.yml/badge.svg)](https://github.com/GuoYixuan0130/PathVLM-LiteBench/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/pathvlm-litebench.svg)](https://pypi.org/project/pathvlm-litebench/)
 
 PathVLM-LiteBench is a lightweight, CPU-compatible and laptop-GPU accelerated toolkit for benchmarking and visualizing vision-language models in computational pathology under limited computing resources.
 
@@ -8,8 +9,20 @@ This project focuses on patch-level pathology image-text retrieval, zero-shot cl
 
 ## TL;DR Quickstart
 
+Install the toolkit and CLI straight from PyPI (CPU works out of the box; see the
+PyTorch note for CUDA):
+
 ```bash
-# 1. Install (CPU works out of the box; see the PyTorch note for CUDA)
+pip install pathvlm-litebench
+pathvlm-litebench --help        # list all commands
+```
+
+This gives you the `pathvlm-litebench` command and the importable library. To run
+the **bundled demos**, clone the repo instead — the example scripts ship with the
+source, not the PyPI wheel:
+
+```bash
+# 1. Clone and install in editable mode
 git clone https://github.com/GuoYixuan0130/PathVLM-LiteBench.git
 cd PathVLM-LiteBench
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
@@ -20,7 +33,6 @@ pathvlm-litebench demo retrieval --model clip --device auto
 
 # 3. List everything else you can do
 pathvlm-litebench demo          # list runnable demos
-pathvlm-litebench --help        # list all commands
 ```
 
 The first demo uses generated RGB images as a smoke test, so it runs on a laptop
