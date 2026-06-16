@@ -443,6 +443,7 @@ pathvlm-litebench render-coordinate-heatmap --help
 pathvlm-litebench score-coordinate-heatmap --help
 pathvlm-litebench score-coordinate-heatmap-prompt-set --help
 pathvlm-litebench compare-coordinate-heatmap-scores --help
+pathvlm-litebench compare-models --help
 ```
 
 The inspection and help commands above do not download models. Model-based evaluation or scoring commands load model weights only when those runs are executed.

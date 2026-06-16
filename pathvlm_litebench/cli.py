@@ -101,6 +101,10 @@ def build_parser() -> argparse.ArgumentParser:
         "compare-coordinate-heatmap-scores",
         help="Compare saved patch-coordinate score CSV artifacts.",
     )
+    compare_models_parser = subparsers.add_parser(
+        "compare-models",
+        help="Compare zero-shot tissue classification accuracy across models.",
+    )
     convert_manifest_parser.add_argument(
         "--input",
         required=True,
@@ -510,6 +514,80 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Allow score CSVs with different row counts.",
     )
+    compare_models_parser.add_argument(
+        "--manifest",
+        required=True,
+        help="Standard patch manifest CSV path (image_path,label columns).",
+    )
+    compare_models_parser.add_argument(
+        "--models",
+        nargs="+",
+        default=["clip", "plip"],
+        help="Model keys or Hugging Face names to compare. Default: clip plip.",
+    )
+    compare_models_parser.add_argument(
+        "--class-names",
+        nargs="+",
+        default=None,
+        help=(
+            "Class names in class-index order. Required for integer-label "
+            "manifests; inferred from unique labels otherwise."
+        ),
+    )
+    compare_models_parser.add_argument(
+        "--prompt-template",
+        default="an H&E image of {}.",
+        help="Prompt template applied to each class name. Use '{}' as the slot.",
+    )
+    compare_models_parser.add_argument(
+        "--class-prompts",
+        nargs="+",
+        default=None,
+        help="Optional explicit per-class prompts that override --prompt-template.",
+    )
+    compare_models_parser.add_argument(
+        "--device",
+        choices=["auto", "cpu", "cuda"],
+        default="auto",
+        help="Device for model inference.",
+    )
+    compare_models_parser.add_argument(
+        "--max-images",
+        type=int,
+        default=None,
+        help="Optional maximum number of manifest records to evaluate.",
+    )
+    compare_models_parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=32,
+        help="Image-encoding batch size.",
+    )
+    compare_models_parser.add_argument(
+        "--image-root",
+        default=None,
+        help="Optional image root for resolving relative manifest image paths.",
+    )
+    compare_models_parser.add_argument(
+        "--split",
+        default=None,
+        help="Optional split value to filter manifest records before evaluation.",
+    )
+    compare_models_parser.add_argument(
+        "--output-dir",
+        default="outputs/model_comparison",
+        help="Directory for the comparison CSV, bar chart PNG, and metadata JSON.",
+    )
+    compare_models_parser.add_argument(
+        "--title",
+        default=None,
+        help="Optional chart title.",
+    )
+    compare_models_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate inputs and resolved class prompts without loading models.",
+    )
 
     return parser
 
@@ -557,6 +635,7 @@ def _handle_demos() -> int:
     print("pathvlm-litebench compare-coordinate-heatmap-scores --score-csvs outputs/patch_coordinate_heatmap_scored_tumor/scores.csv outputs/patch_coordinate_heatmap_scored_lymphocyte/scores.csv --run-names tumor lymphocyte --output-csv outputs/patch_coordinate_heatmap_comparison/score_summary.csv --output-md outputs/patch_coordinate_heatmap_comparison/score_summary.md")
     print("pathvlm-litebench render-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --score-csv outputs/patch_coordinate_heatmap_demo/scores.csv --output outputs/patch_coordinate_heatmap_demo/heatmap.png")
     print("pathvlm-litebench score-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --prompt \"a histopathology image of tumor tissue\" --output-dir outputs/patch_coordinate_heatmap_scored --model clip")
+    print("pathvlm-litebench compare-models --manifest dataset/CRC_VAL_HE_100_sample_manifest.csv --models clip plip conch --class-names \"adipose tissue\" background debris lymphocytes mucus \"smooth muscle\" \"normal colon mucosa\" \"cancer-associated stroma\" \"colorectal adenocarcinoma epithelium\" --output-dir outputs/model_comparison")
     return 0
 
 
@@ -1548,6 +1627,171 @@ def _handle_compare_coordinate_heatmap_scores(args: argparse.Namespace) -> int:
     return 0
 
 
+def _resolve_compare_models_class_names(
+    args: argparse.Namespace,
+    records,
+) -> list[str]:
+    from .data import get_unique_labels
+
+    if args.class_names is not None:
+        return list(args.class_names)
+
+    unique_labels = get_unique_labels(records)
+    if not unique_labels:
+        raise ValueError("Manifest has no labels; provide --class-names.")
+    if any(label.strip().isdigit() for label in unique_labels):
+        raise ValueError(
+            "Manifest labels look like integer class indices; pass --class-names "
+            "in class-index order so prompts can be built."
+        )
+    return unique_labels
+
+
+def _resolve_compare_models_prompts(
+    args: argparse.Namespace,
+    class_names: list[str],
+) -> list[str]:
+    if args.class_prompts is not None:
+        if len(args.class_prompts) != len(class_names):
+            raise ValueError(
+                f"--class-prompts count ({len(args.class_prompts)}) must match "
+                f"the number of classes ({len(class_names)})."
+            )
+        return list(args.class_prompts)
+
+    if "{}" not in args.prompt_template:
+        raise ValueError(
+            "--prompt-template must contain a '{}' slot for the class name, "
+            "or pass explicit --class-prompts instead."
+        )
+    return [args.prompt_template.format(name) for name in class_names]
+
+
+def _handle_compare_models(args: argparse.Namespace) -> int:
+    from .data import (
+        filter_records_by_split,
+        load_patch_manifest,
+        records_to_image_paths,
+        records_to_labels,
+    )
+
+    try:
+        records = load_patch_manifest(
+            manifest_path=args.manifest,
+            image_root=args.image_root,
+            require_exists=True,
+        )
+        if args.split is not None:
+            records = filter_records_by_split(records, args.split)
+            if not records:
+                raise ValueError(f"No manifest records matched split '{args.split}'.")
+        if args.max_images is not None:
+            records = records[: args.max_images]
+
+        class_names = _resolve_compare_models_class_names(args, records)
+        class_prompts = _resolve_compare_models_prompts(args, class_names)
+
+        from .evaluation import resolve_true_indices
+
+        labels = records_to_labels(records)
+        true_indices = resolve_true_indices(labels, class_names)
+
+        output_dir = Path(args.output_dir)
+        csv_path = output_dir / "model_comparison.csv"
+        chart_path = output_dir / "model_comparison.png"
+        metadata_path = output_dir / "metadata.json"
+
+        if args.dry_run:
+            print("Dry run only. No model inference was run.")
+            print(f"Manifest: {args.manifest}")
+            print(f"Patches: {len(records)}")
+            print(f"Models: {', '.join(args.models)}")
+            print(f"Classes ({len(class_names)}): {', '.join(class_names)}")
+            print("Prompts:")
+            for prompt in class_prompts:
+                print(f"  - {prompt}")
+            print(f"CSV output: {csv_path}")
+            print(f"Chart output: {chart_path}")
+            print(f"Metadata output: {metadata_path}")
+            return 0
+
+        from .data import load_patch_images_from_paths
+        from .evaluation import evaluate_models_zero_shot
+        from .visualization import (
+            save_model_comparison_chart,
+            save_model_comparison_csv,
+        )
+
+        image_paths = records_to_image_paths(records)
+        images, _ = load_patch_images_from_paths(image_paths)
+
+        results = evaluate_models_zero_shot(
+            images,
+            true_indices,
+            class_prompts,
+            args.models,
+            device=args.device,
+            batch_size=args.batch_size,
+        )
+
+        random_baseline = 1.0 / len(class_names)
+        subtitle = (
+            f"{len(images)} patches · {len(class_names)} classes · frozen · "
+            f"shared prompt template"
+        )
+        save_model_comparison_csv(results, csv_path)
+        save_model_comparison_chart(
+            results,
+            chart_path,
+            title=args.title,
+            subtitle=subtitle,
+            random_baseline=random_baseline,
+        )
+        metadata_path.parent.mkdir(parents=True, exist_ok=True)
+        metadata_path.write_text(
+            json.dumps(
+                {
+                    "manifest": args.manifest,
+                    "num_images": len(images),
+                    "models": list(args.models),
+                    "class_names": class_names,
+                    "class_prompts": class_prompts,
+                    "prompt_template": (
+                        None if args.class_prompts is not None else args.prompt_template
+                    ),
+                    "device": args.device,
+                    "batch_size": args.batch_size,
+                    "split": args.split,
+                    "random_baseline": random_baseline,
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "results": [
+                        {
+                            "model": result.model,
+                            "accuracy": result.accuracy,
+                            "correct": result.correct,
+                            "total": result.total,
+                        }
+                        for result in results
+                    ],
+                },
+                indent=2,
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        print(f"Error: {exc}")
+        return 1
+
+    print(f"Saved model comparison CSV to: {csv_path}")
+    print(f"Saved model comparison chart to: {chart_path}")
+    print(f"Saved model comparison metadata to: {metadata_path}")
+    print(f"Patches: {len(images)}")
+    for result in results:
+        print(f"- {result.model}: {result.accuracy:.1%} ({result.correct}/{result.total})")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -1597,6 +1841,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "compare-coordinate-heatmap-scores":
         return _handle_compare_coordinate_heatmap_scores(args)
+
+    if args.command == "compare-models":
+        return _handle_compare_models(args)
 
     parser.print_help()
     return 0

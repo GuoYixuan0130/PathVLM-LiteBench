@@ -40,6 +40,10 @@ from .heatmap_comparison import (
     save_patch_score_comparison_summary,
     summarize_patch_score_csv,
 )
+from .model_comparison_report import (
+    save_model_comparison_chart,
+    save_model_comparison_csv,
+)
 
 __all__ = [
     "save_topk_image_grids",
@@ -72,4 +76,6 @@ __all__ = [
     "save_patch_score_comparison_csv",
     "save_patch_score_comparison_summary",
     "summarize_patch_score_csv",
+    "save_model_comparison_chart",
+    "save_model_comparison_csv",
 ]

@@ -15,6 +15,11 @@ from .classification_metrics import (
     get_class_names_from_labels,
 )
 from .coordinate_heatmap import score_patch_images_for_prompt
+from .model_comparison import (
+    ModelZeroShotResult,
+    evaluate_models_zero_shot,
+    resolve_true_indices,
+)
 
 __all__ = [
     "zero_shot_predict",
@@ -29,4 +34,7 @@ __all__ = [
     "compute_confusion_matrix",
     "get_class_names_from_labels",
     "score_patch_images_for_prompt",
+    "ModelZeroShotResult",
+    "evaluate_models_zero_shot",
+    "resolve_true_indices",
 ]
