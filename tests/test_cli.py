@@ -17,7 +17,7 @@ def test_cli_version(capsys):
 
     assert exit_code == 0
     assert "PathVLM-LiteBench" in captured.out
-    assert captured.out.strip() == "PathVLM-LiteBench version 0.11.0"
+    assert captured.out.strip() == "PathVLM-LiteBench version 0.12.0.dev0"
 
 
 def test_cli_models(capsys):
@@ -1026,7 +1026,7 @@ def test_cli_score_coordinate_heatmap_uses_fake_model(
     assert metadata["score_csv"] == str(output_dir / "scores.csv")
     assert metadata["heatmap_output"] == str(output_dir / "heatmap.png")
     assert metadata["metadata_output"] == str(output_dir / "metadata.json")
-    assert metadata["version"] == "0.11.0"
+    assert metadata["version"] == "0.12.0.dev0"
     assert "created_at_utc" in metadata
     scores_text = (output_dir / "scores.csv").read_text(encoding="utf-8")
     assert "synthetic red score" in scores_text
