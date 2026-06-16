@@ -571,6 +571,15 @@ def _print_demo_list() -> None:
     print()
     print("Run one with: pathvlm-litebench demo <name> [demo args...]")
     print("Example: pathvlm-litebench demo retrieval --model clip --device auto")
+    if not _examples_dir().exists():
+        print()
+        print(
+            "Note: the bundled demo scripts ship with a source checkout, not the "
+            "PyPI package."
+        )
+        print(
+            "Clone https://github.com/GuoYixuan0130/PathVLM-LiteBench to run them."
+        )
 
 
 def _handle_demo(args: argparse.Namespace) -> int:

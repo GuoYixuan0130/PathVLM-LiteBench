@@ -72,6 +72,32 @@ def test_cli_demo_lists_demos_when_no_name(capsys):
     assert "heatmap" in captured.out
 
 
+def test_cli_demo_list_notes_source_checkout_when_examples_missing(monkeypatch, tmp_path, capsys):
+    import pathvlm_litebench.cli as cli_module
+
+    monkeypatch.setattr(cli_module, "_examples_dir", lambda: tmp_path / "missing")
+
+    exit_code = main(["demo"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Available demos:" in captured.out
+    assert "source checkout" in captured.out
+    assert "github.com/GuoYixuan0130/PathVLM-LiteBench" in captured.out
+
+
+def test_cli_demo_list_omits_source_note_when_examples_present(monkeypatch, tmp_path, capsys):
+    import pathvlm_litebench.cli as cli_module
+
+    monkeypatch.setattr(cli_module, "_examples_dir", lambda: tmp_path)
+
+    exit_code = main(["demo"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "source checkout" not in captured.out
+
+
 def test_cli_demo_unknown_name_returns_error(capsys):
     exit_code = main(["demo", "does-not-exist"])
     captured = capsys.readouterr()
