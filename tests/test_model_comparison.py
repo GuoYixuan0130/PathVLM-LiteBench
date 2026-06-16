@@ -1,4 +1,5 @@
 import csv
+import json
 from pathlib import Path
 
 import pytest
@@ -15,6 +16,7 @@ from pathvlm_litebench.evaluation.model_comparison import (
 from pathvlm_litebench.visualization.model_comparison_report import (
     save_model_comparison_chart,
     save_model_comparison_csv,
+    save_model_comparison_per_class_csv,
 )
 
 CLASS_NAMES = ["adipose", "muscle", "tumor"]
@@ -90,8 +92,12 @@ def test_evaluate_models_zero_shot_with_injected_factory():
     assert results[0].accuracy == 1.0
     assert results[0].correct == 5
     assert results[0].total == 5
+    assert results[0].per_class_total == [2, 2, 1]
+    assert results[0].per_class_correct == [2, 2, 1]
     assert results[1].accuracy == 0.0
     assert results[1].correct == 0
+    assert results[1].per_class_total == [2, 2, 1]
+    assert results[1].per_class_correct == [0, 0, 0]
 
 
 def test_evaluate_models_zero_shot_rejects_length_mismatch():
@@ -121,6 +127,43 @@ def test_save_model_comparison_csv(tmp_path: Path):
         rows = list(csv.DictReader(handle))
     assert [row["model"] for row in rows] == ["clip", "plip"]
     assert rows[1]["correct"] == "12"
+
+
+def test_save_model_comparison_per_class_csv(tmp_path: Path):
+    results = [
+        ModelZeroShotResult("clip", 0.5, 2, 4, [1, 1, 0], [2, 1, 1]),
+        ModelZeroShotResult("plip", 0.75, 3, 4, [2, 1, 0], [2, 1, 1]),
+    ]
+    out = tmp_path / "per_class.csv"
+    save_model_comparison_per_class_csv(results, CLASS_NAMES, out)
+
+    assert out.exists()
+    with out.open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    assert len(rows) == len(results) * len(CLASS_NAMES)
+    clip_tumor = next(
+        row for row in rows if row["model"] == "clip" and row["class_name"] == "tumor"
+    )
+    assert clip_tumor["total"] == "1"
+    assert clip_tumor["correct"] == "0"
+    assert clip_tumor["accuracy"] == "0.0"
+
+
+def test_save_model_comparison_per_class_csv_blank_for_empty_class(tmp_path: Path):
+    results = [ModelZeroShotResult("clip", 0.5, 1, 2, [1, 0, 0], [2, 0, 0])]
+    out = tmp_path / "per_class.csv"
+    save_model_comparison_per_class_csv(results, CLASS_NAMES, out)
+    with out.open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    muscle = next(row for row in rows if row["class_name"] == "muscle")
+    assert muscle["total"] == "0"
+    assert muscle["accuracy"] == ""
+
+
+def test_save_model_comparison_per_class_csv_rejects_length_mismatch(tmp_path: Path):
+    results = [ModelZeroShotResult("clip", 0.5, 1, 2, [1], [2])]
+    with pytest.raises(ValueError, match="per-class entries"):
+        save_model_comparison_per_class_csv(results, CLASS_NAMES, tmp_path / "x.csv")
 
 
 def test_save_model_comparison_chart(tmp_path: Path):
@@ -239,6 +282,7 @@ def test_cli_compare_models_full_run(tmp_path: Path, capsys, monkeypatch):
 
     assert exit_code == 0
     assert (output_dir / "model_comparison.csv").exists()
+    assert (output_dir / "model_comparison_per_class.csv").exists()
     assert (output_dir / "model_comparison.png").exists()
     assert (output_dir / "metadata.json").exists()
 
@@ -247,3 +291,12 @@ def test_cli_compare_models_full_run(tmp_path: Path, capsys, monkeypatch):
     assert [row["model"] for row in rows] == ["clip", "plip"]
     for row in rows:
         assert 0.0 <= float(row["accuracy"]) <= 1.0
+
+    with (output_dir / "model_comparison_per_class.csv").open(
+        encoding="utf-8", newline=""
+    ) as handle:
+        per_class_rows = list(csv.DictReader(handle))
+    assert len(per_class_rows) == 2 * 3
+
+    metadata = json.loads((output_dir / "metadata.json").read_text(encoding="utf-8"))
+    assert len(metadata["results"][0]["per_class"]) == 3

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Callable, Sequence
 
 import torch
@@ -14,6 +14,8 @@ class ModelZeroShotResult:
     accuracy: float
     correct: int
     total: int
+    per_class_correct: list[int] = field(default_factory=list)
+    per_class_total: list[int] = field(default_factory=list)
 
 
 def resolve_true_indices(
@@ -144,7 +146,13 @@ def evaluate_models_zero_shot(
 
         similarity = image_emb @ text_emb.T
         predictions = similarity.argmax(dim=1).to(torch.long)
-        correct = int((predictions == truth).sum().item())
+        correct_mask = predictions == truth
+        correct = int(correct_mask.sum().item())
+
+        per_class_total = torch.bincount(truth, minlength=num_classes)
+        per_class_correct = torch.bincount(
+            truth[correct_mask], minlength=num_classes
+        )
 
         results.append(
             ModelZeroShotResult(
@@ -152,6 +160,8 @@ def evaluate_models_zero_shot(
                 accuracy=correct / total,
                 correct=correct,
                 total=total,
+                per_class_correct=per_class_correct.tolist(),
+                per_class_total=per_class_total.tolist(),
             )
         )
 

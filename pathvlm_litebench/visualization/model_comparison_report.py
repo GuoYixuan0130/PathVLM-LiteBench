@@ -44,6 +44,53 @@ def save_model_comparison_csv(
     return str(output_csv_path)
 
 
+def save_model_comparison_per_class_csv(
+    results: Sequence["ModelZeroShotResult"],
+    class_names: Sequence[str],
+    output_csv_path: str | Path,
+) -> str:
+    """
+    Save per-model, per-class zero-shot accuracy as a long-format CSV.
+
+    One row per (model, class). Accuracy is left blank for classes that have no
+    patches in the evaluated set.
+    """
+    if len(results) == 0:
+        raise ValueError("results must not be empty.")
+
+    num_classes = len(class_names)
+    for result in results:
+        if len(result.per_class_total) != num_classes:
+            raise ValueError(
+                f"Model {result.model!r} has {len(result.per_class_total)} "
+                f"per-class entries but {num_classes} class names were given."
+            )
+
+    output_csv_path = Path(output_csv_path)
+    output_csv_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fieldnames = ["model", "class_index", "class_name", "correct", "total", "accuracy"]
+    with output_csv_path.open("w", encoding="utf-8", newline="") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()
+        for result in results:
+            for index, name in enumerate(class_names):
+                total = result.per_class_total[index]
+                correct = result.per_class_correct[index]
+                writer.writerow(
+                    {
+                        "model": result.model,
+                        "class_index": index,
+                        "class_name": name,
+                        "correct": correct,
+                        "total": total,
+                        "accuracy": "" if total == 0 else correct / total,
+                    }
+                )
+
+    return str(output_csv_path)
+
+
 def save_model_comparison_chart(
     results: Sequence[ModelZeroShotResult],
     output_path: str | Path,

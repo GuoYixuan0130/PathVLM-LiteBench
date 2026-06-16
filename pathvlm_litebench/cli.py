@@ -1698,6 +1698,7 @@ def _handle_compare_models(args: argparse.Namespace) -> int:
 
         output_dir = Path(args.output_dir)
         csv_path = output_dir / "model_comparison.csv"
+        per_class_csv_path = output_dir / "model_comparison_per_class.csv"
         chart_path = output_dir / "model_comparison.png"
         metadata_path = output_dir / "metadata.json"
 
@@ -1711,6 +1712,7 @@ def _handle_compare_models(args: argparse.Namespace) -> int:
             for prompt in class_prompts:
                 print(f"  - {prompt}")
             print(f"CSV output: {csv_path}")
+            print(f"Per-class CSV output: {per_class_csv_path}")
             print(f"Chart output: {chart_path}")
             print(f"Metadata output: {metadata_path}")
             return 0
@@ -1720,6 +1722,7 @@ def _handle_compare_models(args: argparse.Namespace) -> int:
         from .visualization import (
             save_model_comparison_chart,
             save_model_comparison_csv,
+            save_model_comparison_per_class_csv,
         )
 
         image_paths = records_to_image_paths(records)
@@ -1740,6 +1743,7 @@ def _handle_compare_models(args: argparse.Namespace) -> int:
             f"shared prompt template"
         )
         save_model_comparison_csv(results, csv_path)
+        save_model_comparison_per_class_csv(results, class_names, per_class_csv_path)
         save_model_comparison_chart(
             results,
             chart_path,
@@ -1770,6 +1774,21 @@ def _handle_compare_models(args: argparse.Namespace) -> int:
                             "accuracy": result.accuracy,
                             "correct": result.correct,
                             "total": result.total,
+                            "per_class": [
+                                {
+                                    "class_index": index,
+                                    "class_name": class_names[index],
+                                    "correct": result.per_class_correct[index],
+                                    "total": result.per_class_total[index],
+                                    "accuracy": (
+                                        None
+                                        if result.per_class_total[index] == 0
+                                        else result.per_class_correct[index]
+                                        / result.per_class_total[index]
+                                    ),
+                                }
+                                for index in range(len(class_names))
+                            ],
                         }
                         for result in results
                     ],
@@ -1784,6 +1803,7 @@ def _handle_compare_models(args: argparse.Namespace) -> int:
         return 1
 
     print(f"Saved model comparison CSV to: {csv_path}")
+    print(f"Saved per-class comparison CSV to: {per_class_csv_path}")
     print(f"Saved model comparison chart to: {chart_path}")
     print(f"Saved model comparison metadata to: {metadata_path}")
     print(f"Patches: {len(images)}")

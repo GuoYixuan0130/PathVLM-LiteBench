@@ -831,6 +831,18 @@ Beyond the synthetic smoke test, here is what **frozen** vision-language models 
 
 Domain pretraining is the whole story here: general-domain CLIP lands at 22% with an identical prompt, while the pathology vision-language models PLIP (60%) and CONCH (59%) roughly triple it &mdash; all well above the 1/9 = 11% random baseline, with no fine-tuning. Zero-shot accuracy is also prompt-sensitive, so a single shared template (`an H&E image of {class}.`) is used for every model to keep the comparison fair.
 
+This chart is reproducible from the command line: `compare-models` runs the same frozen zero-shot benchmark and writes the bar chart, an overall-accuracy CSV, a per-class-accuracy CSV, and run metadata.
+
+```bash
+pathvlm-litebench compare-models \
+  --manifest dataset/CRC_VAL_HE_100_sample_manifest.csv \
+  --models clip plip conch \
+  --class-names "adipose tissue" background debris lymphocytes mucus \
+    "smooth muscle" "normal colon mucosa" "cancer-associated stroma" \
+    "colorectal adenocarcinoma epithelium" \
+  --output-dir outputs/model_comparison
+```
+
 Looking at the strongest zero-shot model (PLIP) in more detail:
 
 <p align="center">

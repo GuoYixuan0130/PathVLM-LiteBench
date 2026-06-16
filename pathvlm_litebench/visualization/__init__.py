@@ -43,6 +43,7 @@ from .heatmap_comparison import (
 from .model_comparison_report import (
     save_model_comparison_chart,
     save_model_comparison_csv,
+    save_model_comparison_per_class_csv,
 )
 
 __all__ = [
@@ -78,4 +79,5 @@ __all__ = [
     "summarize_patch_score_csv",
     "save_model_comparison_chart",
     "save_model_comparison_csv",
+    "save_model_comparison_per_class_csv",
 ]
