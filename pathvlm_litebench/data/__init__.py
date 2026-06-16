@@ -17,6 +17,7 @@ __all__ = [
     "filter_records_by_label",
     "convert_manifest",
     "convert_mhist_manifest",
+    "build_imagefolder_manifest",
     "sample_manifest",
     "summarize_manifest",
 ]
@@ -47,6 +48,7 @@ _LAZY_IMPORTS = {
     "filter_records_by_label": ("manifest_loader", "filter_records_by_label"),
     "convert_manifest": ("manifest_converter", "convert_manifest"),
     "convert_mhist_manifest": ("manifest_converter", "convert_mhist_manifest"),
+    "build_imagefolder_manifest": ("imagefolder", "build_imagefolder_manifest"),
     "sample_manifest": ("manifest_sampler", "sample_manifest"),
     "summarize_manifest": ("manifest_sampler", "summarize_manifest"),
 }

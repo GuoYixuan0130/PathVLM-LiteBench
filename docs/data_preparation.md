@@ -61,6 +61,51 @@ pathvlm-litebench convert-manifest \
 `dataset/` is a recommended local folder for downloaded datasets and should not be committed.
 `pathvlm_litebench/data/` is the code module, not a dataset storage directory.
 
+## Building a Manifest from an ImageFolder Tree
+
+Many public pathology datasets ship as an ImageFolder-style directory tree, where each class is its own subfolder. NCT-CRC-HE-100K and PatchCamelyon-style exports are common examples. PathVLM-LiteBench can turn such a tree into a standard manifest without writing any annotation CSV first.
+
+Flat layout (`<class>/<image>`):
+
+```text
+dataset/NCT-CRC-HE-100K/
+|-- ADI/
+|   |-- ADI-AAAA.tif
+|   `-- ADI-AAAB.tif
+|-- BACK/
+|-- DEB/
+`-- ...
+```
+
+```bash
+pathvlm-litebench build-imagefolder-manifest \
+  --image-dir dataset/NCT-CRC-HE-100K \
+  --output dataset/NCT-CRC-HE-100K/manifest.csv
+```
+
+Split layout (`<split>/<class>/<image>`):
+
+```text
+dataset/PCam/
+|-- train/
+|   |-- tumor/
+|   `-- normal/
+`-- test/
+    |-- tumor/
+    `-- normal/
+```
+
+```bash
+pathvlm-litebench build-imagefolder-manifest \
+  --image-dir dataset/PCam \
+  --output dataset/PCam/manifest.csv \
+  --has-split
+```
+
+Each leaf class directory becomes a `label`, and each image file becomes one manifest row with `image_path,label,split` columns (`split` is blank in the flat layout). Paths are written as absolute by default; pass `--relative` to write paths relative to the output CSV directory, which is convenient when the dataset folder moves with the manifest. Use `--extensions png jpg tif` to restrict which image extensions are scanned (the default covers `.png`, `.jpg`, `.jpeg`, `.tif`, `.tiff`, `.bmp`, and `.webp`).
+
+For an end-to-end "download a public dataset, build a manifest, run a benchmark" walkthrough, see [imagefolder_quickstart.md](imagefolder_quickstart.md).
+
 ## Manifest Format (Optional)
 
 You can run demos directly from an image folder, or prepare a CSV manifest for structured datasets.

@@ -16,6 +16,7 @@ from .config.heatmap_config import (
     PatchCoordinateHeatmapPromptSetConfig,
     PatchCoordinateHeatmapScoringConfig,
 )
+from .data.imagefolder import build_imagefolder_manifest
 from .data.manifest_converter import convert_manifest, convert_mhist_manifest
 from .data.manifest_sampler import sample_manifest, summarize_manifest
 from .models.registry import list_available_models
@@ -64,6 +65,10 @@ def build_parser() -> argparse.ArgumentParser:
     convert_manifest_parser = subparsers.add_parser(
         "convert-manifest",
         help="Convert dataset-specific annotations CSV to standard patch manifest CSV.",
+    )
+    imagefolder_manifest_parser = subparsers.add_parser(
+        "build-imagefolder-manifest",
+        help="Build a standard patch manifest from an ImageFolder-style directory tree.",
     )
     sample_manifest_parser = subparsers.add_parser(
         "sample-manifest",
@@ -165,6 +170,32 @@ def build_parser() -> argparse.ArgumentParser:
         "--no_case_id_from_filename",
         action="store_true",
         help="Disable fallback case_id derivation from image filename stem.",
+    )
+    imagefolder_manifest_parser.add_argument(
+        "--image-dir",
+        required=True,
+        help="Root of the ImageFolder tree (<class>/<image>, or <split>/<class>/<image>).",
+    )
+    imagefolder_manifest_parser.add_argument(
+        "--output",
+        required=True,
+        help="Output manifest CSV path.",
+    )
+    imagefolder_manifest_parser.add_argument(
+        "--has-split",
+        action="store_true",
+        help="Treat the first level as a split (<split>/<class>/<image>).",
+    )
+    imagefolder_manifest_parser.add_argument(
+        "--extensions",
+        nargs="+",
+        default=None,
+        help="Image extensions to include (e.g. png jpg tif). Defaults to common formats.",
+    )
+    imagefolder_manifest_parser.add_argument(
+        "--relative",
+        action="store_true",
+        help="Write image paths relative to the output CSV directory instead of absolute.",
     )
     sample_manifest_parser.add_argument(
         "--input",
@@ -636,6 +667,7 @@ def _handle_demos() -> int:
     print("pathvlm-litebench render-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --score-csv outputs/patch_coordinate_heatmap_demo/scores.csv --output outputs/patch_coordinate_heatmap_demo/heatmap.png")
     print("pathvlm-litebench score-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --prompt \"a histopathology image of tumor tissue\" --output-dir outputs/patch_coordinate_heatmap_scored --model clip")
     print("pathvlm-litebench compare-models --manifest dataset/CRC_VAL_HE_100_sample_manifest.csv --models clip plip conch --class-names \"adipose tissue\" background debris lymphocytes mucus \"smooth muscle\" \"normal colon mucosa\" \"cancer-associated stroma\" \"colorectal adenocarcinoma epithelium\" --output-dir outputs/model_comparison")
+    print("pathvlm-litebench build-imagefolder-manifest --image-dir path/to/imagefolder --output dataset/imagefolder_manifest.csv")
     return 0
 
 
@@ -711,6 +743,28 @@ def _handle_convert_manifest(args: argparse.Namespace) -> int:
         copy_extra_columns=not args.no_copy_extra_columns,
     )
     print(f"Saved converted manifest to: {saved_path}")
+    return 0
+
+
+def _handle_build_imagefolder_manifest(args: argparse.Namespace) -> int:
+    try:
+        summary = build_imagefolder_manifest(
+            image_dir=args.image_dir,
+            output_csv=args.output,
+            has_split=args.has_split,
+            extensions=args.extensions,
+            relative=args.relative,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"Error: {exc}")
+        return 1
+
+    print(f"Saved imagefolder manifest to: {summary['output_csv']}")
+    print(f"Number of records: {summary['num_records']}")
+    print(f"Number of classes: {summary['num_classes']}")
+    print(f"Label distribution: {summary['label_distribution']}")
+    if summary["split_distribution"]:
+        print(f"Split distribution: {summary['split_distribution']}")
     return 0
 
 
@@ -1834,6 +1888,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "convert-manifest":
         return _handle_convert_manifest(args)
+
+    if args.command == "build-imagefolder-manifest":
+        return _handle_build_imagefolder_manifest(args)
 
     if args.command == "sample-manifest":
         return _handle_sample_manifest(args)

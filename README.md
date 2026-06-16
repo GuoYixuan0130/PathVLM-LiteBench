@@ -333,6 +333,16 @@ pathvlm-litebench convert-manifest \
   --split_column "Partition"
 ```
 
+Many public datasets (for example NCT-CRC-HE-100K) ship as a class-per-folder ImageFolder tree instead of an annotation CSV. Build a manifest directly from that tree:
+
+```bash
+pathvlm-litebench build-imagefolder-manifest \
+  --image-dir dataset/NCT-CRC-HE-100K \
+  --output dataset/NCT-CRC-HE-100K/manifest.csv
+```
+
+See [docs/imagefolder_quickstart.md](docs/imagefolder_quickstart.md) for the full "download a public dataset, build a manifest, run a benchmark" walkthrough.
+
 The local `dataset/` folder is intended for private local datasets and is ignored by Git.
 
 ## Manifest Sampling
@@ -434,6 +444,7 @@ pathvlm-litebench models
 pathvlm-litebench demos
 pathvlm-litebench demo
 pathvlm-litebench convert-manifest --help
+pathvlm-litebench build-imagefolder-manifest --help
 pathvlm-litebench sample-manifest --help
 pathvlm-litebench summarize-report --help
 pathvlm-litebench compare-reports --help
@@ -455,6 +466,7 @@ To run PathVLM-LiteBench on real pathology patches, prepare a folder of patch-le
 For the shortest MHIST-style workflow, see [docs/small_dataset_quickstart.md](docs/small_dataset_quickstart.md).
 See [docs/data_preparation.md](docs/data_preparation.md) for details.
 For a step-by-step guide on running the toolkit with real pathology patch folders, see [docs/real_patch_workflow.md](docs/real_patch_workflow.md).
+For the shortest "download a public ImageFolder dataset, build a manifest, run a benchmark" path, see [docs/imagefolder_quickstart.md](docs/imagefolder_quickstart.md).
 For an end-to-end public patch benchmark recipe using conversion, sampling, zero-shot, prompt grids, and report comparison, see [docs/public_patch_benchmark_workflow.md](docs/public_patch_benchmark_workflow.md).
 For patch-coordinate heatmaps from existing scores, see [docs/patch_coordinate_heatmap_workflow.md](docs/patch_coordinate_heatmap_workflow.md).
 For single-prompt patch-coordinate heatmap scoring, see [docs/prompt_scored_coordinate_heatmap_workflow.md](docs/prompt_scored_coordinate_heatmap_workflow.md).
@@ -949,7 +961,7 @@ Future milestones may add more packaged patch-level benchmark examples, but the 
 
 Related docs:
 
-- Getting started: [small dataset quickstart](docs/small_dataset_quickstart.md), [real patch workflow](docs/real_patch_workflow.md), [data preparation](docs/data_preparation.md)
+- Getting started: [small dataset quickstart](docs/small_dataset_quickstart.md), [ImageFolder quickstart](docs/imagefolder_quickstart.md), [real patch workflow](docs/real_patch_workflow.md), [data preparation](docs/data_preparation.md)
 - Benchmark workflows: [public patch benchmark workflow](docs/public_patch_benchmark_workflow.md), [prompt-grid workflow](docs/prompt_grid_workflow.md)
 - Coordinate heatmaps: [artifact-only heatmap workflow](docs/patch_coordinate_heatmap_workflow.md), [single-prompt scoring workflow](docs/prompt_scored_coordinate_heatmap_workflow.md), [prompt-set workflow](docs/prompt_set_coordinate_heatmap_workflow.md)
 - Project and release: [project positioning](docs/project_positioning.md), [v0.11.0 release notes](docs/release_notes_v0.11.0.md)
