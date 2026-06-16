@@ -6,6 +6,28 @@ PathVLM-LiteBench is a lightweight, CPU-compatible and laptop-GPU accelerated to
 
 This project focuses on patch-level pathology image-text retrieval, zero-shot classification, prompt sensitivity analysis, embedding caching, and visualization reports using frozen CLIP/PLIP-style vision-language models, with CUDA acceleration when available.
 
+## TL;DR Quickstart
+
+```bash
+# 1. Install (CPU works out of the box; see the PyTorch note for CUDA)
+git clone https://github.com/GuoYixuan0130/PathVLM-LiteBench.git
+cd PathVLM-LiteBench
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -e .
+
+# 2. Run a demo (downloads CLIP weights on first run)
+pathvlm-litebench demo retrieval --model clip --device auto
+
+# 3. List everything else you can do
+pathvlm-litebench demo          # list runnable demos
+pathvlm-litebench --help        # list all commands
+```
+
+The first demo uses generated RGB images as a smoke test, so it runs on a laptop
+without a real dataset. Point it at your own patches with `--image_dir
+path/to/your_patch_folder`. The rest of this README covers datasets, configs, and
+reports in detail.
+
 ## Motivation
 
 Recent computational pathology foundation models and vision-language models have shown strong potential in histopathology image understanding. However, reproducing large-scale pretraining is computationally expensive and often infeasible for students or small research groups.
@@ -386,6 +408,7 @@ Once installed, you can inspect the toolkit with:
 pathvlm-litebench version
 pathvlm-litebench models
 pathvlm-litebench demos
+pathvlm-litebench demo
 pathvlm-litebench convert-manifest --help
 pathvlm-litebench sample-manifest --help
 pathvlm-litebench summarize-report --help

@@ -6,6 +6,8 @@ from dataclasses import replace
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 from . import version
 from .config import load_benchmark_config
@@ -25,6 +27,15 @@ from .visualization.report_summary import (
 )
 
 
+DEMO_SCRIPTS: dict[str, str] = {
+    "retrieval": "01_patch_text_retrieval_demo.py",
+    "zero-shot": "02_zero_shot_classification_demo.py",
+    "prompt-sensitivity": "03_prompt_sensitivity_demo.py",
+    "retrieval-metrics": "04_retrieval_metrics_demo.py",
+    "heatmap": "05_patch_coordinate_heatmap_demo.py",
+}
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pathvlm-litebench",
@@ -35,6 +46,21 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("version", help="Show toolkit version.")
     subparsers.add_parser("models", help="List registered models.")
     subparsers.add_parser("demos", help="Show available demo commands.")
+    demo_parser = subparsers.add_parser(
+        "demo",
+        help="Run a bundled example demo by name (forwards extra args to the script).",
+    )
+    demo_parser.add_argument(
+        "name",
+        nargs="?",
+        default=None,
+        help="Demo to run. One of: " + ", ".join(DEMO_SCRIPTS) + ". Omit to list demos.",
+    )
+    demo_parser.add_argument(
+        "demo_args",
+        nargs=argparse.REMAINDER,
+        help="Arguments forwarded to the demo script, e.g. --model clip --device auto.",
+    )
     convert_manifest_parser = subparsers.add_parser(
         "convert-manifest",
         help="Convert dataset-specific annotations CSV to standard patch manifest CSV.",
@@ -504,6 +530,9 @@ def _handle_models() -> int:
 
 
 def _handle_demos() -> int:
+    print("Tip: run a bundled demo directly with: pathvlm-litebench demo <name>")
+    print("     (names: " + ", ".join(DEMO_SCRIPTS) + ")")
+    print()
     print("Available demo commands:")
     print("python examples/01_patch_text_retrieval_demo.py --model clip")
     print("python examples/02_zero_shot_classification_demo.py --model clip")
@@ -529,6 +558,40 @@ def _handle_demos() -> int:
     print("pathvlm-litebench render-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --score-csv outputs/patch_coordinate_heatmap_demo/scores.csv --output outputs/patch_coordinate_heatmap_demo/heatmap.png")
     print("pathvlm-litebench score-coordinate-heatmap --manifest dataset/patch_coordinates/coordinate_manifest.csv --prompt \"a histopathology image of tumor tissue\" --output-dir outputs/patch_coordinate_heatmap_scored --model clip")
     return 0
+
+
+def _examples_dir() -> Path:
+    return Path(__file__).resolve().parent.parent / "examples"
+
+
+def _print_demo_list() -> None:
+    print("Available demos:")
+    for name, script in DEMO_SCRIPTS.items():
+        print(f"- {name}  (examples/{script})")
+    print()
+    print("Run one with: pathvlm-litebench demo <name> [demo args...]")
+    print("Example: pathvlm-litebench demo retrieval --model clip --device auto")
+
+
+def _handle_demo(args: argparse.Namespace) -> int:
+    if args.name is None:
+        _print_demo_list()
+        return 0
+
+    script = DEMO_SCRIPTS.get(args.name)
+    if script is None:
+        print(f"Error: unknown demo '{args.name}'.")
+        print(f"Available demos: {', '.join(DEMO_SCRIPTS)}")
+        return 1
+
+    script_path = _examples_dir() / script
+    if not script_path.exists():
+        print(f"Error: demo script not found: {script_path}")
+        print("The 'demo' command runs from a source checkout of the repository.")
+        return 1
+
+    command = [sys.executable, str(script_path), *args.demo_args]
+    return subprocess.call(command)
 
 
 def _handle_convert_manifest(args: argparse.Namespace) -> int:
@@ -1492,6 +1555,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "demos":
         return _handle_demos()
+
+    if args.command == "demo":
+        return _handle_demo(args)
 
     if args.command == "convert-manifest":
         return _handle_convert_manifest(args)

@@ -53,6 +53,64 @@ def test_cli_demos_lists_zero_shot_grid_command(capsys):
     assert "patch_coordinate_heatmap_prompt_set_demo_config.json" in captured.out
 
 
+def test_cli_demos_mentions_demo_runner(capsys):
+    exit_code = main(["demos"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "pathvlm-litebench demo" in captured.out
+
+
+def test_cli_demo_lists_demos_when_no_name(capsys):
+    exit_code = main(["demo"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Available demos:" in captured.out
+    assert "retrieval" in captured.out
+    assert "zero-shot" in captured.out
+    assert "heatmap" in captured.out
+
+
+def test_cli_demo_unknown_name_returns_error(capsys):
+    exit_code = main(["demo", "does-not-exist"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "unknown demo" in captured.out
+
+
+def test_cli_demo_forwards_args_to_subprocess(monkeypatch):
+    import pathvlm_litebench.cli as cli_module
+
+    captured_commands = []
+
+    def fake_call(command):
+        captured_commands.append(command)
+        return 0
+
+    monkeypatch.setattr(cli_module.subprocess, "call", fake_call)
+
+    exit_code = main(["demo", "retrieval", "--model", "clip", "--device", "auto"])
+
+    assert exit_code == 0
+    assert len(captured_commands) == 1
+    command = captured_commands[0]
+    assert command[0] == sys.executable
+    assert command[1].endswith("01_patch_text_retrieval_demo.py")
+    assert command[2:] == ["--model", "clip", "--device", "auto"]
+
+
+def test_cli_demo_propagates_subprocess_exit_code(monkeypatch):
+    import pathvlm_litebench.cli as cli_module
+
+    monkeypatch.setattr(cli_module.subprocess, "call", lambda command: 3)
+
+    exit_code = main(["demo", "zero-shot"])
+
+    assert exit_code == 3
+
+
 def test_cli_no_subcommand_shows_help(capsys):
     exit_code = main([])
     captured = capsys.readouterr()
