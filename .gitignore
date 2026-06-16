@@ -19,6 +19,9 @@ env/
 # Local datasets
 /dataset/
 
+# Local data-fetch helper (personal absolute paths, third-party HF mirror; not part of the package)
+/download_nct_crc_sample.py
+
 # Generated outputs
 /outputs/
 /results/
