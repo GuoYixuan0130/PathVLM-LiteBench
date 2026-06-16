@@ -4,6 +4,8 @@ import torch
 import torch.nn.functional as F
 from PIL import Image
 
+from ._batching import iter_image_batches
+
 
 class CONCHWrapper:
     """
@@ -78,17 +80,32 @@ class CONCHWrapper:
         return text_features.cpu()
 
     @torch.no_grad()
-    def encode_images(self, images: list[Image.Image]) -> torch.Tensor:
+    def encode_images(
+        self,
+        images: list[Image.Image],
+        batch_size: int = 32,
+        show_progress: bool = True,
+    ) -> torch.Tensor:
         """
         Encode PIL images into normalized CONCH image embeddings.
+
+        Images are encoded in batches so peak memory stays bounded, which keeps
+        large patch sets feasible on CPU-only machines and laptop GPUs.
         """
-        image_inputs = torch.stack(
-            [self.preprocess(image.convert("RGB")) for image in images],
-            dim=0,
-        ).to(self.device)
-        image_features = self.model.encode_image(image_inputs)
-        image_features = F.normalize(image_features, p=2, dim=-1)
-        return image_features.cpu()
+        if batch_size <= 0:
+            raise ValueError(f"batch_size must be positive, got {batch_size}")
+
+        batch_features: list[torch.Tensor] = []
+        for batch in iter_image_batches(images, batch_size, show_progress):
+            image_inputs = torch.stack(
+                [self.preprocess(image.convert("RGB")) for image in batch],
+                dim=0,
+            ).to(self.device)
+            image_features = self.model.encode_image(image_inputs)
+            image_features = F.normalize(image_features, p=2, dim=-1)
+            batch_features.append(image_features.cpu())
+
+        return torch.cat(batch_features, dim=0)
 
     def compute_similarity(
         self,

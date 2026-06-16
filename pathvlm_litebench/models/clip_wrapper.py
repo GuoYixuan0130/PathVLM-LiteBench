@@ -3,6 +3,8 @@ import torch.nn.functional as F
 from PIL import Image
 from transformers import CLIPModel, CLIPProcessor
 
+from ._batching import iter_image_batches
+
 
 class CLIPWrapper:
     """
@@ -38,29 +40,39 @@ class CLIPWrapper:
         ).to(self.device)
 
         text_features = self.model.get_text_features(**inputs)
-        if not isinstance(text_features, torch.Tensor):
-            text_features = text_features.pooler_output
         text_features = F.normalize(text_features, p=2, dim=-1)
 
         return text_features.cpu()
 
     @torch.no_grad()
-    def encode_images(self, images: list[Image.Image]) -> torch.Tensor:
+    def encode_images(
+        self,
+        images: list[Image.Image],
+        batch_size: int = 32,
+        show_progress: bool = True,
+    ) -> torch.Tensor:
         """
         Encode a list of PIL images into normalized image embeddings.
+
+        Images are encoded in batches so peak memory stays bounded, which keeps
+        large patch sets feasible on CPU-only machines and laptop GPUs.
         """
-        inputs = self.processor(
-            images=images,
-            return_tensors="pt",
-            padding=True,
-        ).to(self.device)
+        if batch_size <= 0:
+            raise ValueError(f"batch_size must be positive, got {batch_size}")
 
-        image_features = self.model.get_image_features(**inputs)
-        if not isinstance(image_features, torch.Tensor):
-            image_features = image_features.pooler_output
-        image_features = F.normalize(image_features, p=2, dim=-1)
+        batch_features: list[torch.Tensor] = []
+        for batch in iter_image_batches(images, batch_size, show_progress):
+            inputs = self.processor(
+                images=batch,
+                return_tensors="pt",
+                padding=True,
+            ).to(self.device)
 
-        return image_features.cpu()
+            image_features = self.model.get_image_features(**inputs)
+            image_features = F.normalize(image_features, p=2, dim=-1)
+            batch_features.append(image_features.cpu())
+
+        return torch.cat(batch_features, dim=0)
 
     def compute_similarity(self, image_embeddings: torch.Tensor, text_embeddings: torch.Tensor) -> torch.Tensor:
         """
