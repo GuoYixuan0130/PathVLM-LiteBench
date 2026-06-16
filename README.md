@@ -825,13 +825,13 @@ Exact scores may vary depending on model version and runtime environment.
 Beyond the synthetic smoke test, here is what a **frozen** PLIP encoder produces on a balanced 108-patch sample of the public NCT-CRC-HE colorectal histology dataset (9 tissue classes, no fine-tuning).
 
 <p align="center">
-  <img src="docs/assets/zero_shot_confusion_matrix.png" alt="Confusion matrix of zero-shot patch classification with frozen PLIP on a 108-patch NCT-CRC-HE sample, showing a strong diagonal and 64% overall accuracy across 9 tissue classes." width="560">
+  <img src="docs/assets/zero_shot_confusion_matrix.png" alt="Confusion matrix of zero-shot patch classification with frozen PLIP on a 108-patch NCT-CRC-HE sample, showing a strong diagonal and 64% overall accuracy across 9 tissue classes." width="680">
 </p>
 
 Zero-shot classification (image-text similarity, argmax over the 9 tissue prompts) reaches 64% overall accuracy with no training. The diagonal is strong for distinct tissues (adipose, background, lymphocytes, tumor); the off-diagonal mass honestly shows where a frozen general-purpose encoder struggles, e.g. mucus confused with cancer-associated stroma.
 
 <p align="center">
-  <img src="docs/assets/embedding_projection.png" alt="t-SNE projection of frozen PLIP patch embeddings for a 108-patch NCT-CRC-HE sample, colored by tissue class, showing well-separated clusters per tissue type." width="720">
+  <img src="docs/assets/embedding_projection.png" alt="t-SNE projection of frozen PLIP patch embeddings for a 108-patch NCT-CRC-HE sample, colored by tissue class, showing well-separated clusters per tissue type." width="680">
 </p>
 
 A t-SNE projection of the same frozen embeddings shows that patches cluster by tissue type without any supervision &mdash; adipose, background, debris, tumor, and lymphocyte clusters are clearly separated, while the muscle/stroma classes overlap as expected for visually similar tissue.
