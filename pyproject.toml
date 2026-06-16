@@ -39,7 +39,7 @@ dependencies = [
     "matplotlib",
     "scikit-learn",
     "torch",
-    "transformers",
+    "transformers>=4.30,<5",
     "tqdm",
 ]
 
