@@ -822,13 +822,21 @@ Exact scores may vary depending on model version and runtime environment.
 
 ## Results on real pathology data
 
-Beyond the synthetic smoke test, here is what a **frozen** PLIP encoder produces on a balanced 108-patch sample of the public NCT-CRC-HE colorectal histology dataset (9 tissue classes, no fine-tuning).
+Beyond the synthetic smoke test, here is what **frozen** vision-language models produce on a balanced 108-patch sample of the public NCT-CRC-HE colorectal histology dataset (9 tissue classes, no fine-tuning). Every model sees the same images and the same prompt template, so the numbers are directly comparable.
 
 <p align="center">
-  <img src="docs/assets/zero_shot_confusion_matrix.png" alt="Confusion matrix of zero-shot patch classification with frozen PLIP on a 108-patch NCT-CRC-HE sample, showing a strong diagonal and 64% overall accuracy across 9 tissue classes." width="680">
+  <img src="docs/assets/model_comparison.png" alt="Bar chart comparing zero-shot tissue-classification accuracy of frozen CLIP, PLIP, and CONCH on a 108-patch NCT-CRC-HE sample: general-domain CLIP reaches 22% while the pathology models PLIP and CONCH reach 60% and 59%, all above the 11% random baseline." width="680">
 </p>
 
-Zero-shot classification (image-text similarity, argmax over the 9 tissue prompts) reaches 64% overall accuracy with no training. The diagonal is strong for distinct tissues (adipose, background, lymphocytes, tumor); the off-diagonal mass honestly shows where a frozen general-purpose encoder struggles, e.g. mucus confused with cancer-associated stroma.
+Domain pretraining is the whole story here: general-domain CLIP lands at 22% with an identical prompt, while the pathology vision-language models PLIP (60%) and CONCH (59%) roughly triple it &mdash; all well above the 1/9 = 11% random baseline, with no fine-tuning. Zero-shot accuracy is also prompt-sensitive, so a single shared template (`an H&E image of {class}.`) is used for every model to keep the comparison fair.
+
+Looking at the strongest zero-shot model (PLIP) in more detail:
+
+<p align="center">
+  <img src="docs/assets/zero_shot_confusion_matrix.png" alt="Confusion matrix of zero-shot patch classification with frozen PLIP on a 108-patch NCT-CRC-HE sample, showing a strong diagonal and 60% overall accuracy across 9 tissue classes." width="680">
+</p>
+
+The per-class confusion matrix (image-text similarity, argmax over the 9 tissue prompts) reaches 60% overall accuracy with no training. The diagonal is strong for distinct tissues (adipose, background, lymphocytes, tumor); the off-diagonal mass honestly shows where a frozen encoder struggles, e.g. mucus confused with cancer-associated stroma.
 
 <p align="center">
   <img src="docs/assets/embedding_projection.png" alt="t-SNE projection of frozen PLIP patch embeddings for a 108-patch NCT-CRC-HE sample, colored by tissue class, showing well-separated clusters per tissue type." width="680">
