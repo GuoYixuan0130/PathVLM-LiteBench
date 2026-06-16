@@ -158,6 +158,7 @@ def run_patch_text_retrieval_demo(
     top_k: int = 3,
     model: str = "clip",
     device: str = "auto",
+    batch_size: int = 32,
     save_visualization: bool = False,
     output_dir: str | Path = "outputs/retrieval_demo",
     use_cache: bool = False,
@@ -243,20 +244,20 @@ def run_patch_text_retrieval_demo(
                 image_embeddings = load_embeddings(image_embedding_cache_path)
             else:
                 print("[INFO] Cache mismatch: image paths changed. Re-encoding images.")
-                image_embeddings = vlm.encode_images(images)
+                image_embeddings = vlm.encode_images(images, batch_size=batch_size)
                 save_embeddings(image_embeddings, image_embedding_cache_path)
                 save_metadata(image_paths, image_paths_cache_path)
                 print("[INFO] Updated image embedding cache.")
         else:
             print("[INFO] Cache miss: encoding images and saving cache.")
-            image_embeddings = vlm.encode_images(images)
+            image_embeddings = vlm.encode_images(images, batch_size=batch_size)
             save_embeddings(image_embeddings, image_embedding_cache_path)
             save_metadata(image_paths, image_paths_cache_path)
             print("[INFO] Saved image embedding cache.")
     else:
         print("[INFO] Embedding cache disabled.")
         print("[INFO] Encoding images...")
-        image_embeddings = vlm.encode_images(images)
+        image_embeddings = vlm.encode_images(images, batch_size=batch_size)
 
     print("[INFO] Encoding text prompts...")
     text_embeddings = vlm.encode_text(prompts)
@@ -413,6 +414,7 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
         "top_k": 3,
         "model": "clip",
         "device": "auto",
+        "batch_size": 32,
         "save_visualization": False,
         "output_dir": "outputs/retrieval_demo",
         "use_cache": False,
@@ -437,6 +439,7 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
             "top_k": args.top_k if args.top_k is not None else default_values["top_k"],
             "model": args.model if args.model is not None else default_values["model"],
             "device": args.device if args.device is not None else default_values["device"],
+            "batch_size": args.batch_size if args.batch_size is not None else default_values["batch_size"],
             "save_visualization": args.save_visualization,
             "output_dir": args.output_dir if args.output_dir is not None else default_values["output_dir"],
             "use_cache": args.use_cache,
@@ -469,6 +472,7 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
         "top_k": args.top_k if args.top_k is not None else config.top_k,
         "model": args.model if args.model is not None else config.model,
         "device": args.device if args.device is not None else config.device,
+        "batch_size": args.batch_size if args.batch_size is not None else default_values["batch_size"],
         "save_visualization": args.save_visualization or config.save_visualization,
         "output_dir": args.output_dir if args.output_dir is not None else config.output_dir,
         "use_cache": args.use_cache or config.use_cache,
@@ -576,6 +580,13 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=None,
+        help="Number of images encoded per forward pass. Lower it if you hit out-of-memory errors. Default: 32.",
+    )
+
+    parser.add_argument(
         "--save_visualization",
         action="store_true",
         help="Save top-k retrieval visualization grids.",
@@ -633,7 +644,11 @@ def parse_args() -> argparse.Namespace:
 if __name__ == "__main__":
     args = parse_args()
 
-    run_kwargs = merge_args_with_config(args)
+    try:
+        run_kwargs = merge_args_with_config(args)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"[ERROR] {exc}")
+        raise SystemExit(1)
 
     if args.config is not None:
         print(f"[INFO] Loaded benchmark config: {args.config}")
@@ -641,6 +656,7 @@ if __name__ == "__main__":
     print("[INFO] Final run configuration:")
     print(f"  model: {run_kwargs['model']}")
     print(f"  device: {run_kwargs['device']}")
+    print(f"  batch_size: {run_kwargs['batch_size']}")
     print(f"  manifest: {run_kwargs['manifest']}")
     print(f"  image_root: {run_kwargs['image_root']}")
     print(f"  split: {run_kwargs['split']}")

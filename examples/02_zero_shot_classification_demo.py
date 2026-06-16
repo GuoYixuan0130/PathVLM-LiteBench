@@ -73,6 +73,7 @@ def run_zero_shot_classification_demo(
     top_k: int = 3,
     model: str = "clip",
     device: str = "auto",
+    batch_size: int = 32,
     save_report: bool = False,
     report_dir: str | Path = "outputs/zero_shot_demo",
 ) -> None:
@@ -153,7 +154,7 @@ def run_zero_shot_classification_demo(
         print(f"[INFO] Using device: {vlm.device}")
 
     print("[INFO] Encoding images...")
-    image_embeddings = vlm.encode_images(images)
+    image_embeddings = vlm.encode_images(images, batch_size=batch_size)
 
     print("[INFO] Encoding class prompts...")
     class_embeddings = vlm.encode_text(class_prompts)
@@ -373,6 +374,13 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=None,
+        help="Number of images encoded per forward pass. Lower it if you hit out-of-memory errors. Default: 32.",
+    )
+
+    parser.add_argument(
         "--save_report",
         action="store_true",
         help="Save zero-shot predictions and metrics reports.",
@@ -403,6 +411,7 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
         "top_k": 3,
         "model": "clip",
         "device": "auto",
+        "batch_size": 32,
         "save_report": False,
         "report_dir": "outputs/zero_shot_demo",
     }
@@ -419,6 +428,7 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
             "top_k": args.top_k if args.top_k is not None else default_values["top_k"],
             "model": args.model if args.model is not None else default_values["model"],
             "device": args.device if args.device is not None else default_values["device"],
+            "batch_size": args.batch_size if args.batch_size is not None else default_values["batch_size"],
             "save_report": args.save_report,
             "report_dir": args.report_dir if args.report_dir is not None else default_values["report_dir"],
         }
@@ -440,6 +450,7 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
         "top_k": args.top_k if args.top_k is not None else config.top_k,
         "model": args.model if args.model is not None else config.model,
         "device": args.device if args.device is not None else config.device,
+        "batch_size": args.batch_size if args.batch_size is not None else default_values["batch_size"],
         "save_report": args.save_report or config.save_report,
         "report_dir": args.report_dir if args.report_dir is not None else config.report_dir,
     }
@@ -447,7 +458,12 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
 
 if __name__ == "__main__":
     args = parse_args()
-    run_kwargs = merge_args_with_config(args)
+
+    try:
+        run_kwargs = merge_args_with_config(args)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"[ERROR] {exc}")
+        raise SystemExit(1)
 
     if args.config is not None:
         print(f"[INFO] Loaded benchmark config: {args.config}")
@@ -456,6 +472,7 @@ if __name__ == "__main__":
     print("  task: zero_shot")
     print(f"  model: {run_kwargs['model']}")
     print(f"  device: {run_kwargs['device']}")
+    print(f"  batch_size: {run_kwargs['batch_size']}")
     print(f"  manifest: {run_kwargs['manifest']}")
     print(f"  image_root: {run_kwargs['image_root']}")
     print(f"  image_dir: {run_kwargs['image_dir']}")

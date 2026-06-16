@@ -24,6 +24,7 @@ def _build_args(**overrides) -> Namespace:
         "top_k": None,
         "model": None,
         "device": None,
+        "batch_size": None,
         "use_pathology_prompts": False,
         "concepts": None,
         "save_report": False,

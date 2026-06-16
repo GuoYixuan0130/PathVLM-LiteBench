@@ -72,6 +72,7 @@ def run_prompt_sensitivity_demo(
     top_k: int = 3,
     model: str = "clip",
     device: str = "auto",
+    batch_size: int = 32,
     use_pathology_prompts: bool = False,
     concepts: list[str] | None = None,
     save_report: bool = False,
@@ -127,7 +128,7 @@ def run_prompt_sensitivity_demo(
         print(f"[INFO] Using device: {vlm.device}")
 
     print("[INFO] Encoding images...")
-    image_embeddings = vlm.encode_images(images)
+    image_embeddings = vlm.encode_images(images, batch_size=batch_size)
 
     print("[INFO] Encoding prompt variants...")
     prompt_embeddings_by_concept = []
@@ -249,6 +250,13 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=None,
+        help="Number of images encoded per forward pass. Lower it if you hit out-of-memory errors. Default: 32.",
+    )
+
+    parser.add_argument(
         "--use_pathology_prompts",
         action="store_true",
         help="Use built-in pathology prompt templates instead of color smoke-test prompts.",
@@ -284,6 +292,7 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
     default_values = {
         "model": "clip",
         "device": "auto",
+        "batch_size": 32,
         "top_k": 3,
         "use_pathology_prompts": False,
         "save_report": False,
@@ -296,6 +305,7 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
             "top_k": args.top_k if args.top_k is not None else default_values["top_k"],
             "model": args.model if args.model is not None else default_values["model"],
             "device": args.device if args.device is not None else default_values["device"],
+            "batch_size": args.batch_size if args.batch_size is not None else default_values["batch_size"],
             "use_pathology_prompts": args.use_pathology_prompts,
             "concepts": args.concepts,
             "save_report": args.save_report,
@@ -317,6 +327,7 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
         "top_k": args.top_k if args.top_k is not None else config.top_k,
         "model": args.model if args.model is not None else config.model,
         "device": args.device if args.device is not None else config.device,
+        "batch_size": args.batch_size if args.batch_size is not None else default_values["batch_size"],
         "use_pathology_prompts": (
             args.use_pathology_prompts
             if args.use_pathology_prompts
@@ -334,7 +345,12 @@ def merge_args_with_config(args: argparse.Namespace) -> dict:
 
 if __name__ == "__main__":
     args = parse_args()
-    run_kwargs = merge_args_with_config(args)
+
+    try:
+        run_kwargs = merge_args_with_config(args)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"[ERROR] {exc}")
+        raise SystemExit(1)
 
     if args.config is not None:
         print(f"[INFO] Loaded benchmark config: {args.config}")
@@ -343,6 +359,7 @@ if __name__ == "__main__":
     print("  task: prompt_sensitivity")
     print(f"  model: {run_kwargs['model']}")
     print(f"  device: {run_kwargs['device']}")
+    print(f"  batch_size: {run_kwargs['batch_size']}")
     print(f"  image_dir: {run_kwargs['image_dir']}")
     print(f"  top_k: {run_kwargs['top_k']}")
     print(f"  use_pathology_prompts: {run_kwargs['use_pathology_prompts']}")

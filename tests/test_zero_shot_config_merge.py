@@ -30,6 +30,7 @@ def _build_args(**overrides) -> Namespace:
         "top_k": None,
         "model": None,
         "device": None,
+        "batch_size": None,
         "save_report": False,
         "report_dir": None,
     }

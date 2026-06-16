@@ -351,33 +351,36 @@ git clone https://github.com/GuoYixuan0130/PathVLM-LiteBench.git
 cd PathVLM-LiteBench
 ```
 
-Create a virtual environment:
+Create and activate a virtual environment:
 
 ```bash
 python -m venv .venv
-```
 
-Activate the environment on Windows:
-
-```bash
+# Windows
 .venv\Scripts\activate
+
+# Linux / macOS
+source .venv/bin/activate
 ```
 
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-## Command-Line Interface
-
-After editable installation:
+Install the package in editable mode. This installs all dependencies and the
+`pathvlm-litebench` command in one step:
 
 ```bash
 pip install -e .
 ```
 
-You can inspect the toolkit with:
+> **PyTorch note:** `pip install -e .` installs a default `torch` build that
+> works on CPU. For CUDA acceleration on a laptop GPU, install the matching
+> torch wheel for your CUDA version first, following the official selector at
+> https://pytorch.org/get-started/locally/, then run `pip install -e .`.
+
+If you only need the libraries without the CLI, `pip install -r requirements.txt`
+also works.
+
+## Command-Line Interface
+
+Once installed, you can inspect the toolkit with:
 
 ```bash
 pathvlm-litebench version
