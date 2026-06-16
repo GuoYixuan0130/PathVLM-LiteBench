@@ -7,6 +7,18 @@ PathVLM-LiteBench is a lightweight, CPU-compatible and laptop-GPU accelerated to
 
 This project focuses on patch-level pathology image-text retrieval, zero-shot classification, prompt sensitivity analysis, embedding caching, and visualization reports using frozen CLIP/PLIP-style vision-language models, with CUDA acceleration when available.
 
+<p align="center">
+  <img src="docs/assets/retrieval_hero.png" alt="Zero-shot text-to-patch retrieval with PLIP: top-4 colorectal histology patches retrieved for the prompts 'adipose tissue', 'lymphocytes', and 'colorectal adenocarcinoma epithelium'." width="780">
+</p>
+
+<p align="center"><sub>
+Zero-shot text&rarr;patch retrieval with a <strong>frozen</strong> PLIP encoder &mdash; no fine-tuning &mdash; reproducible with <code>pathvlm-litebench demo retrieval --model plip</code>.<br>
+Patches: NCT-CRC-HE-100K / CRC-VAL-HE-7K by Kather, J. N. <em>et al.</em>, via
+<a href="https://doi.org/10.5281/zenodo.1214456">Zenodo (DOI 10.5281/zenodo.1214456)</a>,
+licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+Individual patches are unmodified; they are only arranged into a retrieval grid.
+</sub></p>
+
 ## TL;DR Quickstart
 
 Install the toolkit and CLI straight from PyPI (CPU works out of the box; see the
