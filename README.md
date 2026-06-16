@@ -884,7 +884,7 @@ Related docs:
 - Getting started: [small dataset quickstart](docs/small_dataset_quickstart.md), [real patch workflow](docs/real_patch_workflow.md), [data preparation](docs/data_preparation.md)
 - Benchmark workflows: [public patch benchmark workflow](docs/public_patch_benchmark_workflow.md), [prompt-grid workflow](docs/prompt_grid_workflow.md)
 - Coordinate heatmaps: [artifact-only heatmap workflow](docs/patch_coordinate_heatmap_workflow.md), [single-prompt scoring workflow](docs/prompt_scored_coordinate_heatmap_workflow.md), [prompt-set workflow](docs/prompt_set_coordinate_heatmap_workflow.md)
-- Project and release: [project positioning](docs/project_positioning.md), [v0.10.0 release notes](docs/release_notes_v0.10.0.md)
+- Project and release: [project positioning](docs/project_positioning.md), [v0.11.0 release notes](docs/release_notes_v0.11.0.md)
 
 ## Research Positioning
 
