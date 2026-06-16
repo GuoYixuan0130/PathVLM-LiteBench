@@ -8,7 +8,7 @@ PathVLM-LiteBench is a lightweight, CPU-compatible and laptop-GPU accelerated to
 This project focuses on patch-level pathology image-text retrieval, zero-shot classification, prompt sensitivity analysis, embedding caching, and visualization reports using frozen CLIP/PLIP-style vision-language models, with CUDA acceleration when available.
 
 <p align="center">
-  <img src="docs/assets/retrieval_hero.png" alt="Zero-shot text-to-patch retrieval with PLIP: top-4 colorectal histology patches retrieved for the prompts 'adipose tissue', 'lymphocytes', and 'colorectal adenocarcinoma epithelium'." width="780">
+  <img src="docs/assets/retrieval_hero.png" alt="Zero-shot text-to-patch retrieval with PLIP: top-4 colorectal histology patches retrieved for the prompts 'adipose tissue', 'smooth muscle', and 'colorectal adenocarcinoma epithelium'." width="780">
 </p>
 
 <p align="center"><sub>
