@@ -1,3 +1,6 @@
+# Runtime dependencies for PathVLM-LiteBench.
+# Canonical list lives in pyproject.toml ([project.dependencies]); keep in sync.
+# For development tooling (pytest, jupyter), install the extra: pip install -e ".[dev]"
 numpy
 pandas
 pillow
@@ -6,5 +9,3 @@ scikit-learn
 torch
 transformers>=4.30,<5
 tqdm
-jupyter
-pytest

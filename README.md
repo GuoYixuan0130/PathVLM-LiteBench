@@ -980,4 +980,6 @@ Contributions are welcome. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for dev
 
 ## License
 
-This project is released for academic and research purposes.
+PathVLM-LiteBench is released under the [MIT License](LICENSE). It is developed for academic and research use, but the MIT terms also permit commercial use, modification, and redistribution with attribution.
+
+Note that model weights (CLIP, PLIP, CONCH) and any datasets you use are covered by their own separate licenses and access terms.

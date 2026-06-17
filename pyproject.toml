@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pathvlm-litebench"
-version = "0.13.0"
+dynamic = ["version"]
 description = "A lightweight toolkit for benchmarking and visualizing vision-language models in computational pathology."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -51,6 +51,9 @@ dev = [
     "pytest",
     "jupyter",
 ]
+
+[tool.setuptools.dynamic]
+version = { attr = "pathvlm_litebench.version" }
 
 [tool.setuptools.packages.find]
 where = ["."]
