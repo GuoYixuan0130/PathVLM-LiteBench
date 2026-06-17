@@ -455,6 +455,7 @@ pathvlm-litebench score-coordinate-heatmap --help
 pathvlm-litebench score-coordinate-heatmap-prompt-set --help
 pathvlm-litebench compare-coordinate-heatmap-scores --help
 pathvlm-litebench compare-models --help
+pathvlm-litebench linear-probe --help
 ```
 
 The inspection and help commands above do not download models. Model-based evaluation or scoring commands load model weights only when those runs are executed.
@@ -875,6 +876,23 @@ Patches: NCT-CRC-HE-100K / CRC-VAL-HE-7K by Kather, J. N. <em>et al.</em>, via
 licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
 Figures are generated from unmodified patches.
 </sub></p>
+
+## Linear Probe
+
+Zero-shot accuracy depends on the prompt, and on a small sample it can understate how much usable signal a frozen encoder actually carries. The `linear-probe` command answers a complementary question: how linearly separable are the frozen features already? It trains only a logistic-regression classifier on top of the frozen image embeddings &mdash; the encoder itself is never touched &mdash; so it stays laptop-friendly while giving a fairer, prompt-free read on feature quality. This is the standard low-compute step beyond zero-shot in computational pathology.
+
+The command reads a standard patch manifest with `image_path`, `label`, and `split` columns, encodes the train and test splits with the chosen frozen model, fits the probe on the train split, and evaluates on the test split:
+
+```bash
+pathvlm-litebench linear-probe \
+  --manifest dataset/CRC_VAL_HE_100_sample_manifest.csv \
+  --model plip \
+  --train-split train \
+  --test-split test \
+  --output-dir outputs/linear_probe
+```
+
+It writes `predictions.csv`, `errors.csv`, and `metrics.json` (the same report format as the zero-shot command). Accuracy ships with a 95% bootstrap confidence interval, and the metadata records the probe configuration (`logistic_regression`, `C`, `max_iter`, `normalize`, `seed`) plus the exact `torch`/`transformers`/`scikit-learn` versions used. Tune the classifier with `--C`, `--max-iter`, and `--no-normalize`; tune the interval with `--confidence`, `--bootstrap-resamples`, and `--seed`. Add `--dry-run` to validate the manifest and report split sizes without loading any model.
 
 ## Outputs
 

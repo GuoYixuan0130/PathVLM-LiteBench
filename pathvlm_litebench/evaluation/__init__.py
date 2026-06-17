@@ -16,6 +16,7 @@ from .classification_metrics import (
 )
 from .coordinate_heatmap import score_patch_images_for_prompt
 from .bootstrap import accuracy_ci_from_labels, bootstrap_proportion_ci
+from .linear_probe import run_linear_probe
 from .model_comparison import (
     ModelZeroShotResult,
     evaluate_models_zero_shot,
@@ -37,6 +38,7 @@ __all__ = [
     "score_patch_images_for_prompt",
     "accuracy_ci_from_labels",
     "bootstrap_proportion_ci",
+    "run_linear_probe",
     "ModelZeroShotResult",
     "evaluate_models_zero_shot",
     "resolve_true_indices",

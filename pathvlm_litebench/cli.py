@@ -110,6 +110,10 @@ def build_parser() -> argparse.ArgumentParser:
         "compare-models",
         help="Compare zero-shot tissue classification accuracy across models.",
     )
+    linear_probe_parser = subparsers.add_parser(
+        "linear-probe",
+        help="Train a logistic-regression linear probe on frozen embeddings.",
+    )
     convert_manifest_parser.add_argument(
         "--input",
         required=True,
@@ -636,6 +640,101 @@ def build_parser() -> argparse.ArgumentParser:
         "--dry-run",
         action="store_true",
         help="Validate inputs and resolved class prompts without loading models.",
+    )
+
+    linear_probe_parser.add_argument(
+        "--manifest",
+        required=True,
+        help="Standard patch manifest CSV with image_path, label, and split columns.",
+    )
+    linear_probe_parser.add_argument(
+        "--image-root",
+        default=None,
+        help="Optional image root for resolving relative manifest image paths.",
+    )
+    linear_probe_parser.add_argument(
+        "--model",
+        default="clip",
+        help="Model key or Hugging Face name used to encode patches. Default: clip.",
+    )
+    linear_probe_parser.add_argument(
+        "--device",
+        choices=["auto", "cpu", "cuda"],
+        default="auto",
+        help="Device for model inference.",
+    )
+    linear_probe_parser.add_argument(
+        "--train-split",
+        default="train",
+        help="Manifest split value used to fit the probe. Default: train.",
+    )
+    linear_probe_parser.add_argument(
+        "--test-split",
+        default="test",
+        help="Manifest split value used to evaluate the probe. Default: test.",
+    )
+    linear_probe_parser.add_argument(
+        "--class-names",
+        nargs="+",
+        default=None,
+        help="Optional explicit class order. Inferred from train labels otherwise.",
+    )
+    linear_probe_parser.add_argument(
+        "--C",
+        type=float,
+        default=1.0,
+        help="Inverse L2 regularization strength for logistic regression. Default: 1.0.",
+    )
+    linear_probe_parser.add_argument(
+        "--max-iter",
+        type=int,
+        default=1000,
+        help="Maximum solver iterations. Default: 1000.",
+    )
+    linear_probe_parser.add_argument(
+        "--no-normalize",
+        action="store_true",
+        help="Skip L2-normalizing embeddings before fitting the probe.",
+    )
+    linear_probe_parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=32,
+        help="Image-encoding batch size.",
+    )
+    linear_probe_parser.add_argument(
+        "--max-images",
+        type=int,
+        default=None,
+        help="Optional cap on records per split for a quick smoke run.",
+    )
+    linear_probe_parser.add_argument(
+        "--confidence",
+        type=float,
+        default=0.95,
+        help="Confidence level for the bootstrap accuracy interval. Default: 0.95.",
+    )
+    linear_probe_parser.add_argument(
+        "--bootstrap-resamples",
+        type=int,
+        default=2000,
+        help="Number of bootstrap resamples for the accuracy interval. Default: 2000.",
+    )
+    linear_probe_parser.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="Random seed for the probe fit and bootstrap interval. Default: 0.",
+    )
+    linear_probe_parser.add_argument(
+        "--output-dir",
+        default="outputs/linear_probe",
+        help="Directory for predictions.csv, metrics.json, and errors.csv.",
+    )
+    linear_probe_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate inputs and report split sizes without loading models.",
     )
 
     return parser
@@ -1906,6 +2005,183 @@ def _handle_compare_models(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_linear_probe(args: argparse.Namespace) -> int:
+    from .data import (
+        filter_records_by_split,
+        load_patch_manifest,
+        records_to_image_paths,
+        records_to_labels,
+    )
+
+    try:
+        records = load_patch_manifest(
+            manifest_path=args.manifest,
+            image_root=args.image_root,
+            require_exists=True,
+        )
+        train_records = filter_records_by_split(records, args.train_split)
+        test_records = filter_records_by_split(records, args.test_split)
+        if not train_records:
+            raise ValueError(
+                f"No manifest records matched train split '{args.train_split}'."
+            )
+        if not test_records:
+            raise ValueError(
+                f"No manifest records matched test split '{args.test_split}'."
+            )
+        if args.max_images is not None:
+            train_records = train_records[: args.max_images]
+            test_records = test_records[: args.max_images]
+
+        train_labels = records_to_labels(train_records)
+        if any(label is None or not str(label).strip() for label in train_labels):
+            raise ValueError(
+                "Every train record must be labeled to fit a linear probe."
+            )
+        test_labels = records_to_labels(test_records)
+
+        output_dir = Path(args.output_dir)
+        predictions_path = output_dir / "predictions.csv"
+        errors_path = output_dir / "errors.csv"
+        metrics_path = output_dir / "metrics.json"
+
+        if args.dry_run:
+            print("Dry run only. No model inference was run.")
+            print(f"Manifest: {args.manifest}")
+            print(f"Model: {args.model}")
+            print(f"Train split '{args.train_split}': {len(train_records)} patches")
+            print(f"Test split '{args.test_split}': {len(test_records)} patches")
+            print(f"Predictions output: {predictions_path}")
+            print(f"Metrics output: {metrics_path}")
+            return 0
+
+        from .data import load_patch_images_from_paths
+        from .environment import collect_environment
+        from .evaluation import (
+            accuracy_ci_from_labels,
+            compute_classification_report,
+            run_linear_probe,
+        )
+        from .models import create_model
+        from .visualization import (
+            save_classification_metrics_json,
+            save_zero_shot_errors_csv,
+            save_zero_shot_predictions_csv,
+        )
+
+        model = create_model(args.model, args.device)
+        train_images, _ = load_patch_images_from_paths(
+            records_to_image_paths(train_records)
+        )
+        test_images, test_image_paths = load_patch_images_from_paths(
+            records_to_image_paths(test_records)
+        )
+
+        train_embeddings = model.encode_images(train_images, batch_size=args.batch_size)
+        test_embeddings = model.encode_images(test_images, batch_size=args.batch_size)
+
+        probe = run_linear_probe(
+            train_embeddings,
+            train_labels,
+            test_embeddings,
+            class_names=args.class_names,
+            C=args.C,
+            max_iter=args.max_iter,
+            seed=args.seed,
+            normalize=not args.no_normalize,
+        )
+
+        predicted_labels = probe["predicted_labels"]
+        results = [
+            {
+                "image_index": index,
+                "predicted_label": predicted_labels[index],
+                "predicted_index": probe["predicted_indices"][index],
+                "confidence": probe["confidences"][index],
+                "top_predictions": [],
+            }
+            for index in range(len(predicted_labels))
+        ]
+
+        labeled_pairs = [
+            (str(true), predicted_labels[index])
+            for index, true in enumerate(test_labels)
+            if true is not None and str(true).strip()
+        ]
+        if not labeled_pairs:
+            raise ValueError(
+                "No labeled test records; cannot evaluate the linear probe."
+            )
+        labeled_true = [pair[0] for pair in labeled_pairs]
+        labeled_pred = [pair[1] for pair in labeled_pairs]
+
+        report = compute_classification_report(
+            labeled_true,
+            labeled_pred,
+            class_names=args.class_names,
+        )
+        report["accuracy_ci"] = accuracy_ci_from_labels(
+            test_labels,
+            predicted_labels,
+            confidence=args.confidence,
+            num_resamples=args.bootstrap_resamples,
+            seed=args.seed,
+        )
+
+        save_zero_shot_predictions_csv(
+            test_image_paths, results, predictions_path, true_labels=test_labels
+        )
+        save_zero_shot_errors_csv(
+            test_image_paths, results, errors_path, true_labels=test_labels
+        )
+        save_classification_metrics_json(
+            report,
+            metrics_path,
+            metadata={
+                "task": "linear-probe",
+                "manifest": args.manifest,
+                "model": args.model,
+                "device": args.device,
+                "train_split": args.train_split,
+                "test_split": args.test_split,
+                "num_train": probe["num_train"],
+                "num_test": probe["num_test"],
+                "embedding_dim": probe["embedding_dim"],
+                "probe": {
+                    "classifier": "logistic_regression",
+                    "C": probe["C"],
+                    "max_iter": probe["max_iter"],
+                    "normalize": probe["normalize"],
+                    "seed": probe["seed"],
+                },
+                "bootstrap": {
+                    "confidence": args.confidence,
+                    "num_resamples": args.bootstrap_resamples,
+                    "seed": args.seed,
+                },
+                "environment": collect_environment(),
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        print(f"Error: {exc}")
+        return 1
+
+    accuracy_ci = report["accuracy_ci"]
+    print(f"Saved linear-probe predictions to: {predictions_path}")
+    print(f"Saved linear-probe errors to: {errors_path}")
+    print(f"Saved linear-probe metrics to: {metrics_path}")
+    print(f"Train patches: {probe['num_train']} · Test patches: {probe['num_test']}")
+    print(
+        f"Accuracy: {report['accuracy']:.1%} "
+        f"({accuracy_ci['confidence']:.0%} CI "
+        f"[{accuracy_ci['ci_low']:.1%}, {accuracy_ci['ci_high']:.1%}])"
+    )
+    print(f"Balanced accuracy: {report['balanced_accuracy']:.1%}")
+    print(f"Macro F1: {report['macro_f1']:.3f}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -1961,6 +2237,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "compare-models":
         return _handle_compare_models(args)
+
+    if args.command == "linear-probe":
+        return _handle_linear_probe(args)
 
     parser.print_help()
     return 0
