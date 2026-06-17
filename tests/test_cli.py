@@ -73,9 +73,9 @@ def test_cli_demo_lists_demos_when_no_name(capsys):
 
 
 def test_cli_demo_list_notes_source_checkout_when_examples_missing(monkeypatch, tmp_path, capsys):
-    import pathvlm_litebench.cli as cli_module
+    from pathvlm_litebench.cli.commands import info as info_module
 
-    monkeypatch.setattr(cli_module, "_examples_dir", lambda: tmp_path / "missing")
+    monkeypatch.setattr(info_module, "_examples_dir", lambda: tmp_path / "missing")
 
     exit_code = main(["demo"])
     captured = capsys.readouterr()
@@ -87,9 +87,9 @@ def test_cli_demo_list_notes_source_checkout_when_examples_missing(monkeypatch, 
 
 
 def test_cli_demo_list_omits_source_note_when_examples_present(monkeypatch, tmp_path, capsys):
-    import pathvlm_litebench.cli as cli_module
+    from pathvlm_litebench.cli.commands import info as info_module
 
-    monkeypatch.setattr(cli_module, "_examples_dir", lambda: tmp_path)
+    monkeypatch.setattr(info_module, "_examples_dir", lambda: tmp_path)
 
     exit_code = main(["demo"])
     captured = capsys.readouterr()
@@ -107,7 +107,7 @@ def test_cli_demo_unknown_name_returns_error(capsys):
 
 
 def test_cli_demo_forwards_args_to_subprocess(monkeypatch):
-    import pathvlm_litebench.cli as cli_module
+    from pathvlm_litebench.cli.commands import info as info_module
 
     captured_commands = []
 
@@ -115,7 +115,7 @@ def test_cli_demo_forwards_args_to_subprocess(monkeypatch):
         captured_commands.append(command)
         return 0
 
-    monkeypatch.setattr(cli_module.subprocess, "call", fake_call)
+    monkeypatch.setattr(info_module.subprocess, "call", fake_call)
 
     exit_code = main(["demo", "retrieval", "--model", "clip", "--device", "auto"])
 
@@ -128,9 +128,9 @@ def test_cli_demo_forwards_args_to_subprocess(monkeypatch):
 
 
 def test_cli_demo_propagates_subprocess_exit_code(monkeypatch):
-    import pathvlm_litebench.cli as cli_module
+    from pathvlm_litebench.cli.commands import info as info_module
 
-    monkeypatch.setattr(cli_module.subprocess, "call", lambda command: 3)
+    monkeypatch.setattr(info_module.subprocess, "call", lambda command: 3)
 
     exit_code = main(["demo", "zero-shot"])
 
