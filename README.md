@@ -881,11 +881,11 @@ Figures are generated from unmodified patches.
 
 Zero-shot accuracy depends on the prompt, and on a small sample it can understate how much usable signal a frozen encoder actually carries. The `linear-probe` command answers a complementary question: how linearly separable are the frozen features already? It trains only a logistic-regression classifier on top of the frozen image embeddings &mdash; the encoder itself is never touched &mdash; so it stays laptop-friendly while giving a fairer, prompt-free read on feature quality. This is the standard low-compute step beyond zero-shot in computational pathology.
 
-The command reads a standard patch manifest with `image_path`, `label`, and `split` columns, encodes the train and test splits with the chosen frozen model, fits the probe on the train split, and evaluates on the test split:
+The command reads a standard patch manifest with `image_path`, `label`, and `split` columns, encodes the train and test splits with the chosen frozen model, fits the probe on the train split, and evaluates on the test split. The bundled `CRC_VAL_HE_100_sample_manifest.csv` has only `image_path` and `label`, so point the probe at a manifest that carries a `split` column with `train`/`test` values:
 
 ```bash
 pathvlm-litebench linear-probe \
-  --manifest dataset/CRC_VAL_HE_100_sample_manifest.csv \
+  --manifest dataset/CRC_VAL_HE_100_split_manifest.csv \
   --model plip \
   --train-split train \
   --test-split test \

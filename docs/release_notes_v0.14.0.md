@@ -115,10 +115,10 @@ Compare models with confidence intervals on a balanced sample:
 pathvlm-litebench compare-models --manifest dataset/CRC_VAL_HE_100_sample_manifest.csv --models clip plip --class-names "adipose tissue" background debris lymphocytes mucus "smooth muscle" "normal colon mucosa" "cancer-associated stroma" "colorectal adenocarcinoma epithelium" --output-dir outputs/model_comparison
 ```
 
-Train and evaluate a linear probe on frozen embeddings:
+Train and evaluate a linear probe on frozen embeddings (the manifest must carry a `split` column with `train`/`test` values):
 
 ```bash
-pathvlm-litebench linear-probe --manifest dataset/CRC_VAL_HE_100_sample_manifest.csv --model plip --output-dir outputs/linear_probe
+pathvlm-litebench linear-probe --manifest dataset/CRC_VAL_HE_100_split_manifest.csv --model plip --train-split train --test-split test --output-dir outputs/linear_probe
 ```
 
 ## Release Highlights
