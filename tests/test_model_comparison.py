@@ -14,6 +14,7 @@ from pathvlm_litebench.evaluation.model_comparison import (
     resolve_true_indices,
 )
 from pathvlm_litebench.visualization.model_comparison_report import (
+    compute_model_accuracy_cis,
     save_model_comparison_chart,
     save_model_comparison_csv,
     save_model_comparison_per_class_csv,
@@ -98,6 +99,39 @@ def test_evaluate_models_zero_shot_with_injected_factory():
     assert results[1].correct == 0
     assert results[1].per_class_total == [2, 2, 1]
     assert results[1].per_class_correct == [0, 0, 0]
+    assert results[0].correct_flags == [1, 1, 1, 1, 1]
+    assert results[1].correct_flags == [0, 0, 0, 0, 0]
+
+
+def test_compute_model_accuracy_cis_skips_results_without_flags():
+    results = [
+        ModelZeroShotResult("with_flags", 0.5, 1, 2, correct_flags=[1, 0]),
+        ModelZeroShotResult("no_flags", 0.5, 1, 2),
+    ]
+    cis = compute_model_accuracy_cis(results, num_resamples=200, seed=0)
+    assert cis[0] is not None
+    assert cis[0]["estimate"] == 0.5
+    assert cis[0]["ci_low"] <= cis[0]["estimate"] <= cis[0]["ci_high"]
+    assert cis[1] is None
+
+
+def test_save_model_comparison_csv_includes_ci_columns(tmp_path: Path):
+    results = [ModelZeroShotResult("clip", 0.5, 1, 2, correct_flags=[1, 0])]
+    cis = compute_model_accuracy_cis(results, num_resamples=200)
+    out = tmp_path / "model_comparison.csv"
+    save_model_comparison_csv(results, out, cis=cis)
+    with out.open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    assert rows[0]["ci_low"] != ""
+    assert rows[0]["ci_high"] != ""
+
+
+def test_save_model_comparison_chart_with_cis(tmp_path: Path):
+    results = [ModelZeroShotResult("clip", 0.5, 1, 2, correct_flags=[1, 0])]
+    cis = compute_model_accuracy_cis(results, num_resamples=200)
+    out = tmp_path / "chart.png"
+    save_model_comparison_chart(results, out, random_baseline=0.5, cis=cis)
+    assert out.exists() and out.stat().st_size > 0
 
 
 def test_evaluate_models_zero_shot_rejects_length_mismatch():
@@ -300,3 +334,14 @@ def test_cli_compare_models_full_run(tmp_path: Path, capsys, monkeypatch):
 
     metadata = json.loads((output_dir / "metadata.json").read_text(encoding="utf-8"))
     assert len(metadata["results"][0]["per_class"]) == 3
+
+    first_result = metadata["results"][0]
+    assert first_result["accuracy_ci"] is not None
+    assert (
+        first_result["accuracy_ci"]["ci_low"]
+        <= first_result["accuracy"]
+        <= first_result["accuracy_ci"]["ci_high"]
+    )
+    assert metadata["bootstrap"]["confidence"] == 0.95
+    assert metadata["environment"]["packages"]["torch"] is not None
+    assert metadata["environment"]["pathvlm_litebench"]

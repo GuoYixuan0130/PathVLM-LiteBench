@@ -843,7 +843,7 @@ Beyond the synthetic smoke test, here is what **frozen** vision-language models 
 
 Domain pretraining is the whole story here: general-domain CLIP lands at 22% with an identical prompt, while the pathology vision-language models PLIP (60%) and CONCH (59%) roughly triple it &mdash; all well above the 1/9 = 11% random baseline, with no fine-tuning. Zero-shot accuracy is also prompt-sensitive, so a single shared template (`an H&E image of {class}.`) is used for every model to keep the comparison fair.
 
-This chart is reproducible from the command line: `compare-models` runs the same frozen zero-shot benchmark and writes the bar chart, an overall-accuracy CSV, a per-class-accuracy CSV, and run metadata.
+This chart is reproducible from the command line: `compare-models` runs the same frozen zero-shot benchmark and writes the bar chart, an overall-accuracy CSV, a per-class-accuracy CSV, and run metadata. Because a 108-patch sample is small, each accuracy now ships with a 95% bootstrap confidence interval (drawn as error bars on the chart and recorded in the CSV and metadata), and the metadata records the exact `torch`/`transformers`/`numpy` versions used so a run can be tied to its software stack. Tune the interval with `--confidence`, `--bootstrap-resamples`, and `--seed`.
 
 ```bash
 pathvlm-litebench compare-models \

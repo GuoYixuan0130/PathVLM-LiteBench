@@ -16,6 +16,7 @@ class ModelZeroShotResult:
     total: int
     per_class_correct: list[int] = field(default_factory=list)
     per_class_total: list[int] = field(default_factory=list)
+    correct_flags: list[int] = field(default_factory=list)
 
 
 def resolve_true_indices(
@@ -162,6 +163,7 @@ def evaluate_models_zero_shot(
                 total=total,
                 per_class_correct=per_class_correct.tolist(),
                 per_class_total=per_class_total.tolist(),
+                correct_flags=correct_mask.to(torch.int).tolist(),
             )
         )
 

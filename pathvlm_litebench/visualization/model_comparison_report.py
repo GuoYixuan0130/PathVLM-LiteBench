@@ -14,30 +14,76 @@ if TYPE_CHECKING:
     from pathvlm_litebench.evaluation.model_comparison import ModelZeroShotResult
 
 
+def compute_model_accuracy_cis(
+    results: Sequence["ModelZeroShotResult"],
+    *,
+    confidence: float = 0.95,
+    num_resamples: int = 2000,
+    seed: int = 0,
+) -> list[dict | None]:
+    """
+    Bootstrap accuracy confidence intervals for each model result.
+
+    Returns one interval dict per result, in input order, or ``None`` for any
+    result that carries no per-sample ``correct_flags`` (so an interval cannot
+    be estimated). See :func:`pathvlm_litebench.evaluation.bootstrap_proportion_ci`.
+    """
+    from pathvlm_litebench.evaluation.bootstrap import bootstrap_proportion_ci
+
+    cis: list[dict | None] = []
+    for result in results:
+        if result.correct_flags:
+            cis.append(
+                bootstrap_proportion_ci(
+                    result.correct_flags,
+                    num_resamples=num_resamples,
+                    confidence=confidence,
+                    seed=seed,
+                )
+            )
+        else:
+            cis.append(None)
+    return cis
+
+
 def save_model_comparison_csv(
     results: Sequence[ModelZeroShotResult],
     output_csv_path: str | Path,
+    *,
+    cis: Sequence[dict | None] | None = None,
 ) -> str:
     """
     Save per-model zero-shot accuracy as CSV.
+
+    When ``cis`` is provided (one entry per result), the ``ci_low``/``ci_high``
+    columns hold the bootstrap accuracy interval bounds; they are left blank for
+    results without an interval.
     """
     if len(results) == 0:
         raise ValueError("results must not be empty.")
 
+    if cis is not None and len(cis) != len(results):
+        raise ValueError(
+            f"cis and results must have the same length: {len(cis)} vs {len(results)}"
+        )
+
     output_csv_path = Path(output_csv_path)
     output_csv_path.parent.mkdir(parents=True, exist_ok=True)
 
-    fieldnames = ["model", "accuracy", "correct", "total"]
+    fieldnames = ["model", "accuracy", "correct", "total", "ci_low", "ci_high"]
     with output_csv_path.open("w", encoding="utf-8", newline="") as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
-        for result in results:
+        for index, result in enumerate(results):
+            ci = cis[index] if cis is not None else None
             writer.writerow(
                 {
                     "model": result.model,
                     "accuracy": result.accuracy,
                     "correct": result.correct,
                     "total": result.total,
+                    "ci_low": "" if ci is None else ci["ci_low"],
+                    "ci_high": "" if ci is None else ci["ci_high"],
                 }
             )
 
@@ -98,18 +144,39 @@ def save_model_comparison_chart(
     title: str | None = None,
     subtitle: str | None = None,
     random_baseline: float | None = None,
+    cis: Sequence[dict | None] | None = None,
 ) -> str:
     """
     Save a bar chart of per-model zero-shot accuracy.
+
+    When ``cis`` is provided (one entry per result), bootstrap confidence
+    intervals are drawn as error bars on each bar.
     """
     if len(results) == 0:
         raise ValueError("results must not be empty.")
+
+    if cis is not None and len(cis) != len(results):
+        raise ValueError(
+            f"cis and results must have the same length: {len(cis)} vs {len(results)}"
+        )
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     labels = [result.model for result in results]
     accuracies = [result.accuracy for result in results]
+
+    yerr = None
+    if cis is not None and any(ci is not None for ci in cis):
+        lower = [
+            (result.accuracy - ci["ci_low"]) if ci is not None else 0.0
+            for result, ci in zip(results, cis)
+        ]
+        upper = [
+            (ci["ci_high"] - result.accuracy) if ci is not None else 0.0
+            for result, ci in zip(results, cis)
+        ]
+        yerr = np.array([lower, upper])
 
     fig_width = max(5.0, min(14.0, 2.0 + 1.8 * len(labels)))
     fig, ax = plt.subplots(figsize=(fig_width, 6.4))
@@ -118,7 +185,17 @@ def save_model_comparison_chart(
     x = np.arange(len(labels))
     cmap = plt.get_cmap("tab10")
     colors = [cmap(idx % 10) for idx in range(len(labels))]
-    bars = ax.bar(x, accuracies, width=0.6, color=colors, edgecolor="white", linewidth=1.0)
+    bars = ax.bar(
+        x,
+        accuracies,
+        width=0.6,
+        color=colors,
+        edgecolor="white",
+        linewidth=1.0,
+        yerr=yerr,
+        capsize=5 if yerr is not None else 0,
+        error_kw={"ecolor": "#333333", "elinewidth": 1.2},
+    )
 
     if random_baseline is not None:
         ax.axhline(random_baseline, color="#cc4444", linestyle="--", linewidth=1.1)
@@ -132,10 +209,11 @@ def save_model_comparison_chart(
             color="#cc4444",
         )
 
-    for rect, acc in zip(bars, accuracies):
+    for index, (rect, acc) in enumerate(zip(bars, accuracies)):
+        upper_offset = float(yerr[1][index]) if yerr is not None else 0.0
         ax.text(
             rect.get_x() + rect.get_width() / 2,
-            acc + 0.015,
+            acc + upper_offset + 0.015,
             f"{acc:.0%}",
             ha="center",
             va="bottom",

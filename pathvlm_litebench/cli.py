@@ -615,6 +615,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional chart title.",
     )
     compare_models_parser.add_argument(
+        "--confidence",
+        type=float,
+        default=0.95,
+        help="Confidence level for bootstrap accuracy intervals. Default: 0.95.",
+    )
+    compare_models_parser.add_argument(
+        "--bootstrap-resamples",
+        type=int,
+        default=2000,
+        help="Number of bootstrap resamples for accuracy intervals. Default: 2000.",
+    )
+    compare_models_parser.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="Random seed for reproducible bootstrap intervals. Default: 0.",
+    )
+    compare_models_parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Validate inputs and resolved class prompts without loading models.",
@@ -1772,8 +1790,10 @@ def _handle_compare_models(args: argparse.Namespace) -> int:
             return 0
 
         from .data import load_patch_images_from_paths
+        from .environment import collect_environment
         from .evaluation import evaluate_models_zero_shot
         from .visualization import (
+            compute_model_accuracy_cis,
             save_model_comparison_chart,
             save_model_comparison_csv,
             save_model_comparison_per_class_csv,
@@ -1791,12 +1811,19 @@ def _handle_compare_models(args: argparse.Namespace) -> int:
             batch_size=args.batch_size,
         )
 
+        cis = compute_model_accuracy_cis(
+            results,
+            confidence=args.confidence,
+            num_resamples=args.bootstrap_resamples,
+            seed=args.seed,
+        )
+
         random_baseline = 1.0 / len(class_names)
         subtitle = (
             f"{len(images)} patches · {len(class_names)} classes · frozen · "
             f"shared prompt template"
         )
-        save_model_comparison_csv(results, csv_path)
+        save_model_comparison_csv(results, csv_path, cis=cis)
         save_model_comparison_per_class_csv(results, class_names, per_class_csv_path)
         save_model_comparison_chart(
             results,
@@ -1804,6 +1831,7 @@ def _handle_compare_models(args: argparse.Namespace) -> int:
             title=args.title,
             subtitle=subtitle,
             random_baseline=random_baseline,
+            cis=cis,
         )
         metadata_path.parent.mkdir(parents=True, exist_ok=True)
         metadata_path.write_text(
@@ -1821,11 +1849,18 @@ def _handle_compare_models(args: argparse.Namespace) -> int:
                     "batch_size": args.batch_size,
                     "split": args.split,
                     "random_baseline": random_baseline,
+                    "bootstrap": {
+                        "confidence": args.confidence,
+                        "num_resamples": args.bootstrap_resamples,
+                        "seed": args.seed,
+                    },
+                    "environment": collect_environment(),
                     "generated_at": datetime.now(timezone.utc).isoformat(),
                     "results": [
                         {
                             "model": result.model,
                             "accuracy": result.accuracy,
+                            "accuracy_ci": cis[result_index],
                             "correct": result.correct,
                             "total": result.total,
                             "per_class": [
@@ -1844,7 +1879,7 @@ def _handle_compare_models(args: argparse.Namespace) -> int:
                                 for index in range(len(class_names))
                             ],
                         }
-                        for result in results
+                        for result_index, result in enumerate(results)
                     ],
                 },
                 indent=2,
@@ -1861,8 +1896,13 @@ def _handle_compare_models(args: argparse.Namespace) -> int:
     print(f"Saved model comparison chart to: {chart_path}")
     print(f"Saved model comparison metadata to: {metadata_path}")
     print(f"Patches: {len(images)}")
-    for result in results:
-        print(f"- {result.model}: {result.accuracy:.1%} ({result.correct}/{result.total})")
+    for result, ci in zip(results, cis):
+        line = f"- {result.model}: {result.accuracy:.1%} ({result.correct}/{result.total})"
+        if ci is not None:
+            line += (
+                f"  {ci['confidence']:.0%} CI [{ci['ci_low']:.1%}, {ci['ci_high']:.1%}]"
+            )
+        print(line)
     return 0
 
 

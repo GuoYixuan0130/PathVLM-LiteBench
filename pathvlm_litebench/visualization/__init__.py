@@ -41,6 +41,7 @@ from .heatmap_comparison import (
     summarize_patch_score_csv,
 )
 from .model_comparison_report import (
+    compute_model_accuracy_cis,
     save_model_comparison_chart,
     save_model_comparison_csv,
     save_model_comparison_per_class_csv,
@@ -77,6 +78,7 @@ __all__ = [
     "save_patch_score_comparison_csv",
     "save_patch_score_comparison_summary",
     "summarize_patch_score_csv",
+    "compute_model_accuracy_cis",
     "save_model_comparison_chart",
     "save_model_comparison_csv",
     "save_model_comparison_per_class_csv",
